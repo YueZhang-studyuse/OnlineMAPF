@@ -15,7 +15,7 @@ public:
     int num_tasks_reveal = 1;
     Logger* logger = nullptr;
 
-	BaseSystem(Grid &grid, MAPFPlanner* planner, ActionModelWithRotate* model):
+	BaseSystem(Grid &grid, MAPFPlanner* planner, ActionModel* model):
         map(grid), planner(planner), env(planner->env), model(model)
     {}
 
@@ -56,7 +56,7 @@ protected:
     MAPFPlanner* planner;
     SharedEnvironment* env;
 
-    ActionModelWithRotate* model;
+    ActionModel* model;
 
     // #timesteps for simulation
     int timestep;
@@ -108,13 +108,13 @@ protected:
 class FixedAssignSystem : public BaseSystem
 {
 public:
-	FixedAssignSystem(Grid &grid, string agent_task_filename, MAPFPlanner* planner, ActionModelWithRotate *model):
+	FixedAssignSystem(Grid &grid, string agent_task_filename, MAPFPlanner* planner, ActionModel *model):
         BaseSystem(grid, planner, model)
     {
         load_agent_tasks(agent_task_filename);
     };
 
-	FixedAssignSystem(Grid &grid, MAPFPlanner* planner, std::vector<int>& start_locs, std::vector<vector<int>>& tasks, ActionModelWithRotate* model):
+	FixedAssignSystem(Grid &grid, MAPFPlanner* planner, std::vector<int>& start_locs, std::vector<vector<int>>& tasks, ActionModel* model):
         BaseSystem(grid, planner, model)
     {
         if (start_locs.size() != tasks.size())
@@ -155,7 +155,7 @@ private:
 class TaskAssignSystem : public BaseSystem
 {
 public:
-	TaskAssignSystem(Grid &grid, MAPFPlanner* planner, std::vector<int>& start_locs, std::vector<int>& tasks, ActionModelWithRotate* model):
+	TaskAssignSystem(Grid &grid, MAPFPlanner* planner, std::vector<int>& start_locs, std::vector<int>& tasks, ActionModel* model):
         BaseSystem(grid, planner, model)
     {
         int task_id = 0;
@@ -186,7 +186,7 @@ private:
 class InfAssignSystem : public BaseSystem
 {
 public:
-	InfAssignSystem(Grid &grid, MAPFPlanner* planner, std::vector<int>& start_locs, std::vector<int>& tasks, ActionModelWithRotate* model):
+	InfAssignSystem(Grid &grid, MAPFPlanner* planner, std::vector<int>& start_locs, std::vector<int>& tasks, ActionModel* model):
         tasks(tasks), BaseSystem(grid, planner, model)
     {
         num_of_agents = start_locs.size();

@@ -3,21 +3,32 @@
 
 std::ostream& operator<<(std::ostream &stream, const Action &action)
 {
-    if (action == Action::FW) {
-        stream << "F";
-    } else if (action == Action::CR) {
-        stream << "R";
-    } else if (action == Action::CCR) {
-        stream << "C";
+    // if (action == Action::FW) {
+    //     stream << "F";
+    // } else if (action == Action::CR) {
+    //     stream << "R";
+    // } else if (action == Action::CCR) {
+    //     stream << "C";
+    // } else {
+    //     stream << "W";
+    // }
+    if (action == Action::N) {
+        stream << "NO";
+    } else if (action == Action::E) {
+        stream << "EA";
+    } else if (action == Action::S) {
+        stream << "SO";
+    } else if (action == Action::WE) {
+        stream << "WE";
     } else {
-        stream << "W";
+        stream << "WA";
     }
 
     return stream;
 }
 
 
-bool ActionModelWithRotate::is_valid(const vector<State>& prev, const vector<Action> & actions)
+bool ActionModel::is_valid(const vector<State>& prev, const vector<Action> & actions)
 {
     if (prev.size() != actions.size())
     {

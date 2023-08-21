@@ -37,38 +37,38 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
 // plan using simple A* that ignores the time dimension
 void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
 {
-    actions = std::vector<Action>(env->curr_states.size(), Action::W);
-    for (int i = 0; i < env->num_of_agents; i++) 
-    {
-        list<pair<int,int>> path;
-        if (env->goal_locations[i].empty()) 
-        {
-            path.push_back({env->curr_states[i].location, env->curr_states[i].orientation});
-        } 
-        else 
-        {
-            path = single_agent_plan(env->curr_states[i].location,
-                                    env->curr_states[i].orientation,
-                                    env->goal_locations[i].front().first);
-        }
-        if (path.front().first != env->curr_states[i].location)
-        {
-            actions[i] = Action::FW; //forward action
-        } 
-        else if (path.front().second!= env->curr_states[i].orientation)
-        {
-            int incr = path.front().second - env->curr_states[i].orientation;
-            if (incr == 1 || incr == -3)
-            {
-                actions[i] = Action::CR; //C--counter clockwise rotate
-            } 
-            else if (incr == -1 || incr == 3)
-            {
-                actions[i] = Action::CCR; //CCR--clockwise rotate
-            } 
-        }
+    // actions = std::vector<Action>(env->curr_states.size(), Action::W);
+    // for (int i = 0; i < env->num_of_agents; i++) 
+    // {
+    //     list<pair<int,int>> path;
+    //     if (env->goal_locations[i].empty()) 
+    //     {
+    //         path.push_back({env->curr_states[i].location, env->curr_states[i].orientation});
+    //     } 
+    //     else 
+    //     {
+    //         path = single_agent_plan(env->curr_states[i].location,
+    //                                 env->curr_states[i].orientation,
+    //                                 env->goal_locations[i].front().first);
+    //     }
+    //     if (path.front().first != env->curr_states[i].location)
+    //     {
+    //         actions[i] = Action::FW; //forward action
+    //     } 
+    //     else if (path.front().second!= env->curr_states[i].orientation)
+    //     {
+    //         int incr = path.front().second - env->curr_states[i].orientation;
+    //         if (incr == 1 || incr == -3)
+    //         {
+    //             actions[i] = Action::CR; //C--counter clockwise rotate
+    //         } 
+    //         else if (incr == -1 || incr == 3)
+    //         {
+    //             actions[i] = Action::CCR; //CCR--clockwise rotate
+    //         } 
+    //     }
 
-    }
+    // }
   return;
 }
 

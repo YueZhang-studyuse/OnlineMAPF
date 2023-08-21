@@ -28,7 +28,7 @@ list<Task> BaseSystem::move(vector<Action>& actions)
     if (!valid_moves(curr_states, actions))
     {
         fast_mover_feasible = false;
-        actions = std::vector<Action>(num_of_agents, Action::W);
+        actions = std::vector<Action>(num_of_agents, Action::WA);
     }
 
     curr_states = model->result_states(curr_states, actions);
@@ -403,17 +403,41 @@ void BaseSystem::saveResults(const string &fileName) const
                 first = false;
             }
 
-            if (action == Action::FW)
+            // if (action == Action::FW)
+            // {
+            //     path+="F";
+            // }
+            // else if (action == Action::CR)
+            // {
+            //     path+="R";
+            // } 
+            // else if (action == Action::CCR)
+            // {
+            //     path+="C";
+            // }
+            // else if (action == Action::NA)
+            // {
+            //     path+="T";
+            // }
+            // else
+            // {
+            //     path+="W";
+            // }
+            if (action == Action::N)
             {
-                path+="F";
+                path+="NO";
             }
-            else if (action == Action::CR)
+            else if (action == Action::E)
             {
-                path+="R";
+                path+="EA";
             } 
-            else if (action == Action::CCR)
+            else if (action == Action::S)
             {
-                path+="C";
+                path+="SO";
+            }
+            else if (action == Action::WE)
+            {
+                path+="WE";
             }
             else if (action == Action::NA)
             {
@@ -445,18 +469,42 @@ void BaseSystem::saveResults(const string &fileName) const
                 first = false;
             }
 
-            if (action == Action::FW)
+            // if (action == Action::FW)
+            // {
+            //     path+="F";
+            // }
+            // else if (action == Action::CR)
+            // {
+            //     path+="R";
+            // } 
+            // else if (action == Action::CCR)
+            // {
+            //     path+="C";
+            // } 
+            // else if (action == Action::NA)
+            // {
+            //     path+="T";
+            // }
+            // else
+            // {
+            //     path+="W";
+            // }
+            if (action == Action::N)
             {
-                path+="F";
+                path+="NO";
             }
-            else if (action == Action::CR)
+            else if (action == Action::E)
             {
-                path+="R";
+                path+="EA";
             } 
-            else if (action == Action::CCR)
+            else if (action == Action::S)
             {
-                path+="C";
-            } 
+                path+="SO";
+            }
+            else if (action == Action::WE)
+            {
+                path+="WE";
+            }
             else if (action == Action::NA)
             {
                 path+="T";
