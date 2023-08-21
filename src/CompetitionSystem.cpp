@@ -331,11 +331,11 @@ void BaseSystem::savePaths(const string &fileName, int option) const
 }
 
 
-void BaseSystem::saveResults(const string &fileName) const
+void BaseSystem::saveResults(const string &fileName, const bool outputSimple) const
 {
     json js;
     // Save action model
-    js["actionModel"] = "MAPF_T";
+    js["actionModel"] = "MAPF";
 
     std::string feasible = fast_mover_feasible ? "Yes" : "No";
     js["AllValid"] = feasible;
@@ -343,29 +343,33 @@ void BaseSystem::saveResults(const string &fileName) const
     js["teamSize"] = num_of_agents;
 
     // Save start locations[x,y,orientation]
-    json start = json::array();
-    for (int i = 0; i < num_of_agents; i++)
+
+    if (!outputSimple)
     {
-        json s = json::array();
-        s.push_back(starts[i].location/map.cols);
-        s.push_back(starts[i].location%map.cols);
-        switch (starts[i].orientation)
+        json start = json::array();
+        for (int i = 0; i < num_of_agents; i++)
         {
-        case 0:
-            s.push_back("E");
-            break;
-        case 1:
-            s.push_back("S");
-        case 2:
-            s.push_back("W");
-            break;
-        case 3:
-            s.push_back("N");
-            break;
+            json s = json::array();
+            s.push_back(starts[i].location/map.cols);
+            s.push_back(starts[i].location%map.cols);
+            switch (starts[i].orientation)
+            {
+            case 0:
+                s.push_back("E");
+                break;
+            case 1:
+                s.push_back("S");
+            case 2:
+                s.push_back("W");
+                break;
+            case 3:
+                s.push_back("N");
+                break;
+            }
+            start.push_back(s);
         }
-        start.push_back(s);
+        js["start"] = start;
     }
-    js["start"] = start;
 
     js["numTaskFinished"] = num_of_task_finish;
     int sum_of_cost = 0;
@@ -386,6 +390,8 @@ void BaseSystem::saveResults(const string &fileName) const
     js["sumOfCost"] = sum_of_cost;
     js["makespan"] = makespan;
   
+    if (!outputSimple)
+    {
     // Save actual paths
     json apaths = json::array();
     for (int i = 0; i < num_of_agents; i++)
@@ -574,6 +580,7 @@ void BaseSystem::saveResults(const string &fileName) const
         tasks.push_back(task);
     }
     js["tasks"] = tasks;
+    }
 
     std::ofstream f(fileName,std::ios_base::trunc |std::ios_base::out);
     f << std::setw(4) << js;

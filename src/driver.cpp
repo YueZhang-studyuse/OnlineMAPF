@@ -48,6 +48,7 @@ int main(int argc, char **argv)
         // ("inputFolder", po::value<std::string>()->default_value("."), "input folder")
         ("inputFile,i", po::value<std::string>()->required(), "input file name")
         ("output,o", po::value<std::string>()->default_value("./test.json"), "output file name")
+        ("outputSimple", po::value<bool>()->default_value(true), "output file name")
         ("evaluationMode", po::value<bool>()->default_value(false), "evaluate an existing output file")
         ("simulationTime", po::value<int>()->default_value(5000), "run simulation")
         ("fileStoragePath", po::value<std::string>()->default_value(""), "the path to the storage path")
@@ -165,7 +166,7 @@ int main(int argc, char **argv)
 
     if (!vm["evaluationMode"].as<bool>())
     {
-        system_ptr->saveResults(vm["output"].as<std::string>());
+        system_ptr->saveResults(vm["output"].as<std::string>(),vm["outputSimple"].as<bool>());
     }
 
     delete model;
