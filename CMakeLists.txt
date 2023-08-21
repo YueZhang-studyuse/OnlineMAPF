@@ -1,7 +1,7 @@
 project(lifelong)
 
 cmake_minimum_required(VERSION 3.16)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
 # Set the default value of PYTHON to false
 option(PYTHON "Enable Python" OFF)
@@ -23,7 +23,9 @@ IF(NOT CMAKE_BUILD_TYPE)
     #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 ENDIF()
 
-include_directories("inc")
+#include_directories("inc" "inc/CBS" "inc/lacam2")
+include_directories("inc" "inc/MAPF-LNS2/inc" "inc/MAPF-LNS2/inc/CBS" "inc/MAPF-LNS2/inc/lacam2")
+#include_directories("inc" "inc/MAPF-LNS2/inc" "inc/MAPF-LNS2/inc/lacam2")
 
 # Find Boost
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
@@ -61,7 +63,9 @@ IF(PYTHON)
 ELSE()
     message(STATUS "Python support is disabled")
     
-    file(GLOB SOURCES "src/*.cpp")
+    #file(GLOB SOURCES "src/*.cpp" "src/CBS/*.cpp" "src/lacam2/*.cpp")
+    file(GLOB SOURCES "src/*.cpp" "src/MAPF-LNS2/src/*.cpp" "src/MAPF-LNS2/src/CBS/*.cpp" "src/MAPF-LNS2/src/lacam2/*.cpp")
+    #file(GLOB SOURCES "src/*.cpp" "src/MAPF-LNS2/src/*.cpp" "src/MAPF-LNS2/src/lacam2/*.cpp")
 
     add_executable(lifelong ${SOURCES} )
     target_link_libraries(lifelong ${Boost_LIBRARIES})
