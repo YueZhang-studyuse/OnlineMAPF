@@ -7,7 +7,7 @@ std::ostream & operator << (std::ostream &out, const State &s)
     return out;
 }
 
-std::ostream & operator << (std::ostream &out, const Path &path)
+std::ostream & operator << (std::ostream &out, const SimulatePath &path)
 {
     for (auto state : path)
     {

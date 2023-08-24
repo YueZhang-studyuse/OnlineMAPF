@@ -29,6 +29,10 @@ public:
     int restart_times = 0;
     int complete_paths = 0;
     int delete_timesteps = 0;
+    // LNS(const Instance& instance, double time_limit,
+    //     string  init_algo_name, string  replan_algo_name, const string & destory_name,
+    //     int neighbor_size, int num_of_iterations, bool init_lns, string  init_destory_name, bool use_sipp,
+    //     bool truncate_initial_paths, int screen, PIBTPPS_option pipp_option);
     LNS(const Instance& instance, double time_limit,
         string  init_algo_name, string  replan_algo_name, const string & destory_name,
         int neighbor_size, int num_of_iterations, bool init_lns, string  init_destory_name, bool use_sipp,

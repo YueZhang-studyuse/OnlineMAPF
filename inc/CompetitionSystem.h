@@ -65,7 +65,7 @@ protected:
 
     int plan_time_limit = 3;
 
-    std::vector<Path> paths;
+    std::vector<SimulatePath> paths;
     std::vector<std::list<Task > > finished_tasks; // location + finish time
 
     vector<State> starts;

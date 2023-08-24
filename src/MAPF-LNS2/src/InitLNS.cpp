@@ -857,7 +857,7 @@ void InitLNS::writeResultToFile(const string & file_name, int sum_of_distances, 
           iteration_stats.size() << "," << average_group_size << "," <<
           iteration_stats.front().runtime << "," << auc << "," <<
           num_LL_expanded << "," << num_LL_generated << "," << num_LL_reopened << "," << num_LL_runs << "," <<
-          preprocessing_time << "," << getSolverName() << "," << instance.getInstanceName() << endl;
+          preprocessing_time << "," << getSolverName() << endl;
     stats.close();
 }
 

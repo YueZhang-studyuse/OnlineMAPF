@@ -54,7 +54,8 @@ int main(int argc, char **argv)
         ("fileStoragePath", po::value<std::string>()->default_value(""), "the path to the storage path")
         ("planTimeLimit", po::value<int>()->default_value(INT_MAX), "the time limit for planner in seconds")
         ("preprocessTimeLimit", po::value<int>()->default_value(INT_MAX), "the time limit for preprocessing in seconds")
-        ("logFile,l", po::value<std::string>(), "issue log file name");
+        ("logFile,l", po::value<std::string>(), "issue log file name")
+        ("commitStep,c", po::value<int>()->default_value(1), "commit steps");
     clock_t start_time = clock();
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
@@ -117,6 +118,7 @@ int main(int argc, char **argv)
 
     planner->env->map_name = map_path.substr(map_path.find_last_of("/") + 1);
     planner->env->file_storage_path = vm["fileStoragePath"].as<std::string>();
+    planner->commit = vm["commitStep"].as<int>();
 
     ActionModel *model = new ActionModel(grid);
     model->set_logger(logger);

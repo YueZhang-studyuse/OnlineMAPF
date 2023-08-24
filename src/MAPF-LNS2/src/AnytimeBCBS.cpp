@@ -167,6 +167,6 @@ void AnytimeBCBS::writeResultToFile(string file_name) const
     stats << runtime << "," << sum_of_costs << "," << iteration_stats.front().sum_of_costs << "," <<
           sum_of_costs_lowerbound << "," << sum_of_distances << "," <<
           iteration_stats.size() << "," << iteration_stats.front().runtime << "," <<  auc << "," <<
-          preprocessing_time << "," << getSolverName() << "," << instance.getInstanceName() << endl;
+          preprocessing_time << "," << getSolverName() << endl;
     stats.close();
 }

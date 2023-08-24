@@ -13,12 +13,10 @@ public:
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
 	Instance()=default;
-	Instance(const string& map_fname, const string& agent_fname, 
-		int num_of_agents = 0, int num_of_rows = 0, int num_of_cols = 0, int num_of_obstacles = 0, int warehouse_width = 0);
+	Instance(vector<int> map, int rows = 0, int cols = 0, int agents = 0);
 
 
 	void printAgents() const;
-	string getMapFile() const {return map_fname;};
     vector<int> getStarts() const {return start_locations;};
     vector<int> getGoals() const {return goal_locations;};
 
@@ -71,7 +69,6 @@ public:
 	}
 
 	int getDefaultNumberOfAgents() const { return num_of_agents; }
-	string getInstanceName() const { return agent_fname; }
     void savePaths(const string & file_name, const vector<Path*>& paths) const;
     bool validateSolution(const vector<Path*>& paths, int sum_of_costs, int num_of_colliding_pairs) const;
     bool hasCollision(const Path& p1, const Path& p2) const;
@@ -89,20 +86,8 @@ private:
 	  vector<int> goal_locations;
 
 	  bool nathan_benchmark = true;
-	  bool loadMap();
 	  void printMap() const;
 	  void saveMap() const;
-
-	  bool loadAgents();
-	  void saveAgents() const;
-	  void saveNathan() const;
-
-	  void generateConnectedRandomGrid(int rows, int cols, int obstacles); // initialize new [rows x cols] map with random obstacles
-	  void generateRandomAgents(int warehouse_width);
-	  bool addObstacle(int obstacle); // add this obsatcle only if the map is still connected
-	  bool isConnected(int start, int goal); // run BFS to find a path between start and goal, return true if a path exists.
-
-	  int randomWalk(int loc, int steps) const;
 
 	  // Class  SingleAgentSolver can access private members of Node 
 	  friend class SingleAgentSolver;

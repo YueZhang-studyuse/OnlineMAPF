@@ -47,7 +47,6 @@ LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, str
         stay_target[i] = 0;
     }
 
-    //construct_edgecount();
         
     
     preprocessing_time = ((fsec)(Time::now() - start_time)).count();
@@ -843,43 +842,43 @@ bool LNS::runTrafficPP()
 
 bool LNS::runLACAM2() 
 {
-    vector<int> shuffled_agents = neighbor.agents;
-    std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
+    // vector<int> shuffled_agents = neighbor.agents;
+    // std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
     
-    string map_fname = instance.getMapFile();
-    string scen_fname = instance.getInstanceName();
-    uint num_of_agents = instance.getDefaultNumberOfAgents();
-    LACAMInstance ins = LACAMInstance(scen_fname, map_fname, num_of_agents);
-    string verbose = "1";
-    auto MT = std::mt19937(0);
-    const auto deadline = Deadline(time_limit * 1000);
+    // string map_fname = instance.getMapFile();
+    // string scen_fname = instance.getInstanceName();
+    // uint num_of_agents = instance.getDefaultNumberOfAgents();
+    // LACAMInstance ins = LACAMInstance(scen_fname, map_fname, num_of_agents);
+    // string verbose = "1";
+    // auto MT = std::mt19937(0);
+    // const auto deadline = Deadline(time_limit * 1000);
 
-    const Objective objective = static_cast<Objective>(1);
-    const float restart_rate = 0.01;
-    const auto solution = solve(ins, verbose, 0, &deadline, &MT, objective, restart_rate);
+    // const Objective objective = static_cast<Objective>(0);
+    // const float restart_rate = 0.01;
+    // const auto solution = solve(ins, verbose, 0, &deadline, &MT, objective, restart_rate);
 
-    if (solution.empty()) 
-        cout<<"empty"<<endl;
+    // if (solution.empty()) 
+    //     cout<<"empty"<<endl;
 
-    int soc = 0;
-    for (int agent = 0; agent < num_of_agents; agent++)
-    {
-        size_t max_time = solution.size()-1;
-        for (; max_time > 0; max_time--)
-        {
-            if (solution[max_time][agent]->index != solution[max_time-1][agent]->index)
-                break;
-        }
-        agents[agent].path.resize(max_time+1);
-        for (size_t t = 0; t <= max_time; t++)
-        {
-            agents[agent].path[t].location = solution[t][agent]->index;
-        }
-        path_table.insertPath(agents[agent].id, agents[agent].path);
-        soc+=agents[agent].path.size()-1;
-    }
+    // int soc = 0;
+    // for (int agent = 0; agent < num_of_agents; agent++)
+    // {
+    //     size_t max_time = solution.size()-1;
+    //     for (; max_time > 0; max_time--)
+    //     {
+    //         if (solution[max_time][agent]->index != solution[max_time-1][agent]->index)
+    //             break;
+    //     }
+    //     agents[agent].path.resize(max_time+1);
+    //     for (size_t t = 0; t <= max_time; t++)
+    //     {
+    //         agents[agent].path[t].location = solution[t][agent]->index;
+    //     }
+    //     path_table.insertPath(agents[agent].id, agents[agent].path);
+    //     soc+=agents[agent].path.size()-1;
+    // }
 
-    neighbor.sum_of_costs =soc;
+    // neighbor.sum_of_costs =soc;
 
     return true;
 }
@@ -1265,7 +1264,7 @@ void LNS::writeResultToFile(const string & file_name) const
           iteration_stats.size() << "," << average_group_size << "," <<
           initial_solution_runtime << "," << restart_times << "," << auc << "," <<
           num_LL_expanded << "," << num_LL_generated << "," << num_LL_reopened << "," << num_LL_runs << "," <<
-          preprocessing_time << "," << getSolverName() << "," << instance.getInstanceName() << endl;
+          preprocessing_time << "," << getSolverName() << endl;
     stats.close();
 }
 
