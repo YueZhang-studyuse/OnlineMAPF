@@ -82,8 +82,6 @@ public:
 	SIPP(const Instance& instance, int agent):
 		SingleAgentSolver(instance, agent) {}
 
-	Path findPath(const ConstraintTable& constraint_table, unordered_map<pair<int,int>,int>& edges_count);
-
 private:
 	// define typedefs and handles for heap
 	typedef boost::heap::pairing_heap< SIPPNode*, boost::heap::compare<LLNode::compare_node> > heap_open_t;

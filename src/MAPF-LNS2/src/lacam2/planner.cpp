@@ -143,6 +143,13 @@ Solution Planner::solve(std::string& additional_info)
     delete L;  // free
     if (!res) continue;
 
+    //check each goal to see if agent arrives
+    auto N = H->C.size();
+    for (size_t i = 0; i < N; ++i) {
+      if (H->C[i]->id != ins->goals[i]->id)
+        A[i]->reached_goal = true;
+    }
+
     // create new configuration
     for (auto a : A) C_new[a->id] = a->v_next;
 
@@ -285,6 +292,13 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
     // set occupied now
     a->v_now = H->C[a->id];
+
+    //reach goal disapper:
+    if (a->reached_goal)
+    {
+      continue;
+    }
+
     occupied_now[a->v_now->id] = a;
   }
 
@@ -300,9 +314,11 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     if (occupied_next[l_pre] != nullptr && occupied_now[l] != nullptr &&
         occupied_next[l_pre]->id == occupied_now[l]->id)
       return false;
-
     // set occupied_next
     A[i]->v_next = L->where[k];
+    //reach goal disapper:
+    if (A[i]->reached_goal)
+      continue;
     occupied_next[l] = A[i];
   }
 
@@ -318,7 +334,6 @@ bool Planner::funcPIBT(LACAMAgent* ai)
 {
   const auto i = ai->id;
   const auto K = ai->v_now->neighbor.size();
-
   // get candidates for next locations
   for (auto k = 0; k < K; ++k) {
     auto u = ai->v_now->neighbor[k];
@@ -338,7 +353,6 @@ bool Planner::funcPIBT(LACAMAgent* ai)
   LACAMAgent* swap_agent = swap_possible_and_required(ai);
   if (swap_agent != nullptr)
     std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
-
   // main operation
   for (auto k = 0; k < K + 1; ++k) {
     auto u = C_next[i][k];

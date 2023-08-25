@@ -52,7 +52,7 @@ int main(int argc, char **argv)
         ("evaluationMode", po::value<bool>()->default_value(false), "evaluate an existing output file")
         ("simulationTime", po::value<int>()->default_value(5000), "run simulation")
         ("fileStoragePath", po::value<std::string>()->default_value(""), "the path to the storage path")
-        ("planTimeLimit", po::value<int>()->default_value(INT_MAX), "the time limit for planner in seconds")
+        ("planTimeLimit", po::value<int>()->default_value(1), "the time limit for planner in seconds")
         ("preprocessTimeLimit", po::value<int>()->default_value(INT_MAX), "the time limit for preprocessing in seconds")
         ("logFile,l", po::value<std::string>(), "issue log file name")
         ("commitStep,c", po::value<int>()->default_value(1), "commit steps");

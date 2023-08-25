@@ -8,13 +8,13 @@
 LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, string replan_algo_name,
          const string & destory_name, int neighbor_size, int num_of_iterations, bool use_init_lns,
          string init_destory_name, bool use_sipp, bool truncate_initial_paths,
-         int screen, PIBTPPS_option pipp_option) :
+         int screen) :
          BasicLNS(instance, time_limit, neighbor_size, screen),
          init_algo_name(std::move(init_algo_name)),  replan_algo_name(std::move(replan_algo_name)),
          num_of_iterations(num_of_iterations),
          use_init_lns(use_init_lns), init_destory_name(std::move(init_destory_name)),
          truncate_initial_paths(truncate_initial_paths),
-         path_table(instance.map_size), pipp_option(pipp_option)
+         path_table(instance.map_size)
 {
     start_time = Time::now();
     replan_time_limit = time_limit / 100;
@@ -55,37 +55,6 @@ LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, str
     
 }
 
-void LNS::construct_edgecount()
-{
-    //search on single agent shorest path
-    for (int i = 0; i < (int)agents.size(); i++)
-    {
-        ConstraintTable constraint_table(instance.num_of_cols, instance.map_size);
-        auto path = agents[i].path_planner->findPath(constraint_table);
-
-        for (int t = 1; t < (int)path.size(); t++)
-        {
-            int loc1 = path[t-1].location;
-            int loc2 = path[t].location;
-            if (loc1 != loc2)
-            {
-                if (edges_count.find(make_pair(loc1,loc2)) == edges_count.end())
-                {
-                    edges_count[make_pair(loc1,loc2)] = 1;
-                }
-                else
-                {
-                    edges_count[make_pair(loc1,loc2)] += 1;
-                }
-            }
-        }
-    }
-    //see edge count
-    // for (auto c: edges_count)
-    // {
-    //     cout<<c.first.first<<" "<<c.first.second<<", "<<c.second<<endl;
-    // }
-}
 
 bool LNS::run()
 {
@@ -616,72 +585,6 @@ bool LNS::runPP()
                  ", remaining time = " << T - ((fsec)(Time::now() - time)).count() << " seconds. " << endl
                  << "Agent " << agents[id].id << endl;
         agents[id].path = agents[id].path_planner->findPath(constraint_table);
-        if (agents[id].path.empty()) break;
-        neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
-        if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs)
-            break;
-        remaining_agents--;
-        path_table.insertPath(agents[id].id, agents[id].path);
-        ++p;
-    }
-    if (remaining_agents == 0 && neighbor.sum_of_costs <= neighbor.old_sum_of_costs) // accept new paths
-    {
-        return true;
-    }
-    else // stick to old paths
-    {
-        if (p != shuffled_agents.end())
-            num_of_failures++;
-        auto p2 = shuffled_agents.begin();
-        while (p2 != p)
-        {
-            int a = *p2;
-            path_table.deletePath(agents[a].id, agents[a].path);
-            ++p2;
-        }
-        if (!neighbor.old_paths.empty())
-        {
-            p2 = neighbor.agents.begin();
-            for (int i = 0; i < (int)neighbor.agents.size(); i++)
-            {
-                int a = *p2;
-                agents[a].path = neighbor.old_paths[i];
-                path_table.insertPath(agents[a].id, agents[a].path);
-                ++p2;
-            }
-            neighbor.sum_of_costs = neighbor.old_sum_of_costs;
-        }
-        return false;
-    }
-}
-
-bool LNS::runTrafficPP()
-{
-    auto shuffled_agents = neighbor.agents;
-    std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
-    if (screen >= 2) {
-        for (auto id : shuffled_agents)
-            cout << id << "(" << agents[id].path_planner->my_heuristic[agents[id].path_planner->start_location] <<
-                "->" << agents[id].path.size() - 1 << "), ";
-        cout << endl;
-    }
-    int remaining_agents = (int)shuffled_agents.size();
-    auto p = shuffled_agents.begin();
-    neighbor.sum_of_costs = 0;
-    runtime = ((fsec)(Time::now() - start_time)).count();
-    double T = time_limit - runtime; // time limit
-    if (!iteration_stats.empty()) // replan
-        T = min(T, replan_time_limit);
-    auto time = Time::now();
-    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table);
-    while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
-    {
-        int id = *p;
-        if (screen >= 3)
-            cout << "Remaining agents = " << remaining_agents <<
-                 ", remaining time = " << T - ((fsec)(Time::now() - time)).count() << " seconds. " << endl
-                 << "Agent " << agents[id].id << endl;
-        agents[id].path = agents[id].path_planner->findPath(constraint_table,edges_count);
         if (agents[id].path.empty()) break;
         neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs)

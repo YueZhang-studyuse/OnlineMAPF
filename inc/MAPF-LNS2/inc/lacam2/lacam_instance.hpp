@@ -6,6 +6,7 @@
 
 #include "graph.hpp"
 #include "utils.hpp"
+#include "SharedEnv.h"
 
 struct LACAMInstance {
   const Graph G;
@@ -23,7 +24,12 @@ struct LACAMInstance {
   // random instance generation
   LACAMInstance(const std::string& map_filename, std::mt19937* MT,
            const uint _N = 1);
+
+  LACAMInstance(SharedEnvironment* env);
+
   ~LACAMInstance() {}
+
+  
 
   // simple feasibility check of instance
   bool is_valid(const int verbose = 0) const;

@@ -13,6 +13,51 @@ Graph::~Graph()
   V.clear();
 }
 
+Graph::Graph(std::vector<int> map, int rows, int cols): V(Vertices())
+{
+  height = rows;
+  width = cols;
+  U = Vertices(map.size(), nullptr);
+
+  for (int i = 0; i < map.size(); i++)
+  {
+    if (map[i] == 1)
+      continue;
+    auto v = new Vertex(V.size(), i);
+    V.push_back(v);
+    U[i] = v;
+  }
+
+    // create edges
+  for (uint y = 0; y < height; ++y) {
+    for (uint x = 0; x < width; ++x) {
+      auto v = U[width * y + x];
+      if (v == nullptr) continue;
+      // left
+      if (x > 0) {
+        auto u = U[width * y + (x - 1)];
+        if (u != nullptr) v->neighbor.push_back(u);
+      }
+      // right
+      if (x < width - 1) {
+        auto u = U[width * y + (x + 1)];
+        if (u != nullptr) v->neighbor.push_back(u);
+      }
+      // up
+      if (y < height - 1) {
+        auto u = U[width * (y + 1) + x];
+        if (u != nullptr) v->neighbor.push_back(u);
+      }
+      // down
+      if (y > 0) {
+        auto u = U[width * (y - 1) + x];
+        if (u != nullptr) v->neighbor.push_back(u);
+      }
+    }
+  }
+
+}
+
 // to load graph
 static const std::regex r_height = std::regex(R"(height\s(\d+))");
 static const std::regex r_width = std::regex(R"(width\s(\d+))");

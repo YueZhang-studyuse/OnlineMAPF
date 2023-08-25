@@ -96,6 +96,10 @@ public:
 	{
 		return max(get_DH_heuristic(from, to), instance.getManhattanDistance(from, to));
 	}
+	int get_heuristic(int from, int to) const
+	{
+		return instance.getManhattanDistance(from, to);
+	}
 	const Instance& instance;
 
     //virtual Path findOptimalPath(const PathTable& path_table) = 0;
@@ -105,7 +109,6 @@ public:
 	virtual pair<Path, int> findSuboptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
 		const vector<Path*>& paths, int agent, int lowerbound, double w) = 0;  // return the path and the lowerbound
     virtual Path findPath(const ConstraintTable& constraint_table) = 0;  // return the path
-	virtual Path findPath(const ConstraintTable& constraint_table,unordered_map<pair<int,int>,int>& edges_count) = 0;  // return the path
     void findMinimumSetofColldingTargets(vector<int>& goal_table,set<int>& A_target);
     virtual int getTravelTime(int start, int end, const ConstraintTable& constraint_table, int upper_bound) = 0;
 	virtual string getName() const = 0;

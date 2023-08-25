@@ -23,12 +23,6 @@ Path SpaceTimeAStar::findOptimalPath(const HLNode& node, const ConstraintTable& 
 	return findSuboptimalPath(node, initial_constraints, paths, agent, lowerbound, 1).first;
 }
 
-Path SpaceTimeAStar::findPath(const ConstraintTable& constraint_table, unordered_map<pair<int,int>,int>& edges_count)
-{
-	Path path;
-	return path;
-}
-
 
 // find path by time-space A* search
 // Returns a path that minimizes the collisions with the paths in the path table, breaking ties by the length

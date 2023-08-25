@@ -12,6 +12,23 @@ LACAMInstance::LACAMInstance(const std::string& map_filename,
   for (auto k : goal_indexes) goals.push_back(G.U[k]);
 }
 
+//for start kit
+LACAMInstance::LACAMInstance(SharedEnvironment* env)
+  :G(env->map,env->rows,env->cols),starts(Config()), goals(Config()),N(env->num_of_agents)
+{
+  //curr states is the start location
+  for (int i = 0; i < env->curr_states.size(); i++)
+  {
+    starts.push_back(G.U[env->curr_states[i].location]);
+  }
+
+  for (int i = 0; i < env->goal_locations.size(); i++)
+  {
+    goals.push_back(G.U[env->goal_locations[i].front().first]);
+  }
+
+}
+
 // for load instance
 static const std::regex r_instance =
     std::regex(R"(\d+\t.+\.map\t\d+\t\d+\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t.+)");
@@ -34,7 +51,7 @@ LACAMInstance::LACAMInstance(const std::string& scen_filename,
     if (*(line.end() - 1) == 0x0d) line.pop_back();
 
     if (std::regex_match(line, results, r_instance)) {
-      uint x_s = std::stoi(results[1].str());
+      uint x_s = std::stoi(results[1].str()); //x is the column, y is the row
       uint y_s = std::stoi(results[2].str());
       uint x_g = std::stoi(results[3].str());
       uint y_g = std::stoi(results[4].str());
