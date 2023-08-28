@@ -21,4 +21,8 @@ public:
 
     int commit = 1;
     int remain_commit = 1;
+
+    vector<list<int>> commited_paths;
+    vector<list<int>> future_paths;
+    bool initial_run = true;
 };

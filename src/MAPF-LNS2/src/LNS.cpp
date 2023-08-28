@@ -41,14 +41,12 @@ LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, str
     agents.reserve(N);
     stay_target.resize(N);
 
-    // for (int i = 0; i < N; i++)
-    // {
-    //     agents.emplace_back(instance, i, use_sipp);
-    //     stay_target[i] = 0;
-    // }
+    for (int i = 0; i < N; i++)
+    {
+        agents.emplace_back(instance, i, use_sipp);
+        stay_target[i] = 0;
+    }
 
-        
-    
     preprocessing_time = ((fsec)(Time::now() - start_time)).count();
     if (screen >= 2)
         cout << "Pre-processing time = " << preprocessing_time << " seconds." << endl;
@@ -128,8 +126,8 @@ bool LNS::run()
         //     break;
         // }
         runtime =((fsec)(Time::now() - start_time)).count();
-        if(screen >= 1)
-            validateSolution();
+        // if(screen >= 1)
+        //     validateSolution();
         if (ALNS)
             chooseDestroyHeuristicbyALNS();
 
@@ -329,6 +327,7 @@ void LNS::deleteRepeatedStates() // if there are two timesteps when locations of
                 {
                     for (int t = 1; t < (int) a1_.path.size(); t++ )
                     {
+                        //cout<<a1_.path[t - 1].location<<" "<<endl;
                         if (!instance.validMove(a1_.path[t - 1].location, a1_.path[t].location))
                         {
                             cerr << "The path of agent " << a1_.id << " jump from "
@@ -336,6 +335,7 @@ void LNS::deleteRepeatedStates() // if there are two timesteps when locations of
                                  << " between timesteps " << t - 1 << " and " << t << endl;
                             exit(-1);
                         }
+                        //cout<<endl;
                     }
                 }
             }
@@ -745,6 +745,26 @@ bool LNS::runPP()
 
 bool LNS::runLACAM2() 
 {
+    // auto start1 = std::chrono::steady_clock::now();
+    // actions = std::vector<Action>(env->curr_states.size(), Action::WA);
+
+    LACAMInstance ins = LACAMInstance(instance.my_env);
+    string verbose = "";
+    auto MT = std::mt19937(0);
+    const auto deadline = Deadline((time_limit-0.1) * 1000);
+
+    const Objective objective = static_cast<Objective>(0);
+    const float restart_rate = 0.01;
+    const auto solution = solve(ins, verbose, 0, &deadline, &MT, objective, restart_rate);
+    // auto end1 = std::chrono::steady_clock::now();
+    // auto diff1 = end1-start1;
+    // cout<<"lacam solve ends at.."<<std::chrono::duration<double>(diff1).count()<<endl;
+
+    // if (solution.empty())
+    // {
+    //     cout<<"no solution"<<endl;
+    //     return;
+    // }
     // vector<int> shuffled_agents = neighbor.agents;
     // std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
     
@@ -760,28 +780,30 @@ bool LNS::runLACAM2()
     // const float restart_rate = 0.01;
     // const auto solution = solve(ins, verbose, 0, &deadline, &MT, objective, restart_rate);
 
-    // if (solution.empty()) 
-    //     cout<<"empty"<<endl;
+    if (solution.empty()) 
+        cout<<"empty"<<endl;
 
-    // int soc = 0;
-    // for (int agent = 0; agent < num_of_agents; agent++)
-    // {
-    //     size_t max_time = solution.size()-1;
-    //     for (; max_time > 0; max_time--)
-    //     {
-    //         if (solution[max_time][agent]->index != solution[max_time-1][agent]->index)
-    //             break;
-    //     }
-    //     agents[agent].path.resize(max_time+1);
-    //     for (size_t t = 0; t <= max_time; t++)
-    //     {
-    //         agents[agent].path[t].location = solution[t][agent]->index;
-    //     }
-    //     path_table.insertPath(agents[agent].id, agents[agent].path);
-    //     soc+=agents[agent].path.size()-1;
-    // }
+    int soc = 0;
+    for (int agent = 0; agent < instance.getDefaultNumberOfAgents(); agent++)
+    {
+        size_t max_time = solution.size()-1;
+        for (; max_time > 0; max_time--)
+        {
+            if (solution[max_time][agent]->index != instance.getGoals()[agent])
+                continue;
+            if (solution[max_time][agent]->index != solution[max_time-1][agent]->index)
+                break;
+        }
+        agents[agent].path.resize(max_time+1);
+        for (size_t t = 0; t <= max_time; t++)
+        {
+            agents[agent].path[t].location = solution[t][agent]->index;
+        }
+        path_table.insertPath(agents[agent].id, agents[agent].path);
+        soc+=agents[agent].path.size()-1;
+    }
 
-    // neighbor.sum_of_costs =soc;
+    neighbor.sum_of_costs =soc;
 
     return true;
 }

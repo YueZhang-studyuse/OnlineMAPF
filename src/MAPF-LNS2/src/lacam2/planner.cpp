@@ -137,6 +137,11 @@ Solution Planner::solve(std::string& additional_info)
     if (H_goal == nullptr) {
       bool allreached = false;
       for (size_t i = 0; i < N; ++i) {
+        if (!A[i]->reached_goal)
+        {
+          allreached = false;
+          break;
+        }
         allreached = A[i]->reached_goal;
     }
       if (allreached)
@@ -158,7 +163,7 @@ Solution Planner::solve(std::string& additional_info)
     //check each goal to see if agent arrives
     auto N = H->C.size();
     for (size_t i = 0; i < N; ++i) {
-      if (H->C[i]->id != ins->goals[i]->id)
+      if (H->C[i]->id == ins->goals[i]->id)
         A[i]->reached_goal = true;
     }
 

@@ -1,5 +1,6 @@
 #pragma once
 #include"lns_common.h"
+#include "SharedEnv.h"
 
 
 // Currently only works for undirected unweighted 4-nighbor grids
@@ -9,11 +10,12 @@ public:
 	int num_of_cols;
 	int num_of_rows;
 	int map_size;
+	SharedEnvironment* my_env;
 
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
 	Instance()=default;
-	Instance(vector<int> map, int rows = 0, int cols = 0, int agents = 0);
+	Instance(SharedEnvironment* env);
 
 
 	void printAgents() const;

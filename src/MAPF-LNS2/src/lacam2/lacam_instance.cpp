@@ -25,9 +25,9 @@ LACAMInstance::LACAMInstance(SharedEnvironment* env)
   for (int i = 0; i < env->goal_locations.size(); i++)
   {
     goals.push_back(G.U[env->goal_locations[i].front().first]);
-    //cout<<env->goal_locations[i].front().first<<" ";
+    cout<<env->goal_locations[i].front().first<<" ";
   }
-  //cout<<endl;
+  cout<<endl;
 
 }
 
