@@ -41,11 +41,11 @@ LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, str
     agents.reserve(N);
     stay_target.resize(N);
 
-    for (int i = 0; i < N; i++)
-    {
-        agents.emplace_back(instance, i, use_sipp);
-        stay_target[i] = 0;
-    }
+    // for (int i = 0; i < N; i++)
+    // {
+    //     agents.emplace_back(instance, i, use_sipp);
+    //     stay_target[i] = 0;
+    // }
 
         
     

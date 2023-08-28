@@ -11,6 +11,7 @@ Instance::Instance(vector<int> map, int rows, int cols, int agents)
 	num_of_cols = cols;
 	num_of_agents = agents;
 	map_size = map.size();
+    my_map.resize(map_size);
 	//read map to my_map
 	for (int i = 0; i < map_size; i++)
 	{

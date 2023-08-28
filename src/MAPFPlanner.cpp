@@ -9,19 +9,18 @@
 void MAPFPlanner::initialize(int preprocess_time_limit)
 {
     remain_commit = commit;
-    // Instance instance(env->map, env->rows, env->cols, env->num_of_agents);
-
-    // LNS lns(instance, preprocess_time_limit,
-    //             "LACAM",
-    //             "PP",
-    //             "Adaptive",
-    //             8,
-    //             MAX_TIMESTEP,
-    //             true,
-    //             "Adaptive",
-    //             true,
-    //             true,0);
-    cout<<"init"<<endl;
+    Instance instance(env->map, env->rows, env->cols, env->num_of_agents);
+    
+    LNS lns(instance, preprocess_time_limit,
+                "LACAM",
+                "PP",
+                "Adaptive",
+                8,
+                MAX_TIMESTEP,
+                true,
+                "Adaptive",
+                true,
+                true,0);
 }
 
 
@@ -42,7 +41,6 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     auto end1 = std::chrono::steady_clock::now();
     auto diff1 = end1-start1;
     cout<<"lacam solve ends at.."<<std::chrono::duration<double>(diff1).count()<<endl;
-    cout<<verbose<<endl;
 
     if (solution.empty())
     {
