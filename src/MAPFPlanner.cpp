@@ -34,7 +34,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     LACAMInstance ins = LACAMInstance(env);
     string verbose = "";
     auto MT = std::mt19937(0);
-    const auto deadline = Deadline((time_limit-1) * 1000);
+    const auto deadline = Deadline((time_limit-0.1) * 1000);
 
     const Objective objective = static_cast<Objective>(0);
     const float restart_rate = 0.01;
@@ -42,6 +42,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     auto end1 = std::chrono::steady_clock::now();
     auto diff1 = end1-start1;
     cout<<"lacam solve ends at.."<<std::chrono::duration<double>(diff1).count()<<endl;
+    cout<<verbose<<endl;
 
     if (solution.empty())
     {
