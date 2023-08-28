@@ -133,15 +133,27 @@ Solution Planner::solve(std::string& additional_info)
       break;
     }
 
+    // check goal condition -- reach goal once
+    if (H_goal == nullptr) {
+      bool allreached = false;
+      for (size_t i = 0; i < N; ++i) {
+        allreached = A[i]->reached_goal;
+    }
+      if (allreached)
+      {
+        H_goal = H;
+        solver_info(1, "found solution, cost: ", H->g);
+        cout<<"found solution, cost: "<<H->g<<endl;
+        break;
+      }
+      // if (objective == OBJ_NONE) break;
+      // continue;
+    }
+
     // create successors at the low-level search
     auto L = H->search_tree.front();
     H->search_tree.pop();
     expand_lowlevel_tree(H, L);
-
-    // create successors at the high-level search
-    const auto res = get_new_config(H, L);
-    delete L;  // free
-    if (!res) continue;
 
     //check each goal to see if agent arrives
     auto N = H->C.size();
@@ -149,6 +161,11 @@ Solution Planner::solve(std::string& additional_info)
       if (H->C[i]->id != ins->goals[i]->id)
         A[i]->reached_goal = true;
     }
+
+    // create successors at the high-level search
+    const auto res = get_new_config(H, L);
+    delete L;  // free
+    if (!res) continue;
 
     // create new configuration
     for (auto a : A) C_new[a->id] = a->v_next;
@@ -293,11 +310,11 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     // set occupied now
     a->v_now = H->C[a->id];
 
-    //reach goal disapper:
-    if (a->reached_goal)
-    {
-      continue;
-    }
+    // //reach goal disapper:
+    // if (a->reached_goal)
+    // {
+    //   continue;
+    // }
 
     occupied_now[a->v_now->id] = a;
   }
@@ -316,9 +333,9 @@ bool Planner::get_new_config(HNode* H, LNode* L)
       return false;
     // set occupied_next
     A[i]->v_next = L->where[k];
-    //reach goal disapper:
-    if (A[i]->reached_goal)
-      continue;
+    // //reach goal disapper:
+    // if (A[i]->reached_goal)
+    //   continue;
     occupied_next[l] = A[i];
   }
 

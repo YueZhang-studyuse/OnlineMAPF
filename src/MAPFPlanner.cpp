@@ -28,21 +28,26 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
 // plan using simple A* that ignores the time dimension
 void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
 {
+    auto start1 = std::chrono::steady_clock::now();
     actions = std::vector<Action>(env->curr_states.size(), Action::WA);
 
     LACAMInstance ins = LACAMInstance(env);
     string verbose = "";
     auto MT = std::mt19937(0);
-    const auto deadline = Deadline((time_limit-0.1) * 1000);
+    const auto deadline = Deadline((time_limit-1) * 1000);
 
     const Objective objective = static_cast<Objective>(0);
     const float restart_rate = 0.01;
     const auto solution = solve(ins, verbose, 0, &deadline, &MT, objective, restart_rate);
+    auto end1 = std::chrono::steady_clock::now();
+    auto diff1 = end1-start1;
+    cout<<"lacam solve ends at.."<<std::chrono::duration<double>(diff1).count()<<endl;
 
-
-    int soc = 0;
     if (solution.empty())
+    {
+        cout<<"no solution"<<endl;
         return;
+    }
 
     for (int agent = 0; agent < env->num_of_agents; agent++)
     {
