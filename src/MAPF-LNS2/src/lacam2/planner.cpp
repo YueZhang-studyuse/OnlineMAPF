@@ -119,6 +119,7 @@ Solution Planner::solve(std::string& additional_info)
   while (!OPEN.empty() && !is_expired(deadline)) {
 
     loop_cnt += 1;
+    cout<<"loop "<<loop_cnt<<endl;
 
     // do not pop here!
     auto H = OPEN.top();  // high-level node
@@ -332,6 +333,8 @@ void Planner::expand_lowlevel_tree(HNode* H, LNode* L)
 
 bool Planner::get_new_config(HNode* H, LNode* L)
 {
+
+  cout<<"current config"<<endl;
   // setup cache
   for (auto a : A) {
     // clear previous cache
@@ -346,12 +349,21 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     // set occupied now
     a->v_now = H->C[a->id];
 
+    if (H->reach_goal[a->id])
+    {
+      a->v_next = a->v_now;
+    }
+
     //if already reached goal, we do not set the occupied now
     if (H->parent != nullptr && H->parent->reach_goal[a->id] && H->reach_goal[a->id])
       continue;
 
     occupied_now[a->v_now->id] = a;
+
+
+    cout<<a->v_now->index<<" ";
   }
+  cout<<endl;
 
 
   // add constraints
@@ -369,10 +381,6 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     // set occupied_next
     A[i]->v_next = L->where[k];
     
-    if (H->reach_goal[i])
-    {
-      A[i]->v_next = A[i]->v_now;
-    }
     occupied_next[l] = A[i];
   }
 
@@ -390,6 +398,7 @@ bool Planner::funcPIBT(LACAMAgent* ai)
 {
   const auto i = ai->id;
   const auto K = ai->v_now->neighbor.size();
+
   // get candidates for next locations
   for (auto k = 0; k < K; ++k) {
     auto u = ai->v_now->neighbor[k];
@@ -410,6 +419,7 @@ bool Planner::funcPIBT(LACAMAgent* ai)
 
   if (swap_agent != nullptr)
     std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
+    
   // main operation
   for (auto k = 0; k < K + 1; ++k) {
     auto u = C_next[i][k];
