@@ -349,19 +349,21 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     // set occupied now
     a->v_now = H->C[a->id];
 
-    if (H->reach_goal[a->id])
+    if (H->reach_goal[a->id] && H->parent != nullptr && H->parent->parent != nullptr)
     {
       a->v_next = a->v_now;
     }
 
+    cout<<a->v_now->index<<" ";
+
     //if already reached goal, we do not set the occupied now
-    if (H->parent != nullptr && H->parent->reach_goal[a->id] && H->reach_goal[a->id])
+    //we skip the start and target are the same (start, start->children)
+    if (H->parent != nullptr && H->parent->parent != nullptr && H->parent->reach_goal[a->id] && H->reach_goal[a->id])
       continue;
 
     occupied_now[a->v_now->id] = a;
 
 
-    cout<<a->v_now->index<<" ";
   }
   cout<<endl;
 

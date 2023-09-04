@@ -791,7 +791,7 @@ bool LNS::runLACAM2()
     for (int agent = 0; agent < instance.getDefaultNumberOfAgents(); agent++)
     {
         size_t max_time = solution.size()-1;
-        for (; max_time > 0; max_time--)
+        for (; max_time > 1; max_time--)
         {
             if (solution[max_time][agent]->index != instance.getGoals()[agent])
                 continue;
@@ -799,10 +799,13 @@ bool LNS::runLACAM2()
                 break;
         }
         agents[agent].path.resize(max_time+1);
+        cout<<"agent: "<<agent<<endl;
         for (size_t t = 0; t <= max_time; t++)
         {
             agents[agent].path[t].location = solution[t][agent]->index;
+            cout<<agents[agent].path[t].location<<" ";
         }
+        cout<<endl;
         path_table.insertPath(agents[agent].id, agents[agent].path);
         soc+=agents[agent].path.size()-1;
     }
@@ -1391,7 +1394,9 @@ void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<lis
         //                         instance.getRowCoordinate(commit_path[agent.id].back()) << ")->";
         // }
         if (agent.path.size() == 1)
+        {
             cout<<"path empty"<<endl;
+        }
         if (agent.path.size() > commit_step)
         {
             if (stay_target[agent.id] != 0)
