@@ -20,7 +20,9 @@ LACAMInstance::LACAMInstance(SharedEnvironment* env)
   for (int i = 0; i < env->curr_states.size(); i++)
   {
     starts.push_back(G.U[env->curr_states[i].location]);
+    cout<<env->curr_states[i].location<<" ";
   }
+  cout<<endl;
 
   for (int i = 0; i < env->goal_locations.size(); i++)
   {

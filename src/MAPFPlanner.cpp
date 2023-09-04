@@ -39,21 +39,29 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
                 true,
                 "Adaptive",
                 true,
-                true,0);
+                true,3);
+    lns.setIterations(0);
+    
     if (!initial_run)
+    {
         lns.loadPaths(future_paths);
+        cout<<"loading"<<endl;
+    }
     for (int i = 0; i < env->num_of_agents; i++)
     {
         future_paths[i].clear();
         commited_paths[i].clear();
     }
     bool succ = lns.run();
+
+    actions = std::vector<Action>(env->curr_states.size(), Action::WA);
+    if (!succ)
+        return;
     lns.commitPath(1,commited_paths,future_paths,true,env->curr_timestep);
     initial_run = false;
 
     
-    // auto start1 = std::chrono::steady_clock::now();
-    actions = std::vector<Action>(env->curr_states.size(), Action::WA);
+    // auto start1 = std::chrono::steady_clock::now()
 
     // LACAMInstance ins = LACAMInstance(env);
     // string verbose = "";
@@ -87,6 +95,12 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
             actions[agent] = Action::WA;
         else
             actions[agent] = Action::N;
+
+        if (future_paths[agent].size()==1)
+        {
+            cout<<"finished"<<endl;
+            initial_run = true;
+        }
     }
 
     return;

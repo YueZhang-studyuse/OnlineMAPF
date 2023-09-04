@@ -26,7 +26,6 @@ Instance::Instance(SharedEnvironment* env)
     {
         start_locations[i] = env->curr_states[i].location;
         goal_locations[i] = env->goal_locations[i][0].first;
-        cout<<"start  "<<my_env->curr_states[i].location<<"  end   "<<my_env->goal_locations[i][0].first<<endl;
     }
 }
 
@@ -245,16 +244,16 @@ bool Instance::hasCollision(const Path& p1, const Path& p2) const
             return true;
         }
     }
-    if (p1.size() == p2.size()) return false;
+    // if (p1.size() == p2.size()) return false;
 
-    auto p = p1.size() > p2.size()? p1 : p2;
-    auto target = p1.size() < p2.size()? p1.back().location : p2.back().location;
-    for (; t < (int) p.size(); t++)
-    {
-        if (p[t].location == target)  // target conflict
-        {
-            return true;
-        }
-    }
+    // auto p = p1.size() > p2.size()? p1 : p2;
+    // auto target = p1.size() < p2.size()? p1.back().location : p2.back().location;
+    // for (; t < (int) p.size(); t++)
+    // {
+    //     if (p[t].location == target)  // target conflict
+    //     {
+    //         return true;
+    //     }
+    // }
     return false;
 }

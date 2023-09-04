@@ -46,6 +46,9 @@ struct HNode {
   const uint h;  // h-value
   uint f;        // g + h (might be updated)
 
+  //reached goal once
+  std::vector<bool> reach_goal;
+
   // for low-level search
   std::vector<float> priorities;
   std::vector<uint> order;

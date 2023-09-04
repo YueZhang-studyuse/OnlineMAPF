@@ -31,6 +31,10 @@ HNode::HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
   search_tree.push(new LNode());
   const auto N = C.size();
 
+
+  //init reach goal size
+  reach_goal.resize(N);
+
   // update neighbor
   if (parent != nullptr) parent->neighbor.insert(this);
 
@@ -38,6 +42,9 @@ HNode::HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
   if (parent == nullptr) {
     // initialize
     for (uint i = 0; i < N; ++i) priorities[i] = (float)D.get(i, C[i]) / N;
+
+    //init reach goal to be all false
+    for (int i = 0; i < N; i++) reach_goal[i] = false;
   } else {
     // dynamic priorities, akin to PIBT
     for (size_t i = 0; i < N; ++i) {
@@ -46,6 +53,9 @@ HNode::HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
       } else {
         priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
       }
+
+      //set reach goal to be all same with parent
+      reach_goal[i] = parent->reach_goal[i];
     }
   }
 
@@ -89,9 +99,9 @@ Planner::~Planner() {}
 Solution Planner::solve(std::string& additional_info)
 {
   solver_info(1, "start search");
-
   // setup agents
   for (auto i = 0; i < N; ++i) A[i] = new LACAMAgent(i);
+
 
   // setup search
   auto OPEN = std::stack<HNode*>();
@@ -107,18 +117,21 @@ Solution Planner::solve(std::string& additional_info)
 
   // DFS
   while (!OPEN.empty() && !is_expired(deadline)) {
+
     loop_cnt += 1;
 
     // do not pop here!
     auto H = OPEN.top();  // high-level node
 
-    // low-level search end
+
+    // low-level search end search tree refers to constraint tree
     if (H->search_tree.empty()) {
       OPEN.pop();
       continue;
     }
 
-    // check lower bounds
+
+    // check lower bounds, this is used in anytime after finding goal
     if (H_goal != nullptr && H->f >= H_goal->f) {
       OPEN.pop();
       continue;
@@ -133,42 +146,60 @@ Solution Planner::solve(std::string& additional_info)
       break;
     }
 
-    // check goal condition -- reach goal once
-    if (H_goal == nullptr) {
-      bool allreached = false;
-      for (size_t i = 0; i < N; ++i) {
-        if (!A[i]->reached_goal)
-        {
-          allreached = false;
-          break;
-        }
-        allreached = A[i]->reached_goal;
-    }
-      if (allreached)
-      {
-        H_goal = H;
-        solver_info(1, "found solution, cost: ", H->g);
-        cout<<"found solution, cost: "<<H->g<<endl;
-        break;
-      }
+
+    // // check goal condition -- reach goal once ->discard
+    // if (H_goal == nullptr) {
+    //   bool allreached = true;
+    //   for (size_t i = 0; i < N; ++i) {
+    //     if (!A[i]->reached_goal)
+    //     {
+    //       allreached = false;
+    //       break;
+    //     }
+    // }
+    //   if (allreached)
+    //   {
+    //     H_goal = H;
+    //     solver_info(1, "found solution, cost: ", H->g);
+    //     cout<<"found solution, cost: "<<H->g<<endl;
+    //     break;
+    //   }
+
       // if (objective == OBJ_NONE) break;
       // continue;
-    }
+    //}
 
     // create successors at the low-level search
     auto L = H->search_tree.front();
     H->search_tree.pop();
-    expand_lowlevel_tree(H, L);
+    expand_lowlevel_tree(H, L); //generate constraint 
+
+    if (is_expired(deadline)) break;
 
     //check each goal to see if agent arrives
+    bool allreached = true;
     auto N = H->C.size();
     for (size_t i = 0; i < N; ++i) {
       if (H->C[i]->id == ins->goals[i]->id)
-        A[i]->reached_goal = true;
+        H->reach_goal[i] = true;
+      if (!H->reach_goal[i])
+        allreached = false;
+    }
+
+    if (allreached)
+    {
+      H_goal = H;
+      solver_info(1, "found solution, cost: ", H->g);
+      // if (objective == OBJ_NONE) break;
+      // continue;
+      break;
     }
 
     // create successors at the high-level search
     const auto res = get_new_config(H, L);
+
+    if (is_expired(deadline)) break;
+
     delete L;  // free
     if (!res) continue;
 
@@ -289,12 +320,12 @@ uint Planner::get_h_value(const Config& C)
 
 void Planner::expand_lowlevel_tree(HNode* H, LNode* L)
 {
-  if (L->depth >= N) return;
+  if (L->depth >= N) return; //prohibt each agent at one depth, so max is the number of agent
   const auto i = H->order[L->depth];
   auto C = H->C[i]->neighbor;
   C.push_back(H->C[i]);
   // randomize
-  if (MT != nullptr) std::shuffle(C.begin(), C.end(), *MT);
+  if (MT != nullptr) std::shuffle(C.begin(), C.end(), *MT); //random the order (neighbor)
   // insert
   for (auto v : C) H->search_tree.push(new LNode(L, i, v));
 }
@@ -315,14 +346,13 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     // set occupied now
     a->v_now = H->C[a->id];
 
-    // //reach goal disapper:
-    // if (a->reached_goal)
-    // {
-    //   continue;
-    // }
+    //if already reached goal, we do not set the occupied now
+    if (H->parent != nullptr && H->parent->reach_goal[a->id] && H->reach_goal[a->id])
+      continue;
 
     occupied_now[a->v_now->id] = a;
   }
+
 
   // add constraints
   for (uint k = 0; k < L->depth; ++k) {
@@ -338,14 +368,18 @@ bool Planner::get_new_config(HNode* H, LNode* L)
       return false;
     // set occupied_next
     A[i]->v_next = L->where[k];
-    // //reach goal disapper:
-    // if (A[i]->reached_goal)
-    //   continue;
+    
+    if (H->reach_goal[i])
+    {
+      A[i]->v_next = A[i]->v_now;
+    }
     occupied_next[l] = A[i];
   }
 
+
   // perform PIBT
   for (auto k : H->order) {
+    if (is_expired(deadline)) return false;
     auto a = A[k];
     if (a->v_next == nullptr && !funcPIBT(a)) return false;  // planning failure
   }
@@ -373,6 +407,7 @@ bool Planner::funcPIBT(LACAMAgent* ai)
             });
 
   LACAMAgent* swap_agent = swap_possible_and_required(ai);
+
   if (swap_agent != nullptr)
     std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
   // main operation
