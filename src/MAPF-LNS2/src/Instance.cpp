@@ -5,13 +5,38 @@
 #include"Instance.h"
 
 
-Instance::Instance(SharedEnvironment* env)
+// Instance::Instance(SharedEnvironment* env)
+// {
+//     my_env = env;
+// 	num_of_rows = env->rows;
+// 	num_of_cols = env->cols;
+// 	num_of_agents = env->num_of_agents;
+// 	map_size = env->map.size();
+//     my_map.resize(map_size);
+// 	//read map to my_map
+// 	for (int i = 0; i < map_size; i++)
+// 	{
+// 		my_map[i] = (env->map[i] == 1);
+//  	}
+
+//     start_locations.resize(num_of_agents);
+// 	goal_locations.resize(num_of_agents);
+
+//     for (int i = 0; i < num_of_agents; i++)
+//     {
+//         start_locations[i] = env->curr_states[i].location;
+//         goal_locations[i] = env->goal_locations[i][0].first;
+//     }
+// }
+
+void Instance::initMap(SharedEnvironment* simulate_env)
 {
-    my_env = env;
+    env = simulate_env;
 	num_of_rows = env->rows;
 	num_of_cols = env->cols;
 	num_of_agents = env->num_of_agents;
 	map_size = env->map.size();
+    cout<<env->num_of_agents<<endl;
     my_map.resize(map_size);
 	//read map to my_map
 	for (int i = 0; i < map_size; i++)
@@ -21,12 +46,21 @@ Instance::Instance(SharedEnvironment* env)
 
     start_locations.resize(num_of_agents);
 	goal_locations.resize(num_of_agents);
+}
 
+bool Instance::updateStartGoals()
+{
+    bool new_task = false;
     for (int i = 0; i < num_of_agents; i++)
     {
         start_locations[i] = env->curr_states[i].location;
-        goal_locations[i] = env->goal_locations[i][0].first;
+        if (goal_locations[i] != env->goal_locations[i][0].first)
+        {
+            goal_locations[i] = env->goal_locations[i][0].first;
+            new_task = true;
+        }
     }
+    return new_task;
 }
 
 

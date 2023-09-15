@@ -1,6 +1,5 @@
 #include <MAPFPlanner.h>
 #include <random>
-#include <LNS.h>
 #include "AnytimeBCBS.h"
 #include "AnytimeEECBS.h"
 #include "lacam2/lacam2.hpp"
@@ -9,28 +8,8 @@
 void MAPFPlanner::initialize(int preprocess_time_limit)
 {
     remain_commit = commit;
-}
-
-
-// plan using simple A* that ignores the time dimension
-void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
-{
-    // for (int i = 0; i < instance.getDefaultNumberOfAgents();i++)
-    // {
-    //     if (commited_paths[i].size()>0) 
-    //     {
-    //         //change instance.start locations according commited_paths
-    //         instance.setStart(i,commited_paths[i].back());
-    //     }
-    //     //else we do nothing, just keep as in instances
-    // }
-
-    //the 1st ver. lns complete restart
-    commited_paths.resize(env->num_of_agents);
-    future_paths.resize(env->num_of_agents);
-    Instance instance(env);
-    
-    LNS lns(instance, time_limit - 0.1,
+    instance.initMap(env);
+    lns = new LNS(instance, preprocess_time_limit,
                 "LACAM",
                 "PP",
                 "Adaptive",
@@ -40,11 +19,39 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
                 "Adaptive",
                 true,
                 true,3);
-    lns.setIterations(0);
+    lns->setIterations(0);
+}
+
+
+// plan using simple A* that ignores the time dimension
+void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
+{
+    bool new_task = instance.updateStartGoals();
+    lns->clearAll("Adaptive");
+    if (new_task)
+        lns->setHasInitialSolution(false);
+
+    //the 1st ver. lns complete restart
+    commited_paths.resize(env->num_of_agents);
+    future_paths.resize(env->num_of_agents);
+    lns->setRuntimeLimit(time_limit);
+    //Instance instance(env);
+    
+    // LNS lns(instance, time_limit - 0.1,
+    //             "LACAM",
+    //             "PP",
+    //             "Adaptive",
+    //             8,
+    //             MAX_TIMESTEP,
+    //             true,
+    //             "Adaptive",
+    //             true,
+    //             true,3);
+    // lns.setIterations(0);
     
     if (!initial_run)
     {
-        lns.loadPaths(future_paths);
+        lns->loadPaths(future_paths);
         cout<<"loading"<<endl;
     }
     for (int i = 0; i < env->num_of_agents; i++)
@@ -52,12 +59,12 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         future_paths[i].clear();
         commited_paths[i].clear();
     }
-    bool succ = lns.run();
+    bool succ = lns->run();
 
     actions = std::vector<Action>(env->curr_states.size(), Action::WA);
     if (!succ)
         return;
-    lns.commitPath(1,commited_paths,future_paths,true,env->curr_timestep);
+    lns->commitPath(1,commited_paths,future_paths,true,env->curr_timestep);
     initial_run = false;
 
     

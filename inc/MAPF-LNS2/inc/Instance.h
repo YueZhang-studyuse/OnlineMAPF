@@ -10,12 +10,15 @@ public:
 	int num_of_cols;
 	int num_of_rows;
 	int map_size;
-	SharedEnvironment* my_env;
+	SharedEnvironment* env;
 
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
 	Instance()=default;
-	Instance(SharedEnvironment* env);
+	//Instance(SharedEnvironment* env);
+
+	void initMap(SharedEnvironment* simulate_env);
+	bool updateStartGoals();
 
 
 	void printAgents() const;

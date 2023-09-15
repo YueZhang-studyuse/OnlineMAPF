@@ -749,7 +749,7 @@ bool LNS::runLACAM2()
     // auto start1 = std::chrono::steady_clock::now();
     // actions = std::vector<Action>(env->curr_states.size(), Action::WA);
 
-    LACAMInstance ins = LACAMInstance(instance.my_env);
+    LACAMInstance ins = LACAMInstance(instance.env);
     string verbose = "";
     auto MT = std::mt19937(0);
     const auto deadline = Deadline((time_limit-0.3) * 1000);

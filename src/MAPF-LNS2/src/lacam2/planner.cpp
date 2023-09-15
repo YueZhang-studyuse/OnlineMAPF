@@ -41,14 +41,15 @@ HNode::HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
   // set priorities
   if (parent == nullptr) {
     // initialize
-    for (uint i = 0; i < N; ++i) priorities[i] = (float)D.get(i, C[i]) / N;
+    for (uint i = 0; i < N; ++i) priorities[i] = i;
+    //(float)D.get(i, C[i]) / N;
 
     //init reach goal to be all false
     for (int i = 0; i < N; i++) reach_goal[i] = false;
   } else {
     // dynamic priorities, akin to PIBT
     for (size_t i = 0; i < N; ++i) {
-      if (D.get(i, C[i]) != 0) {
+      if (D.get(i, C[i]) != 0 ) {
         priorities[i] = parent->priorities[i] + 1;
       } else {
         priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
