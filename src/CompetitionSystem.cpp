@@ -96,7 +96,9 @@ vector<Action> BaseSystem::plan()
             logger->log_info("planner cannot run because the previous run is still running", timestep);
         }
 
-        if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready)
+        //auto waitlimit = plan_time_limit+0.1;
+
+        if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready) //allow some minor timeout
         {
             task_td.join();
             started = false;

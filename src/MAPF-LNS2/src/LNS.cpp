@@ -67,7 +67,8 @@ bool LNS::run()
     start_time = Time::now();
     bool succ;
     if (has_initial_solution)
-        {succ = fixInitialSolution();}
+        return true;
+        //{succ = fixInitialSolution();}
     else
         succ = getInitialSolution();
     initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
@@ -748,10 +749,10 @@ bool LNS::runLACAM2()
     // auto start1 = std::chrono::steady_clock::now();
     // actions = std::vector<Action>(env->curr_states.size(), Action::WA);
 
-    LACAMInstance ins = LACAMInstance(instance.my_env);
+    LACAMInstance ins = LACAMInstance(instance.env);
     string verbose = "";
     auto MT = std::mt19937(0);
-    const auto deadline = Deadline((time_limit-0.1) * 1000);
+    const auto deadline = Deadline((time_limit-0.3) * 1000);
 
     const Objective objective = static_cast<Objective>(0);
     const float restart_rate = 0.01;
@@ -781,13 +782,16 @@ bool LNS::runLACAM2()
     // const auto solution = solve(ins, verbose, 0, &deadline, &MT, objective, restart_rate);
 
     if (solution.empty()) 
+    {
         cout<<"empty"<<endl;
+        return false;
+    }
 
     int soc = 0;
     for (int agent = 0; agent < instance.getDefaultNumberOfAgents(); agent++)
     {
         size_t max_time = solution.size()-1;
-        for (; max_time > 0; max_time--)
+        for (; max_time > 1; max_time--)
         {
             if (solution[max_time][agent]->index != instance.getGoals()[agent])
                 continue;
@@ -795,10 +799,13 @@ bool LNS::runLACAM2()
                 break;
         }
         agents[agent].path.resize(max_time+1);
+        cout<<"agent: "<<agent<<endl;
         for (size_t t = 0; t <= max_time; t++)
         {
             agents[agent].path[t].location = solution[t][agent]->index;
+            cout<<agents[agent].path[t].location<<" ";
         }
+        cout<<endl;
         path_table.insertPath(agents[agent].id, agents[agent].path);
         soc+=agents[agent].path.size()-1;
     }
@@ -1386,6 +1393,10 @@ void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<lis
         //         cout<< "(" << instance.getColCoordinate(commit_path[agent.id].back()) << "," <<
         //                         instance.getRowCoordinate(commit_path[agent.id].back()) << ")->";
         // }
+        if (agent.path.size() == 1)
+        {
+            cout<<"path empty"<<endl;
+        }
         if (agent.path.size() > commit_step)
         {
             if (stay_target[agent.id] != 0)
@@ -1407,30 +1418,34 @@ void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<lis
                 {
                     commit_path[agent.id].emplace_back(state.location);
                     if (screen == 3)
-                        cout<< "(" << instance.getColCoordinate(state.location) << "," <<
-                                instance.getRowCoordinate(state.location) << ")->";
+                        // cout<< "(" << instance.getColCoordinate(state.location) << "," <<
+                        //         instance.getRowCoordinate(state.location) << ")->";
+                        cout<<state.location << ")->";
                 }
                 else if (step == commit_step)
                 {
                     commit_path[agent.id].emplace_back(state.location);
                     if (screen == 3)
                     {
-                        cout<< "(" << instance.getColCoordinate(state.location) << "," <<
-                                    instance.getRowCoordinate(state.location) << ")"<<endl;
+                        // cout<< "(" << instance.getColCoordinate(state.location) << "," <<
+                        //             instance.getRowCoordinate(state.location) << ")"<<endl;
+                        cout<<state.location<<endl;
                         cout<<"Remaining: "<<endl;
                     }
                         
                     future_path[agent.id].emplace_back(state.location);
                     if (screen == 3)
-                        cout<< "(" << instance.getColCoordinate(state.location) << "," <<
-                                instance.getRowCoordinate(state.location) << ")->";
+                        // cout<< "(" << instance.getColCoordinate(state.location) << "," <<
+                        //         instance.getRowCoordinate(state.location) << ")->";
+                        cout<<state.location << ")->";
                 }
                 else
                 {
                     future_path[agent.id].emplace_back(state.location);
                     if (screen == 3)
-                        cout<< "(" << instance.getColCoordinate(state.location) << "," <<
-                                instance.getRowCoordinate(state.location) << ")->";
+                        // cout<< "(" << instance.getColCoordinate(state.location) << "," <<
+                        //         instance.getRowCoordinate(state.location) << ")->";
+                        cout<<state.location << ")->";
                 }
                 step++;
             }
@@ -1451,8 +1466,9 @@ void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<lis
                 }
                 commit_path[agent.id].emplace_back(state.location);
                 if (screen == 3)
-                    cout<< "(" << instance.getColCoordinate(state.location) << "," <<
-                            instance.getRowCoordinate(state.location) << ")->";
+                    // cout<< "(" << instance.getColCoordinate(state.location) << "," <<
+                    //         instance.getRowCoordinate(state.location) << ")->";
+                    cout<<state.location << ")->";
                 step++;
             }
             for (;step<=commit_step;step++)
@@ -1467,8 +1483,9 @@ void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<lis
             }
             future_path[agent.id].emplace_back(commit_path[agent.id].back());
             if (screen == 3)
-                cout<< "(" << instance.getColCoordinate(commit_path[agent.id].back()) << "," <<
-                        instance.getRowCoordinate(commit_path[agent.id].back()) << ")->";
+                // cout<< "(" << instance.getColCoordinate(commit_path[agent.id].back()) << "," <<
+                //         instance.getRowCoordinate(commit_path[agent.id].back()) << ")->";
+                cout<<commit_path[agent.id].back() << ")->";
         }
         if (screen == 3)
             cout<<endl;

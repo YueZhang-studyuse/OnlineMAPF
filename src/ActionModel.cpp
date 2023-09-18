@@ -42,6 +42,7 @@ bool ActionModel::is_valid(const vector<State>& prev, const vector<Action> & act
 
     for (int i = 0; i < prev.size(); i ++) 
     {
+        cout<<"locations validation "<<i<<" "<<prev[i].location<<" "<<next[i].location<<endl;
         if (next[i].location < 0 || next[i].location >= grid.map.size() || 
             (abs(next[i].location / cols - prev[i].location/cols) + abs(next[i].location % cols - prev[i].location %cols) > 1 ))
         {

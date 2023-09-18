@@ -71,7 +71,6 @@ InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_li
 bool InitLNS::run()
 {
     start_time = Time::now();
-    //construct_edgecount();
     bool succ = getInitialSolution();
     runtime = ((fsec)(Time::now() - start_time)).count();
     iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, runtime, "PP", 0, num_of_colliding_pairs);
@@ -481,31 +480,33 @@ bool InitLNS::updateCollidingPairs(set<pair<int, int>>& colliding_pairs, int age
                 }
             }
         }
-        //auto id = getAgentWithTarget(to, t);
-        //if (id >= 0) // this agent traverses the target of another agent
-        //    colliding_pairs.emplace(min(agent_id, id), max(agent_id, id));
-        if (!path_table.goals.empty() && path_table.goals[to] < t) // target conflicts
-        { // this agent traverses the target of another agent
-            for (auto id : path_table.table[to][path_table.goals[to]]) // look at all agents at the goal time
-            {
-                if (agents[id].path.back().location == to) // if agent id's goal is to, then this is the agent we want
-                {
-                    succ = true;
-                    colliding_pairs.emplace(min(agent_id, id), max(agent_id, id));
-                    break;
-                }
-            }
-        }
+        //do not check target conflict
+        // //auto id = getAgentWithTarget(to, t);
+        // //if (id >= 0) // this agent traverses the target of another agent
+        // //    colliding_pairs.emplace(min(agent_id, id), max(agent_id, id));
+        // if (!path_table.goals.empty() && path_table.goals[to] < t) // target conflicts
+        // { // this agent traverses the target of another agent
+        //     for (auto id : path_table.table[to][path_table.goals[to]]) // look at all agents at the goal time
+        //     {
+        //         if (agents[id].path.back().location == to) // if agent id's goal is to, then this is the agent we want
+        //         {
+        //             succ = true;
+        //             colliding_pairs.emplace(min(agent_id, id), max(agent_id, id));
+        //             break;
+        //         }
+        //     }
+        // }
     }
-    int goal = path.back().location; // target conflicts - some other agent traverses the target of this agent
-    for (int t = (int)path.size(); t < path_table.table[goal].size(); t++)
-    {
-        for (auto id : path_table.table[goal][t])
-        {
-            succ = true;
-            colliding_pairs.emplace(min(agent_id, id), max(agent_id, id));
-        }
-    }
+    //do not check target conflict
+    // int goal = path.back().location; // target conflicts - some other agent traverses the target of this agent
+    // for (int t = (int)path.size(); t < path_table.table[goal].size(); t++)
+    // {
+    //     for (auto id : path_table.table[goal][t])
+    //     {
+    //         succ = true;
+    //         colliding_pairs.emplace(min(agent_id, id), max(agent_id, id));
+    //     }
+    // }
     return succ;
 }
 

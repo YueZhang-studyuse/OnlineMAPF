@@ -4,7 +4,6 @@
 #include "graph.hpp"
 #include "./lacam2/lacam_instance.hpp"
 #include "planner.hpp"
-#include "post_processing.hpp"
 #include "utils.hpp"
 
 // main function

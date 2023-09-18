@@ -2,6 +2,8 @@
 #include <ctime>
 #include "SharedEnv.h"
 #include "ActionModel.h"
+#include "Instance.h"
+#include <LNS.h>
 
 
 class MAPFPlanner
@@ -11,7 +13,7 @@ public:
 
 	MAPFPlanner(SharedEnvironment* env): env(env){};
     MAPFPlanner(){env = new SharedEnvironment();};
-	virtual ~MAPFPlanner(){delete env;};
+	virtual ~MAPFPlanner(){delete env; delete lns;};
 
 
     virtual void initialize(int preprocess_time_limit);
@@ -21,6 +23,9 @@ public:
 
     int commit = 1;
     int remain_commit = 1;
+
+    Instance instance;
+    LNS* lns = nullptr;
 
     vector<list<int>> commited_paths;
     vector<list<int>> future_paths;
