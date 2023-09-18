@@ -21,9 +21,9 @@ public:
 	bool updateStartGoals();
 
 
-	void printAgents() const;
+	//void printAgents() const;
     vector<int> getStarts() const {return start_locations;};
-    vector<int> getGoals() const {return goal_locations;};
+    vector<list<int>> getGoals() const {return goal_location_seqs;};
 
 
     inline bool isObstacle(int loc) const { return my_map[loc]; }
@@ -75,10 +75,12 @@ public:
 
 	int getDefaultNumberOfAgents() const { return num_of_agents; }
     void savePaths(const string & file_name, const vector<Path*>& paths) const;
-    bool validateSolution(const vector<Path*>& paths, int sum_of_costs, int num_of_colliding_pairs) const;
+    //bool validateSolution(const vector<Path*>& paths, int sum_of_costs, int num_of_colliding_pairs) const;
     bool hasCollision(const Path& p1, const Path& p2) const;
 
 	void setStart(int agent, int location){start_locations[agent] = location;}
+
+	void createDummyGoals();
 	
 private:
 	  // int moves_offset[MOVE_COUNT];
@@ -88,11 +90,15 @@ private:
 
 	  int num_of_agents;
 	  vector<int> start_locations;
-	  vector<int> goal_locations;
+	  //vector<int> goal_locations;
+	  vector<list<int>> goal_location_seqs;
+	  vector<int> dummy_goals;
 
 	  bool nathan_benchmark = true;
 	  void printMap() const;
 	  void saveMap() const;
+
+	  int dummy_goal_accpetance = 4;
 
 	  // Class  SingleAgentSolver can access private members of Node 
 	  friend class SingleAgentSolver;
