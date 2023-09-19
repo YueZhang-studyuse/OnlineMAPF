@@ -11,6 +11,9 @@ public:
 	int num_of_rows;
 	int map_size;
 	SharedEnvironment* env;
+	vector<vector<int>> heuristic;
+
+	void computeAllPair();
 
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 

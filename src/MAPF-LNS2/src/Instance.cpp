@@ -48,6 +48,72 @@ void Instance::initMap(SharedEnvironment* simulate_env)
 	goal_locations.resize(num_of_agents);
 }
 
+void Instance::computeAllPair()
+{
+    cout<<"computing all pair"<<endl;
+    heuristic.resize(my_map.size());
+
+    struct Node
+	{
+		int location;
+		int value;
+
+		Node() = default;
+		Node(int location, int value) : location(location), value(value) {}
+		// the following is used to compare nodes in the OPEN list
+		struct compare_node
+		{
+			// returns true if n1 > n2 (note -- this gives us *min*-heap).
+			bool operator()(const Node& n1, const Node& n2) const
+			{
+				return n1.value >= n2.value;
+			}
+		};  // used by OPEN (heap) to compare nodes (top of the heap has min f-val, and then highest g-val)
+	};
+
+    for (int i = 0; i < heuristic.size(); i++)
+    {
+        if (my_map[i])
+            continue;
+        //heuristic[i] = std::vector<int>(heuristic.size()-i, MAX_TIMESTEP);
+        heuristic[i] = std::vector<int>(heuristic.size(), MAX_TIMESTEP);
+    }
+    for (int i = 0; i < heuristic.size(); i++)
+    {
+        if (my_map[i])
+            continue;
+        // generate a heap that can save nodes (and a open_handle)
+        boost::heap::pairing_heap< Node, boost::heap::compare<Node::compare_node> > heap;
+
+        Node root(i, 0); //compute every node to i
+        heuristic[i][0] = 0;
+
+        heap.push(root);  // add root to heap
+        while (!heap.empty())
+        {
+            Node curr = heap.top();
+            heap.pop();
+            for (int next_location : getNeighbors(curr.location))
+            {
+                if (heuristic[i][next_location] > curr.value + 1)
+                {
+                    heuristic[i][next_location] = curr.value + 1;
+                    Node next(next_location, curr.value + 1);
+                    heap.push(next);
+                }
+            }
+        }
+        // cout<<"vertex "<<i<<" end.. "<<heuristic[i].size()<<endl;
+        // for (int j = 0; j < heuristic[i].size();j++)
+        // {
+        //     cout<<heuristic[i][j]<<" ";
+        // }
+        // cout<<endl;
+    }
+
+
+}
+
 bool Instance::updateStartGoals()
 {
     bool new_task = false;

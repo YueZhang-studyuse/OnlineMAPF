@@ -9,6 +9,8 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
 {
     remain_commit = commit;
     instance.initMap(env);
+    instance.computeAllPair();
+    
     lns = new LNS(instance, preprocess_time_limit,
                 "LACAM",
                 "PP",
