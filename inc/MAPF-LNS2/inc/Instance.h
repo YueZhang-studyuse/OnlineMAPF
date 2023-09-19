@@ -12,6 +12,8 @@ public:
 	int map_size;
 	SharedEnvironment* env;
 
+	vector<vector<int>> heuristic;
+
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
 	Instance()=default;
@@ -81,6 +83,8 @@ public:
 	void setStart(int agent, int location){start_locations[agent] = location;}
 
 	void createDummyGoals();
+
+	void computeAllPair();
 	
 private:
 	  // int moves_offset[MOVE_COUNT];

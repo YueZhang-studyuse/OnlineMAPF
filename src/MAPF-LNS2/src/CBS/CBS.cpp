@@ -1489,10 +1489,10 @@ CBS::CBS(const Instance& instance, bool sipp, int screen) :
     mutex_helper.search_engines = search_engines;
 	runtime_preprocessing = (double)(clock() - t) / CLOCKS_PER_SEC;
 
-	if (screen >= 2) // print start and goals
-	{
-		instance.printAgents();
-	}
+	// if (screen >= 2) // print start and goals
+	// {
+	// 	instance.printAgents();
+	// }
 }
 
 

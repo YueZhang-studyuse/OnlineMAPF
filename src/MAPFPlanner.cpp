@@ -9,6 +9,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
 {
     remain_commit = commit;
     instance.initMap(env);
+    instance.computeAllPair();
     lns = new LNS(instance, preprocess_time_limit,
                 "LACAM",
                 "PP",
@@ -27,6 +28,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
 void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
 {
     bool new_task = instance.updateStartGoals();
+
     lns->clearAll("Adaptive");
     if (new_task)
         lns->setHasInitialSolution(false);

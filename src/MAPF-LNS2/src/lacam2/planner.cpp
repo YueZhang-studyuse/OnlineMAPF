@@ -41,24 +41,15 @@ HNode::HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
   // set priorities
   if (parent == nullptr) {
     // initialize
-<<<<<<< HEAD
-    for (uint i = 0; i < N; ++i) priorities[i] = (float)D.get(i, C[i]) / N;
-=======
     for (uint i = 0; i < N; ++i) priorities[i] = i;
     //(float)D.get(i, C[i]) / N;
->>>>>>> origin/lacam-lns
 
     //init reach goal to be all false
     for (int i = 0; i < N; i++) reach_goal[i] = false;
   } else {
     // dynamic priorities, akin to PIBT
     for (size_t i = 0; i < N; ++i) {
-<<<<<<< HEAD
-      //modified for reach goal canbe pushed away
-      if (D.get(i, C[i]) != 0 && !reach_goal[i]) {
-=======
       if (D.get(i, C[i]) != 0 ) {
->>>>>>> origin/lacam-lns
         priorities[i] = parent->priorities[i] + 1;
       } else {
         priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
@@ -129,11 +120,7 @@ Solution Planner::solve(std::string& additional_info)
   while (!OPEN.empty() && !is_expired(deadline)) {
 
     loop_cnt += 1;
-<<<<<<< HEAD
-    //cout<<"loop "<<loop_cnt<<endl;
-=======
     cout<<"loop "<<loop_cnt<<endl;
->>>>>>> origin/lacam-lns
 
     // do not pop here!
     auto H = OPEN.top();  // high-level node
@@ -348,11 +335,7 @@ void Planner::expand_lowlevel_tree(HNode* H, LNode* L)
 bool Planner::get_new_config(HNode* H, LNode* L)
 {
 
-<<<<<<< HEAD
-  //cout<<"current config"<<endl;
-=======
   cout<<"current config"<<endl;
->>>>>>> origin/lacam-lns
   // setup cache
   for (auto a : A) {
     // clear previous cache
@@ -367,13 +350,6 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     // set occupied now
     a->v_now = H->C[a->id];
 
-<<<<<<< HEAD
-    // if (H->reach_goal[a->id] 
-    // && H->parent != nullptr && H->parent->parent != nullptr)
-    // {
-    //   a->v_next = a->v_now;
-    // }
-=======
     if (H->reach_goal[a->id] && H->parent != nullptr && H->parent->parent != nullptr)
     {
       a->v_next = a->v_now;
@@ -385,7 +361,6 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     //we skip the start and target are the same (start, start->children)
     if (H->parent != nullptr && H->parent->parent != nullptr && H->parent->reach_goal[a->id] && H->reach_goal[a->id])
       continue;
->>>>>>> origin/lacam-lns
 
     // cout<<a->v_now->index<<" ";
 
@@ -399,11 +374,7 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
 
   }
-<<<<<<< HEAD
-  //cout<<endl;
-=======
   cout<<endl;
->>>>>>> origin/lacam-lns
 
 
   // add constraints
