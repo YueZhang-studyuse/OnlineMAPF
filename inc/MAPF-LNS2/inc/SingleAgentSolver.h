@@ -122,7 +122,7 @@ public:
 	SingleAgentSolver(const Instance& instance, int agent) :
 		instance(instance), //agent(agent), 
 		start_location(instance.start_locations[agent]),
-		goal_location(instance.goal_locations[agent])
+		goal_location(instance.goal_location_seqs[agent].front())
 	{
 		compute_heuristics();
 	}

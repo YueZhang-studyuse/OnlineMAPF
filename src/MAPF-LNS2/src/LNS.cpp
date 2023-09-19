@@ -791,13 +791,13 @@ bool LNS::runLACAM2()
     for (int agent = 0; agent < instance.getDefaultNumberOfAgents(); agent++)
     {
         size_t max_time = solution.size()-1;
-        for (; max_time > 1; max_time--)
-        {
-            if (solution[max_time][agent]->index != instance.getGoals()[agent])
-                continue;
-            if (solution[max_time][agent]->index != solution[max_time-1][agent]->index)
-                break;
-        }
+        // for (; max_time > 1; max_time--)
+        // {
+        //     if (solution[max_time][agent]->index != instance.getGoals()[agent])
+        //         continue;
+        //     if (solution[max_time][agent]->index != solution[max_time-1][agent]->index)
+        //         break;
+        // }
         agents[agent].path.resize(max_time+1);
         cout<<"agent: "<<agent<<endl;
         for (size_t t = 0; t <= max_time; t++)

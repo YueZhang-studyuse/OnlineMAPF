@@ -7,6 +7,7 @@
 #include "graph.hpp"
 #include "utils.hpp"
 #include "SharedEnv.h"
+#include "Instance.h"
 
 struct LACAMInstance {
   const Graph G;
