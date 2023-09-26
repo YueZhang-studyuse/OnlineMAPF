@@ -105,6 +105,7 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                     delete next;
             }
         }  // end for loop that generates successors
+        
         // wait at the current location
         if (curr->high_expansion == curr->high_generation and
             reservation_table.find_safe_interval(interval, curr->location, curr->high_expansion) and

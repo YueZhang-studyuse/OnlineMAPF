@@ -98,7 +98,7 @@ public:
 	}
 	int get_heuristic(int from, int to) const
 	{
-		return instance.getManhattanDistance(from, to);
+		return instance.getAllpairDistance(from, to);
 	}
 	const Instance& instance;
 

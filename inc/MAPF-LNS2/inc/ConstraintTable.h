@@ -7,7 +7,7 @@ class ConstraintTable
 {
 public:
 	int length_min = 0;
-	int length_max = MAX_TIMESTEP;
+	int length_max = MAX_TIMESTEP; //min and max is for target constraint
 	size_t num_col;
 	size_t map_size;
     const PathTable * path_table_for_CT;

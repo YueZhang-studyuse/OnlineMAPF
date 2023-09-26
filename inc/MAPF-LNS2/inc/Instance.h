@@ -61,6 +61,11 @@ public:
         return abs(loc1.first - loc2.first) + abs(loc1.second - loc2.second);
     }
 
+	int getAllpairDistance(int loc1, int loc2) const
+	{
+		return heuristic[loc1][loc2];
+	}
+
 	int getDegree(int loc) const
 	{
 		assert(loc >= 0 && loc < map_size && !my_map[loc]);
