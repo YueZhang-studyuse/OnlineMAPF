@@ -10,7 +10,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
     remain_commit = commit;
     instance.initMap(env);
     instance.computeAllPair();
-    
+
     lns = new LNS(instance, preprocess_time_limit,
                 "LACAM",
                 "PP",
@@ -30,8 +30,13 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
 {
     bool new_task = instance.updateStartGoals();
     lns->clearAll("Adaptive");
-    if (new_task)
+    if (new_task && env->curr_timestep <= 8)
+    {
+    //if (future_paths.empty() || future_paths[0].empty()){
         lns->setHasInitialSolution(false);
+        initial_run = true;
+    }
+
 
     //the 1st ver. lns complete restart
     commited_paths.resize(env->num_of_agents);
@@ -108,7 +113,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         if (future_paths[agent].size()==1)
         {
             cout<<"finished"<<endl;
-            initial_run = true;
+            //initial_run = true;
         }
     }
 

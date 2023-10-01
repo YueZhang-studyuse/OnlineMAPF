@@ -349,11 +349,11 @@ bool LNS::fixInitialSolution()
     neighbor.agents.clear();
     initial_sum_of_costs = 0;
     list<int> complete_agents; // subsets of agents who have complete and collision-free paths
-    if (truncate_initial_paths)
-    {
-        truncatePaths();
-        deleteRepeatedStates();
-    }
+    // if (truncate_initial_paths)
+    // {
+    //     //truncatePaths();
+    //     //deleteRepeatedStates();
+    // }
     int makespan = 0;
     for (auto& agent : agents)
     {
@@ -791,13 +791,13 @@ bool LNS::runLACAM2()
     for (int agent = 0; agent < instance.getDefaultNumberOfAgents(); agent++)
     {
         size_t max_time = solution.size()-1;
-        for (; max_time > 1; max_time--)
-        {
-            if (solution[max_time][agent]->index != instance.getGoals()[agent])
-                continue;
-            if (solution[max_time][agent]->index != solution[max_time-1][agent]->index)
-                break;
-        }
+        // for (; max_time > 1; max_time--)
+        // {
+        //     if (solution[max_time][agent]->index != instance.getGoals()[agent])
+        //         continue;
+        //     if (solution[max_time][agent]->index != solution[max_time-1][agent]->index)
+        //         break;
+        // }
         agents[agent].path.resize(max_time+1);
         cout<<"agent: "<<agent<<endl;
         for (size_t t = 0; t <= max_time; t++)
