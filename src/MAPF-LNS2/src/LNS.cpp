@@ -349,11 +349,11 @@ bool LNS::fixInitialSolution()
     neighbor.agents.clear();
     initial_sum_of_costs = 0;
     list<int> complete_agents; // subsets of agents who have complete and collision-free paths
-    if (truncate_initial_paths)
-    {
-        truncatePaths();
-        deleteRepeatedStates();
-    }
+    // if (truncate_initial_paths)
+    // {
+    //     //truncatePaths();
+    //     //deleteRepeatedStates();
+    // }
     int makespan = 0;
     for (auto& agent : agents)
     {

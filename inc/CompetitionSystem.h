@@ -38,8 +38,11 @@ public:
     void set_logger(Logger* logger){this->logger = logger;}
 
 	void simulate(int simulation_time);
-    vector<Action> plan();
-    vector<Action> plan_wrapper();
+    //vector<Action> plan();
+    //vector<Action> plan_wrapper();
+
+    bool plan();
+    void plan_wrapper();
 
     void savePaths(const string &fileName, int option) const; //option = 0: save actual movement, option = 1: save planner movement
     //void saveSimulationIssues(const string &fileName) const;
@@ -49,7 +52,8 @@ public:
 protected:
     Grid map;
 
-    std::future<std::vector<Action>> future;
+    //std::future<std::vector<Action>> future;
+    std::future<void> future;
     std::thread task_td;
     bool started = false;
 
@@ -60,6 +64,11 @@ protected:
 
     // #timesteps for simulation
     int timestep;
+
+    //store the commit waitted to execute
+    //vector<vector<Action>> last_commit; //the lastest committed actions
+    //vector<int> pre_con_last_commit; //the pre conditions (starting locations) of the last commit
+    vector<Action> actions;
 
     int preprocess_time_limit=10;
 

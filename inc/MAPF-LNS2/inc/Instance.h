@@ -11,6 +11,9 @@ public:
 	int num_of_rows;
 	int map_size;
 	SharedEnvironment* env;
+	vector<vector<int>> heuristic;
+
+	void computeAllPair();
 
 	vector<vector<int>> heuristic;
 
@@ -59,6 +62,11 @@ public:
     {
         return abs(loc1.first - loc2.first) + abs(loc1.second - loc2.second);
     }
+
+	int getAllpairDistance(int loc1, int loc2) const
+	{
+		return heuristic[loc1][loc2];
+	}
 
 	int getDegree(int loc) const
 	{

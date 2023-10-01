@@ -10,10 +10,8 @@ using json = nlohmann::ordered_json;
 
 list<Task> BaseSystem::move(vector<Action>& actions)
 {
-    // actions.resize(num_of_agents, Action::NA);
     for (int k = 0; k < num_of_agents; k++)
     {
-        //log->log_plan(false,k);
         if (k >= actions.size()){
             fast_mover_feasible = false;
             planner_movements[k].push_back(Action::NA);
@@ -74,18 +72,59 @@ void BaseSystem::sync_shared_env() {
 }
 
 
-vector<Action> BaseSystem::plan_wrapper()
+//vector<Action> BaseSystem::plan_wrapper()
+void BaseSystem::plan_wrapper()
 {
-    std::cout<<"wrapper called"<<std::endl;
-    vector<Action> actions;
-    std::cout<<"planning"<<std::endl;
+    //vector<Action> actions;
     planner->plan(plan_time_limit, actions);
 
-    return actions;
+    //return actions;
 }
 
 
-vector<Action> BaseSystem::plan()
+//vector<Action> BaseSystem::plan()
+// {
+//     using namespace std::placeholders;
+//     if (started && future.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+//     {
+//         std::cout << started << "     " << (future.wait_for(std::chrono::seconds(0)) != std::future_status::ready) << std::endl;
+//         if(logger)
+//         {
+//             logger->log_info("planner cannot run because the previous run is still running", timestep);
+//         }
+
+//         //auto waitlimit = plan_time_limit+0.1;
+
+//         if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready) //allow some minor timeout
+//         {
+//             task_td.join();
+//             started = false;
+//             return future.get();
+//         }
+//         logger->log_info("planner timeout", timestep);
+//         return {};
+//     }
+
+//     std::packaged_task<std::vector<Action>()> task(std::bind(&BaseSystem::plan_wrapper, this));
+//     future = task.get_future();
+//     if (task_td.joinable())
+//     {
+//         task_td.join();
+//     }
+//     task_td = std::thread(std::move(task));
+//     started = true;
+//     if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready)
+//     {
+//         task_td.join();
+//         started = false;
+//         return future.get();
+//     }
+//     logger->log_info("planner timeout", timestep);
+//     return {};
+// }
+
+//vector<Action> BaseSystem::plan()
+bool BaseSystem::plan()
 {
     using namespace std::placeholders;
     if (started && future.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
@@ -102,13 +141,15 @@ vector<Action> BaseSystem::plan()
         {
             task_td.join();
             started = false;
-            return future.get();
+            //return future.get();
+            return true;
         }
         logger->log_info("planner timeout", timestep);
-        return {};
+        //return {};
+        return false;
     }
 
-    std::packaged_task<std::vector<Action>()> task(std::bind(&BaseSystem::plan_wrapper, this));
+    std::packaged_task<void()> task(std::bind(&BaseSystem::plan_wrapper, this));
     future = task.get_future();
     if (task_td.joinable())
     {
@@ -120,10 +161,12 @@ vector<Action> BaseSystem::plan()
     {
         task_td.join();
         started = false;
-        return future.get();
+        //return future.get();
+        return true;
     }
     logger->log_info("planner timeout", timestep);
-    return {};
+    //return {};
+    return false;
 }
 
 
@@ -175,7 +218,6 @@ void BaseSystem::log_event_finished(int agent_id, int task_id, int timestep)
 void BaseSystem::simulate(int simulation_time)
 {
     //init logger
-    //Logger* log = new Logger();
     initialize();
     int num_of_tasks = 0;
 
@@ -186,13 +228,12 @@ void BaseSystem::simulate(int simulation_time)
 
         // find a plan
         sync_shared_env();
-        // vector<Action> actions = planner->plan(plan_time_limit);
-        // vector<Action> actions;
-        // planner->plan(plan_time_limit,actions);
 
         auto start = std::chrono::steady_clock::now();
 
-        vector<Action> actions = plan();
+        bool finished = plan();
+        if (!finished)
+            actions = {};
 
         auto end = std::chrono::steady_clock::now();
 
