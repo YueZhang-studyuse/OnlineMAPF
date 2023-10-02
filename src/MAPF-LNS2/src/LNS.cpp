@@ -788,9 +788,12 @@ bool LNS::runLACAM2()
         return false;
     }
 
+    
+
     int soc = 0;
     for (int agent = 0; agent < instance.getDefaultNumberOfAgents(); agent++)
     {
+        bool reach_goal = false;
         size_t max_time = solution.size()-1;
         // for (; max_time > 1; max_time--)
         // {
@@ -800,13 +803,29 @@ bool LNS::runLACAM2()
         //         break;
         // }
         agents[agent].path.resize(max_time+1);
-        cout<<"agent: "<<agent<<endl;
+        // cout<<"agent: "<<agent<<endl;
         for (size_t t = 0; t <= max_time; t++)
         {
             agents[agent].path[t].location = solution[t][agent]->index;
-            cout<<agents[agent].path[t].location<<" ";
+            // if (solution[t][agent]->index == instance.getGoals()[agent].front())
+            // {
+            //     reach_goal = true;
+            // }
         }
-        cout<<endl;
+        // list<int> remain_locs;
+        // int curr = agents[agent].path[max_time].location;
+        // while (!reach_goal)
+        // {
+        //     auto nei = instance.getNeighbors(curr);
+        //     int next = nei.front();
+        //     for (auto n: nei)
+        //     {
+        //         if (instance.getAllpairDistance(n,instance.getGoals()))
+        //     }
+        //     remain_locs.append()
+        // }
+        //(!reach_goal)
+        
         path_table.insertPath(agents[agent].id, agents[agent].path);
         soc+=agents[agent].path.size()-1;
     }

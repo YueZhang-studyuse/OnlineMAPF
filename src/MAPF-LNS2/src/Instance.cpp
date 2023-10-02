@@ -403,11 +403,21 @@ void Instance::createDummyGoals()
     dummy_goal_accpetance = 0;
     for (int agent = 0; agent < num_of_agents; agent++)
     {
+        // if (dummy_goals[agent] != -1)
+        // {
+        //     dummy_goals_set.insert(dummy_goals[agent]);
+        // }
+        goals.insert(env->goal_locations[agent][0].first);
+    }
+
+    for (int agent = 0; agent < num_of_agents; agent++)
+    {
+        if (goals.find(dummy_goals[agent]) != goals.end())
+            dummy_goals[agent] = -1;
         if (dummy_goals[agent] != -1)
         {
             dummy_goals_set.insert(dummy_goals[agent]);
         }
-        goals.insert(env->goal_locations[agent][0].first);
     }
     for (int agent = 0; agent < num_of_agents; agent++)
     {
