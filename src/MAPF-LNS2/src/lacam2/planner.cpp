@@ -41,32 +41,22 @@ HNode::HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
   // set priorities
   if (parent == nullptr) {
     // initialize
-    for (uint i = 0; i < N; ++i) priorities[i] = i; //do not according to the distance in our online ver
+    for (uint i = 0; i < N; ++i) priorities[i] = i;
     //(float)D.get(i, C[i]) / N;
 
     //init reach goal to be all false
     for (int i = 0; i < N; i++) reach_goal[i] = false;
-  } 
-  else 
-  {
+  } else {
     // dynamic priorities, akin to PIBT
-    for (size_t i = 0; i < N; ++i) { //the orders
-
-    //set reach goal to be all same with parent
-      reach_goal[i] = parent->reach_goal[i];
-      //if (C[i]->id == ins->goals[i]->id)
-      if (D.get(i, C[i]) == 0 )
-      {
-        reach_goal[i] = true;
-      }
-
-      //if (D.get(i, C[i]) != 0 ) {
-        //->reached goal get lowest prority
-      if (!reach_goal[i]){
+    for (size_t i = 0; i < N; ++i) {
+      if (D.get(i, C[i]) != 0 ) {
         priorities[i] = parent->priorities[i] + 1;
       } else {
         priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
       }
+
+      //set reach goal to be all same with parent
+      reach_goal[i] = parent->reach_goal[i];
     }
   }
 
@@ -125,7 +115,6 @@ Solution Planner::solve(std::string& additional_info)
   std::vector<Config> solution;
   auto C_new = Config(N, nullptr);  // for new configuration
   HNode* H_goal = nullptr;          // to store goal node
-  HNode* curr_best = nullptr;
 
   // DFS
   while (!OPEN.empty() && !is_expired(deadline)) {
@@ -141,38 +130,6 @@ Solution Planner::solve(std::string& additional_info)
     if (H->search_tree.empty()) {
       OPEN.pop();
       continue;
-    }
-
-    //H_goal = H;
-    if (curr_best == nullptr)
-      curr_best = H;
-    else
-    {
-      int reached_pre = 400;
-      int reached_after = 400;
-
-      for (size_t i = 0; i < N; ++i) {
-        if (!H->reach_goal[i])
-        {
-          //cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<ins->goals[i]->index<<endl;
-          reached_after--;
-          //break;
-        }
-        if (!curr_best->reach_goal[i])
-        {
-          reached_pre--;
-        }
-      }
-      if (reached_after > reached_pre)
-        curr_best = H;
-
-    }
-
-    for (size_t i = 0; i < N; ++i) 
-    {
-      //if (C1[i]->id != C2[i]->id) return false;
-      if (H->C[i]->id == ins->goals[i]->id)
-        H->reach_goal[i] = true;
     }
 
 
@@ -192,37 +149,23 @@ Solution Planner::solve(std::string& additional_info)
     }
 
 
-    // check goal condition -- reach goal once
-    if (H_goal == nullptr) {
-      bool allreached = true;
-      int reached = 400;
-      for (size_t i = 0; i < N; ++i) {
-        if (!H->reach_goal[i])
-        {
-          //cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<ins->goals[i]->index<<endl;
-          allreached = false;
-          reached--;
-          //break;
-        }
-      }
-      cout<<"reached "<<reached<<endl;
-      if (reached == 399)
-      {
-        for (size_t i = 0; i < N; ++i) {
-        if (!H->reach_goal[i])
-        {
-          cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<ins->goals[i]->index<<endl;
-        }
-      }
-      }
-      if (allreached)
-      {
-        H_goal = H;
-        solver_info(1, "found solution, cost: ", H->g);
-        cout<<"found solution, cost: "<<H->g<<endl;
-        break;
-      }
-    }
+    // // check goal condition -- reach goal once ->discard
+    // if (H_goal == nullptr) {
+    //   bool allreached = true;
+    //   for (size_t i = 0; i < N; ++i) {
+    //     if (!A[i]->reached_goal)
+    //     {
+    //       allreached = false;
+    //       break;
+    //     }
+    // }
+    //   if (allreached)
+    //   {
+    //     H_goal = H;
+    //     solver_info(1, "found solution, cost: ", H->g);
+    //     cout<<"found solution, cost: "<<H->g<<endl;
+    //     break;
+    //   }
 
       // if (objective == OBJ_NONE) break;
       // continue;
@@ -235,6 +178,24 @@ Solution Planner::solve(std::string& additional_info)
 
     if (is_expired(deadline)) break;
 
+    //check each goal to see if agent arrives
+    bool allreached = true;
+    auto N = H->C.size();
+    for (size_t i = 0; i < N; ++i) {
+      if (H->C[i]->id == ins->goals[i]->id)
+        H->reach_goal[i] = true;
+      if (!H->reach_goal[i])
+        allreached = false;
+    }
+
+    if (allreached)
+    {
+      H_goal = H;
+      solver_info(1, "found solution, cost: ", H->g);
+      // if (objective == OBJ_NONE) break;
+      // continue;
+      break;
+    }
 
     // create successors at the high-level search
     const auto res = get_new_config(H, L);
@@ -264,12 +225,6 @@ Solution Planner::solve(std::string& additional_info)
       EXPLORED[H_new->C] = H_new;
       if (H_goal == nullptr || H_new->f < H_goal->f) OPEN.push(H_new);
     }
-  }
-
-  if (H_goal == nullptr)
-  {
-    H_goal = curr_best;
-    cout<<"lacam failed"<<endl;
   }
 
   // backtrack
@@ -394,35 +349,18 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
     // set occupied now
     a->v_now = H->C[a->id];
-    if (a->id == 116 && a->v_now->index == 895)
-    {
-      cout<<"test for reached";
-      if (H->reach_goal[a->id])
-      {
-        cout<<"correct";
-      }
-      else
-      {
-        cout<<"wrong";
-      }
-    }
-    if (a->v_now->id == ins->goals[a->id]->id)
-      H->reach_goal[a->id] = true;
-    if (H->reach_goal[a->id])
-      a->reached_goal = true;
 
-    // -->discard because pushed away
-    // if (H->reach_goal[a->id] && H->parent != nullptr && H->parent->parent != nullptr)
-    // {
-    //   a->v_next = a->v_now;
-    // }
+    if (H->reach_goal[a->id] && H->parent != nullptr && H->parent->parent != nullptr)
+    {
+      a->v_next = a->v_now;
+    }
 
     cout<<a->v_now->index<<" ";
 
-    // //if already reached goal, we do not set the occupied now
-    // //we skip the start and target are the same (start, start->children)
-    // if (H->parent != nullptr && H->parent->parent != nullptr && H->parent->reach_goal[a->id] && H->reach_goal[a->id])
-    //   continue;
+    //if already reached goal, we do not set the occupied now
+    //we skip the start and target are the same (start, start->children)
+    if (H->parent != nullptr && H->parent->parent != nullptr && H->parent->reach_goal[a->id] && H->reach_goal[a->id])
+      continue;
 
     occupied_now[a->v_now->id] = a;
 
@@ -451,18 +389,11 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
 
   // perform PIBT
-  cout<<"pibt order .."<<endl;
   for (auto k : H->order) {
     if (is_expired(deadline)) return false;
     auto a = A[k];
-    cout<<a->id<<" ";
-    if (a->v_next == nullptr && !funcPIBT(a))
-    {
-      cout<<endl<<"pibt failed"<<endl;
-     return false;  // planning failure
-    }
+    if (a->v_next == nullptr && !funcPIBT(a)) return false;  // planning failure
   }
-  cout<<endl;
   return true;
 }
 
@@ -480,23 +411,16 @@ bool Planner::funcPIBT(LACAMAgent* ai)
   }
   C_next[i][K] = ai->v_now;
 
-  LACAMAgent* swap_agent = nullptr;
+  // sort
+  std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
+            [&](Vertex* const v, Vertex* const u) {
+              return D.get(i, v) + tie_breakers[v->id] <
+                     D.get(i, u) + tie_breakers[u->id];
+            });
 
-  if (!ai->reached_goal)
-  {
-    // sort
-    std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
-              [&](Vertex* const v, Vertex* const u) {
-                return D.get(i, v) + tie_breakers[v->id] <
-                      D.get(i, u) + tie_breakers[u->id];
-              });
-  
-  }
-    swap_agent = swap_possible_and_required(ai);
+  LACAMAgent* swap_agent = swap_possible_and_required(ai);
 
-  //}
-
-    if (swap_agent != nullptr)
+  if (swap_agent != nullptr)
     std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
     
   // main operation
