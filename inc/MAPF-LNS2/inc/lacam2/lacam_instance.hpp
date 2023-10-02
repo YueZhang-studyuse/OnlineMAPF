@@ -7,12 +7,14 @@
 #include "graph.hpp"
 #include "utils.hpp"
 #include "SharedEnv.h"
-#include "Instance.h"
 
 struct LACAMInstance {
   const Graph G;
   Config starts;
   Config goals;
+
+  Config dummy_goals;
+
   const uint N;  // number of agents
 
   // for testing
@@ -34,6 +36,8 @@ struct LACAMInstance {
 
   // simple feasibility check of instance
   bool is_valid(const int verbose = 0) const;
+
+  void update_dummygoals(vector<int> dummy_goal);
 };
 
 // solution: a sequence of configurations

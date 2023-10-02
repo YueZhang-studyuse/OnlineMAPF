@@ -8,6 +8,7 @@
 #include "graph.hpp"
 #include "lacam_instance.hpp"
 #include "utils.hpp"
+#include "Instance.h"
 
 // objective function
 enum Objective { OBJ_NONE, OBJ_MAKESPAN, OBJ_SUM_OF_LOSS };
@@ -48,6 +49,7 @@ struct HNode {
 
   //reached goal once
   std::vector<bool> reach_goal;
+  int reached_goal_count = 0;
 
   // for low-level search
   std::vector<float> priorities;
@@ -61,6 +63,7 @@ struct HNode {
 using HNodes = std::vector<HNode*>;
 
 struct Planner {
+  const Instance& instance;
   const LACAMInstance* ins;
   const Deadline* deadline;
   std::mt19937* MT;
@@ -83,7 +86,7 @@ struct Planner {
   LACAMAgents occupied_now;                          // for quick collision checking
   LACAMAgents occupied_next;                         // for quick collision checking
 
-  Planner(const LACAMInstance* _ins, const Deadline* _deadline, std::mt19937* _MT,
+  Planner(const Instance& _instance, const LACAMInstance* _ins, const Deadline* _deadline, std::mt19937* _MT,
           const int _verbose = 0,
           // other parameters
           const Objective _objective = OBJ_NONE,

@@ -36,7 +36,7 @@ void Instance::initMap(SharedEnvironment* simulate_env)
 	num_of_cols = env->cols;
 	num_of_agents = env->num_of_agents;
 	map_size = env->map.size();
-    cout<<env->num_of_agents<<endl;
+    //cout<<env->num_of_agents<<endl;
     my_map.resize(map_size);
 	//read map to my_map
 	for (int i = 0; i < map_size; i++)
@@ -53,10 +53,10 @@ void Instance::initMap(SharedEnvironment* simulate_env)
         degrees[index]++;
     }
 
-    for (int i = 0; i < 4; i ++)
-    {
-        cout<<"degrees "<<i+1<< " " << degrees[i]<<endl;
-    }
+    // for (int i = 0; i < 4; i ++)
+    // {
+    //     cout<<"degrees "<<i+1<< " " << degrees[i]<<endl;
+    // }
 
     //we estimate ie. if 4-degree grid is enough?
     int temp_locations = 0;
@@ -75,75 +75,9 @@ void Instance::initMap(SharedEnvironment* simulate_env)
     dummy_goals = std::vector<int>(num_of_agents,-1);
 }
 
-void Instance::computeAllPair()
-{
-    cout<<"computing all pair"<<endl;
-    heuristic.resize(my_map.size());
-
-    struct Node
-	{
-		int location;
-		int value;
-
-		Node() = default;
-		Node(int location, int value) : location(location), value(value) {}
-		// the following is used to compare nodes in the OPEN list
-		struct compare_node
-		{
-			// returns true if n1 > n2 (note -- this gives us *min*-heap).
-			bool operator()(const Node& n1, const Node& n2) const
-			{
-				return n1.value >= n2.value;
-			}
-		};  // used by OPEN (heap) to compare nodes (top of the heap has min f-val, and then highest g-val)
-	};
-
-    for (int i = 0; i < heuristic.size(); i++)
-    {
-        if (my_map[i])
-            continue;
-        //heuristic[i] = std::vector<int>(heuristic.size()-i, MAX_TIMESTEP);
-        heuristic[i] = std::vector<int>(heuristic.size(), MAX_TIMESTEP);
-    }
-    for (int i = 0; i < heuristic.size(); i++)
-    {
-        if (my_map[i])
-            continue;
-        // generate a heap that can save nodes (and a open_handle)
-        boost::heap::pairing_heap< Node, boost::heap::compare<Node::compare_node> > heap;
-
-        Node root(i, 0); //compute every node to i
-        heuristic[i][0] = 0;
-
-        heap.push(root);  // add root to heap
-        while (!heap.empty())
-        {
-            Node curr = heap.top();
-            heap.pop();
-            for (int next_location : getNeighbors(curr.location))
-            {
-                if (heuristic[i][next_location] > curr.value + 1)
-                {
-                    heuristic[i][next_location] = curr.value + 1;
-                    Node next(next_location, curr.value + 1);
-                    heap.push(next);
-                }
-            }
-        }
-        // cout<<"vertex "<<i<<" end.. "<<heuristic[i].size()<<endl;
-        // for (int j = 0; j < heuristic[i].size();j++)
-        // {
-        //     cout<<heuristic[i][j]<<" ";
-        // }
-        // cout<<endl;
-    }
-
-
-}
-
 bool Instance::updateStartGoals()
 {
-    cout<<"dummy goals degree"<<dummy_goal_accpetance<<endl;
+    //cout<<"dummy goals degree"<<dummy_goal_accpetance<<endl;
     bool new_task = false;
     for (int i = 0; i < num_of_agents; i++)
     {
@@ -159,11 +93,11 @@ bool Instance::updateStartGoals()
     if (new_task)
         createDummyGoals();
 
-    for (int i = 0; i < num_of_agents; i++)
-    {
-        cout<<"agent "<<i<<endl;
-        cout<<"start "<<start_locations[i]<<" goal "<<goal_location_seqs[i].front()<<" degree "<<getDegree(goal_location_seqs[i].front())<<" dummy goal "<<dummy_goals[i]<<" degree "<<getDegree(dummy_goals[i])<<endl;
-    }
+    // for (int i = 0; i < num_of_agents; i++)
+    // {
+    //     cout<<"agent "<<i<<endl;
+    //     cout<<"start "<<start_locations[i]<<" goal "<<goal_location_seqs[i].front()<<" degree "<<getDegree(goal_location_seqs[i].front())<<" dummy goal "<<dummy_goals[i]<<" degree "<<getDegree(dummy_goals[i])<<endl;
+    // }
     return new_task;
 }
 

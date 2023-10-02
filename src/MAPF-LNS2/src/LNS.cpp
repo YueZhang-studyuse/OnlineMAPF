@@ -750,13 +750,14 @@ bool LNS::runLACAM2()
     // actions = std::vector<Action>(env->curr_states.size(), Action::WA);
 
     LACAMInstance ins = LACAMInstance(instance.env);
+    ins.update_dummygoals(instance.getDummyGoals());
     string verbose = "";
     auto MT = std::mt19937(0);
     const auto deadline = Deadline((time_limit-0.3) * 1000);
 
     const Objective objective = static_cast<Objective>(0);
     const float restart_rate = 0.01;
-    const auto solution = solve(ins, verbose, 0, &deadline, &MT, objective, restart_rate);
+    const auto solution = solve(instance, ins, verbose, 0, &deadline, &MT, objective, restart_rate);
     // auto end1 = std::chrono::steady_clock::now();
     // auto diff1 = end1-start1;
     // cout<<"lacam solve ends at.."<<std::chrono::duration<double>(diff1).count()<<endl;

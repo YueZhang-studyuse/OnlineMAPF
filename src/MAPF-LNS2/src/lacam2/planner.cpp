@@ -67,6 +67,12 @@ HNode::HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
       } else {
         priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
       }
+
+      if (priorities[i] > priorities[381])
+        cout<<"other higher priority "<<i<<" : "<<priorities[i]<<endl;
+
+      if (i == 381)
+        cout<<"agent 381 priority "<<priorities[i]<<endl;
     }
   }
 
@@ -84,10 +90,12 @@ HNode::~HNode()
   }
 }
 
-Planner::Planner(const LACAMInstance* _ins, const Deadline* _deadline,
+Planner::Planner(const Instance& _instance, const LACAMInstance* _ins, const Deadline* _deadline,
                  std::mt19937* _MT, const int _verbose,
                  const Objective _objective, const float _restart_rate)
-    : ins(_ins),
+    : 
+      instance(_instance),
+      ins(_ins),
       deadline(_deadline),
       MT(_MT),
       verbose(_verbose),
@@ -131,7 +139,7 @@ Solution Planner::solve(std::string& additional_info)
   while (!OPEN.empty() && !is_expired(deadline)) {
 
     loop_cnt += 1;
-    cout<<"loop "<<loop_cnt<<endl;
+    //cout<<"loop "<<loop_cnt<<endl;
 
     // do not pop here!
     auto H = OPEN.top();  // high-level node
@@ -143,7 +151,7 @@ Solution Planner::solve(std::string& additional_info)
       continue;
     }
 
-    //H_goal = H;
+    //record the current best, in case no solution found
     if (curr_best == nullptr)
       curr_best = H;
     else
@@ -165,57 +173,54 @@ Solution Planner::solve(std::string& additional_info)
       }
       if (reached_after > reached_pre)
         curr_best = H;
-
     }
 
-    for (size_t i = 0; i < N; ++i) 
-    {
-      //if (C1[i]->id != C2[i]->id) return false;
-      if (H->C[i]->id == ins->goals[i]->id)
-        H->reach_goal[i] = true;
-    }
+    // // check lower bounds, this is used in anytime after finding goal
+    // if (H_goal != nullptr && H->f >= H_goal->f) {
+    //   OPEN.pop();
+    //   continue;
+    // }
 
-
-    // check lower bounds, this is used in anytime after finding goal
-    if (H_goal != nullptr && H->f >= H_goal->f) {
-      OPEN.pop();
-      continue;
-    }
-
-    // check goal condition
-    if (H_goal == nullptr && is_same_config(H->C, ins->goals)) {
-      H_goal = H;
-      solver_info(1, "found solution, cost: ", H->g);
-      // if (objective == OBJ_NONE) break;
-      // continue;
-      break;
-    }
+    // // check goal condition
+    // if (H_goal == nullptr && is_same_config(H->C, ins->goals)) {
+    //   H_goal = H;
+    //   solver_info(1, "found solution, cost: ", H->g);
+    //   // if (objective == OBJ_NONE) break;
+    //   // continue;
+    //   break;
+    // }
 
 
     // check goal condition -- reach goal once
+    //should all reached the current goal and after that reach the dummy goal
     if (H_goal == nullptr) {
       bool allreached = true;
       int reached = 400;
       for (size_t i = 0; i < N; ++i) {
         if (!H->reach_goal[i])
         {
-          //cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<ins->goals[i]->index<<endl;
           allreached = false;
           reached--;
-          //break;
         }
       }
-      cout<<"reached "<<reached<<endl;
+      cout<<"reached goal "<<reached<<endl;
       if (reached == 399)
       {
         for (size_t i = 0; i < N; ++i) {
         if (!H->reach_goal[i])
-        {
           cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<ins->goals[i]->index<<endl;
         }
-      }
+       
       }
       if (allreached)
+      {
+        cout<<"reached goal loop at "<< loop_cnt<<endl;
+        // H_goal = H;
+        // solver_info(1, "found solution, cost: ", H->g);
+        // cout<<"found solution, cost: "<<H->g<<endl;
+        // break;
+      }
+      if (allreached && is_same_config(H->C, ins->dummy_goals))
       {
         H_goal = H;
         solver_info(1, "found solution, cost: ", H->g);
@@ -242,10 +247,17 @@ Solution Planner::solve(std::string& additional_info)
     if (is_expired(deadline)) break;
 
     delete L;  // free
-    if (!res) continue;
+    if (!res) {
+      continue;
+      cout<<"pibt failed"<<endl;
+    }
 
     // create new configuration
-    for (auto a : A) C_new[a->id] = a->v_next;
+    for (auto a : A) 
+    {
+      C_new[a->id] = a->v_next;
+    }
+    cout<<"new config for 381 "<<C_new[381]->index<<endl;
 
     // check explored list
     const auto iter = EXPLORED.find(C_new);
@@ -379,7 +391,6 @@ void Planner::expand_lowlevel_tree(HNode* H, LNode* L)
 
 bool Planner::get_new_config(HNode* H, LNode* L)
 {
-
   cout<<"current config"<<endl;
   // setup cache
   for (auto a : A) {
@@ -394,20 +405,9 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
     // set occupied now
     a->v_now = H->C[a->id];
-    if (a->id == 116 && a->v_now->index == 895)
-    {
-      cout<<"test for reached";
-      if (H->reach_goal[a->id])
-      {
-        cout<<"correct";
-      }
-      else
-      {
-        cout<<"wrong";
-      }
-    }
-    if (a->v_now->id == ins->goals[a->id]->id)
-      H->reach_goal[a->id] = true;
+
+    // if (a->v_now->id == ins->goals[a->id]->id)
+    //   H->reach_goal[a->id] = true;
     if (H->reach_goal[a->id])
       a->reached_goal = true;
 
@@ -417,14 +417,19 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     //   a->v_next = a->v_now;
     // }
 
-    cout<<a->v_now->index<<" ";
+    //cout<<a->v_now->index<<" ";
 
     // //if already reached goal, we do not set the occupied now
     // //we skip the start and target are the same (start, start->children)
     // if (H->parent != nullptr && H->parent->parent != nullptr && H->parent->reach_goal[a->id] && H->reach_goal[a->id])
     //   continue;
 
-    // cout<<a->v_now->index<<" ";
+    if (a->v_now->index == 321)
+      cout<<a->id<<"at location 895, goal is "<<ins->goals[a->id]<<endl;
+    if (a->id == 381)
+      cout<<"agent 381 location: "<<a->v_now->index<<endl;
+
+    //cout<<a->v_now->index<<" ";
 
     //if already reached goal, we do not set the occupied now
     //we skip the start and target are the same (start, start->children)
@@ -453,24 +458,28 @@ bool Planner::get_new_config(HNode* H, LNode* L)
       return false;
     // set occupied_next
     A[i]->v_next = L->where[k];
+
+    if (i == 381)
+      cout<<"constraint on 381 "<<A[i]->v_next->index<<endl;
     
     occupied_next[l] = A[i];
   }
 
 
   // perform PIBT
-  cout<<"pibt order .."<<endl;
   for (auto k : H->order) {
     if (is_expired(deadline)) return false;
     auto a = A[k];
-    cout<<a->id<<" ";
     if (a->v_next == nullptr && !funcPIBT(a))
     {
-      cout<<endl<<"pibt failed"<<endl;
      return false;  // planning failure
     }
+    if (a->id == 381 && a->v_next->index == 895)
+    cout<<"agent 381 at 895"<<endl;
+    if (a->id == 381)
+      cout<<"agent 381 next location: "<<a->v_next->index<<endl;
   }
-  cout<<endl;
+
   return true;
 }
 
@@ -492,23 +501,37 @@ bool Planner::funcPIBT(LACAMAgent* ai)
 
   if (!ai->reached_goal)
   {
-    // sort
+    //sort
     std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
               [&](Vertex* const v, Vertex* const u) {
                 return D.get(i, v) + tie_breakers[v->id] <
                       D.get(i, u) + tie_breakers[u->id];
               });
+
+    //swap_agent = swap_possible_and_required(ai);
   
   }
-    swap_agent = swap_possible_and_required(ai);
+  else
+  {
+    std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
+              [&](Vertex* const v, Vertex* const u) {
+                return instance.getAllpairDistance(v->index,instance.getDummyGoals()[i]) + tie_breakers[v->id] <
+                      instance.getAllpairDistance(u->index,instance.getDummyGoals()[i]) + tie_breakers[u->id];
+              });
+  }
+  //swap_agent = swap_possible_and_required(ai);
 
   //}
 
     if (swap_agent != nullptr)
-    std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
+    {
+      std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
+    }
     
   // main operation
   for (auto k = 0; k < K + 1; ++k) {
+    if (ai->id == 381 && C_next[i][k]->index == 895)
+      cout<<"agent 381 considered 895"<<endl;
     auto u = C_next[i][k];
 
     // avoid vertex conflicts

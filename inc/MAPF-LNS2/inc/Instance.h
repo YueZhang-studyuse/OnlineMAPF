@@ -15,8 +15,6 @@ public:
 
 	void computeAllPair();
 
-	vector<vector<int>> heuristic;
-
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
 	Instance()=default;
@@ -92,7 +90,7 @@ public:
 
 	void createDummyGoals();
 
-	void computeAllPair();
+	vector<int> getDummyGoals() const { return dummy_goals;};
 	
 private:
 	  // int moves_offset[MOVE_COUNT];
