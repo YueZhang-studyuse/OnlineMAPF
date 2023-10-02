@@ -41,7 +41,7 @@ HNode::HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
   // set priorities
   if (parent == nullptr) {
     // initialize
-    for (uint i = 0; i < N; ++i) priorities[i] = i; //do not according to the distance in our online ver
+    for (uint i = 0; i < N; ++i) priorities[i] = (float)i/N; //do not according to the distance in our online ver
     //(float)D.get(i, C[i]) / N;
 
     //init reach goal to be all false
@@ -67,12 +67,6 @@ HNode::HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
       } else {
         priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
       }
-
-      if (priorities[i] > priorities[381])
-        cout<<"other higher priority "<<i<<" : "<<priorities[i]<<endl;
-
-      if (i == 381)
-        cout<<"agent 381 priority "<<priorities[i]<<endl;
     }
   }
 
@@ -200,18 +194,11 @@ Solution Planner::solve(std::string& additional_info)
         if (!H->reach_goal[i])
         {
           allreached = false;
+          cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<"goal at "<<ins->goals[i]<<endl;
           reached--;
         }
       }
       cout<<"reached goal "<<reached<<endl;
-      if (reached == 399)
-      {
-        for (size_t i = 0; i < N; ++i) {
-        if (!H->reach_goal[i])
-          cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<ins->goals[i]->index<<endl;
-        }
-       
-      }
       if (allreached)
       {
         cout<<"reached goal loop at "<< loop_cnt<<endl;
@@ -249,7 +236,6 @@ Solution Planner::solve(std::string& additional_info)
     delete L;  // free
     if (!res) {
       continue;
-      cout<<"pibt failed"<<endl;
     }
 
     // create new configuration
@@ -257,7 +243,6 @@ Solution Planner::solve(std::string& additional_info)
     {
       C_new[a->id] = a->v_next;
     }
-    cout<<"new config for 381 "<<C_new[381]->index<<endl;
 
     // check explored list
     const auto iter = EXPLORED.find(C_new);
@@ -391,7 +376,7 @@ void Planner::expand_lowlevel_tree(HNode* H, LNode* L)
 
 bool Planner::get_new_config(HNode* H, LNode* L)
 {
-  cout<<"current config"<<endl;
+  //cout<<"current config"<<endl;
   // setup cache
   for (auto a : A) {
     // clear previous cache
@@ -423,12 +408,6 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     // //we skip the start and target are the same (start, start->children)
     // if (H->parent != nullptr && H->parent->parent != nullptr && H->parent->reach_goal[a->id] && H->reach_goal[a->id])
     //   continue;
-
-    if (a->v_now->index == 321)
-      cout<<a->id<<"at location 895, goal is "<<ins->goals[a->id]<<endl;
-    if (a->id == 381)
-      cout<<"agent 381 location: "<<a->v_now->index<<endl;
-
     //cout<<a->v_now->index<<" ";
 
     //if already reached goal, we do not set the occupied now
@@ -441,7 +420,7 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
 
   }
-  cout<<endl;
+  //cout<<endl;
 
 
   // add constraints
@@ -458,9 +437,6 @@ bool Planner::get_new_config(HNode* H, LNode* L)
       return false;
     // set occupied_next
     A[i]->v_next = L->where[k];
-
-    if (i == 381)
-      cout<<"constraint on 381 "<<A[i]->v_next->index<<endl;
     
     occupied_next[l] = A[i];
   }
@@ -474,10 +450,6 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     {
      return false;  // planning failure
     }
-    if (a->id == 381 && a->v_next->index == 895)
-    cout<<"agent 381 at 895"<<endl;
-    if (a->id == 381)
-      cout<<"agent 381 next location: "<<a->v_next->index<<endl;
   }
 
   return true;
@@ -508,7 +480,7 @@ bool Planner::funcPIBT(LACAMAgent* ai)
                       D.get(i, u) + tie_breakers[u->id];
               });
 
-    //swap_agent = swap_possible_and_required(ai);
+    swap_agent = swap_possible_and_required(ai);
   
   }
   else
@@ -599,8 +571,14 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
 {
   auto v_pusher = v_pusher_origin;
   auto v_puller = v_puller_origin;
+  int pusher_vpuller = A[pusher]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[pusher]->index, v_puller->index) : D.get(pusher, v_puller);
+  int pusher_vpusher = A[pusher]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[pusher]->index, v_pusher->index) : D.get(pusher, v_pusher);
+  int puller_vpuller = A[puller]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[puller]->index, v_puller->index) : D.get(puller, v_puller);
+  int puller_vpusher = A[puller]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[puller]->index, v_pusher->index) : D.get(puller, v_pusher);
+
   Vertex* tmp = nullptr;
-  while (D.get(pusher, v_puller) < D.get(pusher, v_pusher)) {
+  //while (D.get(pusher, v_puller) < D.get(pusher, v_pusher)) {
+    while (pusher_vpuller < pusher_vpusher) {
     auto n = v_puller->neighbor.size();
     // remove agents who need not to move
     for (auto u : v_puller->neighbor) {
@@ -619,9 +597,11 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
   }
 
   // judge based on distance
-  return (D.get(puller, v_pusher) < D.get(puller, v_puller)) &&
-         (D.get(pusher, v_pusher) == 0 ||
-          D.get(pusher, v_puller) < D.get(pusher, v_pusher));
+  // return (D.get(puller, v_pusher) < D.get(puller, v_puller)) &&
+  //        (D.get(pusher, v_pusher) == 0 ||
+  //         D.get(pusher, v_puller) < D.get(pusher, v_pusher));
+  return (puller_vpusher < puller_vpuller) &&
+          (pusher_vpusher == 0 || pusher_vpuller < pusher_vpusher);
 }
 
 // simulate whether the swap is possible

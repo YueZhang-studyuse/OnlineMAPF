@@ -399,12 +399,15 @@ bool Instance::hasCollision(const Path& p1, const Path& p2) const
 void Instance::createDummyGoals()
 {
     unordered_set<int> dummy_goals_set;
+    unordered_set<int> goals;
+    dummy_goal_accpetance = 0;
     for (int agent = 0; agent < num_of_agents; agent++)
     {
         if (dummy_goals[agent] != -1)
         {
             dummy_goals_set.insert(dummy_goals[agent]);
         }
+        goals.insert(goal_location_seqs[agent].front());
     }
     for (int agent = 0; agent < num_of_agents; agent++)
     {
@@ -418,7 +421,7 @@ void Instance::createDummyGoals()
         {
             int curr = open.front();
             open.pop();
-            if (dummy_goals_set.find(curr) == dummy_goals_set.end() && getDegree(curr) >= dummy_goal_accpetance)
+            if (dummy_goals_set.find(curr) == dummy_goals_set.end() && goals.find(curr) == goals.end() && getDegree(curr) >= dummy_goal_accpetance)
             {
                 dummy_goals[agent] = curr;
                 dummy_goals_set.insert(curr);
