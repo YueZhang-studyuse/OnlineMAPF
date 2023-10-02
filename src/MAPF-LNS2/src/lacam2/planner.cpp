@@ -500,11 +500,6 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
 bool Planner::funcPIBT(LACAMAgent* ai)
 {
-  // cout<<"pibt for agent "<<ai->id<<" ";
-  // if (ai->reached_goal)
-  //   cout<<"reached goal"<<endl;
-  // else
-  //   cout<<"not reached goal"<<endl;
   const auto i = ai->id;
   const auto K = ai->v_now->neighbor.size();
 
@@ -538,6 +533,7 @@ bool Planner::funcPIBT(LACAMAgent* ai)
                 return instance.getAllpairDistance(v->index,instance.getDummyGoals()[i]) + tie_breakers[v->id] <
                       instance.getAllpairDistance(u->index,instance.getDummyGoals()[i]) + tie_breakers[u->id];
               });
+    //swap_agent = swap_possible_and_required(ai);
   }
   //swap_agent = swap_possible_and_required(ai);
 
@@ -547,18 +543,30 @@ bool Planner::funcPIBT(LACAMAgent* ai)
   {
     std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
   }
+
+  if (ai->id == 325 && ai->v_now->index == 912)
+  {
+
+      cout<<"consider next for 325 ";
+      for (auto k = 0; k < K + 1; ++k)
+      {
+        cout<<C_next[i][k]->index<<" ";
+      }
+      cout<<endl;
+      if (swap_agent != nullptr)
+        cout<<"swap needed "<<swap_agent->id<<" "<<A[swap_agent->id]->v_now<<endl;
+  }
     
   // main operation
   for (auto k = 0; k < K + 1; ++k) {
     auto u = C_next[i][k];
+
 
     // avoid vertex conflicts
     if (occupied_next[u->id] != nullptr) 
     {
       continue;
     }
-
-
 
 
     auto& ak = occupied_now[u->id];
@@ -629,9 +637,10 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
   int puller_vpuller = A[puller]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[puller]->index, v_puller->index) : D.get(puller, v_puller);
   int puller_vpusher = A[puller]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[puller]->index, v_pusher->index) : D.get(puller, v_pusher);
 
+
   Vertex* tmp = nullptr;
   //while (D.get(pusher, v_puller) < D.get(pusher, v_pusher)) {
-    while (pusher_vpuller < pusher_vpusher) {
+    while ((!A[pusher]->reached_goal && A[puller]->reached_goal) || (!A[pusher]->reached_goal && !A[puller]->reached_goal && pusher_vpuller < pusher_vpusher)) {
     auto n = v_puller->neighbor.size();
     // remove agents who need not to move
     for (auto u : v_puller->neighbor) {
@@ -643,15 +652,25 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
         tmp = u;
       }
     }
+
     if (n >= 2) return false;  // able to swap
     if (n <= 0) break;
+
+    if (pusher == 325 && v_pusher->index == 912)
+    {
+      cout<<v_puller->index<<" "<<n<<endl;
+    }
+
     v_pusher = v_puller;
     v_puller = tmp;
+
 
     pusher_vpuller = A[pusher]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[pusher]->index, v_puller->index) : D.get(pusher, v_puller);
     pusher_vpusher = A[pusher]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[pusher]->index, v_pusher->index) : D.get(pusher, v_pusher);
     puller_vpuller = A[puller]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[puller]->index, v_puller->index) : D.get(puller, v_puller);
     puller_vpusher = A[puller]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[puller]->index, v_pusher->index) : D.get(puller, v_pusher);
+    if (pusher_vpuller >= pusher_vpusher)
+      cout<<"no "<<endl;
   }
 
   // judge based on distance
