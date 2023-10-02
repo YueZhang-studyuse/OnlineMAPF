@@ -546,6 +546,13 @@ bool Planner::funcPIBT(LACAMAgent* ai)
               });
     //swap_agent = swap_possible_and_required(ai);
   }
+
+  // if (swap_agent != nullptr && ins->goals[swap_agent->id] == ins->goals[ai->id] && !ai->reached_goal && !swap_agent->reached_goal)
+  // {
+  //   cout<<"wrong swap check "<<endl;
+  //   swap_agent = nullptr;
+  // }
+
   //swap_agent = swap_possible_and_required(ai);
 
   //}
@@ -553,19 +560,6 @@ bool Planner::funcPIBT(LACAMAgent* ai)
   if (swap_agent != nullptr)
   {
     std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
-  }
-
-  if (ai->id == 325 && ai->v_now->index == 912)
-  {
-
-      cout<<"consider next for 325 ";
-      for (auto k = 0; k < K + 1; ++k)
-      {
-        cout<<C_next[i][k]->index<<" ";
-      }
-      cout<<endl;
-      if (swap_agent != nullptr)
-        cout<<"swap needed "<<swap_agent->id<<" "<<A[swap_agent->id]->v_now<<endl;
   }
     
   // main operation
@@ -640,6 +634,14 @@ LACAMAgent* Planner::swap_possible_and_required(LACAMAgent* ai)
 bool Planner::is_swap_required(const uint pusher, const uint puller,
                                Vertex* v_pusher_origin, Vertex* v_puller_origin)
 {
+
+  // auto pusher_goal = A[pusher]->reached_goal ? ins->dummy_goals[pusher] : ins->goals[pusher];
+  // auto puller_goal = A[puller]->reached_goal ? ins->dummy_goals[puller] : ins->goals[puller];
+  // if (pusher_goal->id == puller_goal->id)
+  // {
+  //   cout<<"wrong"<<endl;
+  //   return false;
+  // }
   
   auto v_pusher = v_pusher_origin;
   auto v_puller = v_puller_origin;
