@@ -224,7 +224,7 @@ void Instance::computeAllPair()
         boost::heap::pairing_heap< Node, boost::heap::compare<Node::compare_node> > heap;
 
         Node root(i, 0); //compute every node to i
-        heuristic[i][0] = 0;
+        heuristic[i][i] = 0;
 
         heap.push(root);  // add root to heap
         while (!heap.empty())
@@ -407,7 +407,7 @@ void Instance::createDummyGoals()
         {
             dummy_goals_set.insert(dummy_goals[agent]);
         }
-        goals.insert(goal_location_seqs[agent].front());
+        goals.insert(env->goal_locations[agent][0].first);
     }
     for (int agent = 0; agent < num_of_agents; agent++)
     {

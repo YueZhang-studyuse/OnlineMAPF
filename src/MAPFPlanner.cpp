@@ -19,7 +19,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
                 true,
                 "Adaptive",
                 true,
-                true,3);
+                true,0);
     lns->setIterations(0);
 }
 
@@ -30,7 +30,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     bool new_task = instance.updateStartGoals();
 
     lns->clearAll("Adaptive");
-    if (new_task)
+    if (new_task && env->curr_timestep <= 16)
     {
     //if (future_paths.empty() || future_paths[0].empty()){
         lns->setHasInitialSolution(false);

@@ -41,24 +41,36 @@ HNode::HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
   // set priorities
   if (parent == nullptr) {
     // initialize
-    for (uint i = 0; i < N; ++i) priorities[i] = (float)i/N; //do not according to the distance in our online ver
-    //(float)D.get(i, C[i]) / N;
+    for (uint i = 0; i < N; ++i) //priorities[i] = (float)i/N; //do not according to the distance in our online ver
+    priorities[i] = (float)D.get(i, C[i]) / N;
 
     //init reach goal to be all false
-    for (int i = 0; i < N; i++) reach_goal[i] = false;
+    for (int i = 0; i < N; i++) reach_goal[i] = (D.get(i, C[i]) == 0);
   } 
   else 
   {
+    auto check_curr = parent;
+    while (check_curr != nullptr)
+    {
+      for (size_t i = 0; i < N; ++i)
+      {
+        if (reach_goal[i])
+          continue;
+        if (D.get(i, check_curr->C[i]) == 0)
+          reach_goal[i] = true;
+      }
+      check_curr = check_curr->parent;
+    }
     // dynamic priorities, akin to PIBT
     for (size_t i = 0; i < N; ++i) { //the orders
 
     //set reach goal to be all same with parent
-      reach_goal[i] = parent->reach_goal[i];
+      //reach_goal[i] = parent->reach_goal[i];
       //if (C[i]->id == ins->goals[i]->id)
-      if (D.get(i, C[i]) == 0 )
-      {
-        reach_goal[i] = true;
-      }
+      // if (D.get(i, C[i]) == 0 )
+      // {
+      //   reach_goal[i] = true;
+      // }
 
       //if (D.get(i, C[i]) != 0 ) {
         //->reached goal get lowest prority
@@ -194,18 +206,24 @@ Solution Planner::solve(std::string& additional_info)
         if (!H->reach_goal[i])
         {
           allreached = false;
-          cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<"goal at "<<ins->goals[i]<<endl;
+          //cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<"goal at "<<ins->goals[i]<<endl;
           reached--;
         }
+        // else
+        // {
+        //   if (instance.getAllpairDistance(ins->dummy_goals[i]->index,H->C[i]->index) != 0)
+        //     H->priorities[i] = H->parent->priorities[i] + 1;
+        // }
       }
-      cout<<"reached goal "<<reached<<endl;
+      if (reached > 390)
+        cout<<"reached goal "<<reached<<endl;
       if (allreached)
       {
         cout<<"reached goal loop at "<< loop_cnt<<endl;
-        // H_goal = H;
-        // solver_info(1, "found solution, cost: ", H->g);
-        // cout<<"found solution, cost: "<<H->g<<endl;
-        // break;
+        H_goal = H;
+        solver_info(1, "found solution, cost: ", H->g);
+        cout<<"found solution, cost: "<<H->g<<endl;
+        break;
       }
       if (allreached && is_same_config(H->C, ins->dummy_goals))
       {
@@ -238,6 +256,7 @@ Solution Planner::solve(std::string& additional_info)
       continue;
     }
 
+
     // create new configuration
     for (auto a : A) 
     {
@@ -253,13 +272,19 @@ Solution Planner::solve(std::string& additional_info)
       auto H_insert = (MT != nullptr && get_random_float(MT) >= RESTART_RATE)
                           ? iter->second
                           : H_init;
-      if (H_goal == nullptr || H_insert->f < H_goal->f) OPEN.push(H_insert);
+      if (H_goal == nullptr || H_insert->f < H_goal->f) 
+      {
+        OPEN.push(H_insert);
+      }
     } else {
       // insert new search node
       const auto H_new = new HNode(
           C_new, D, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new));
       EXPLORED[H_new->C] = H_new;
-      if (H_goal == nullptr || H_new->f < H_goal->f) OPEN.push(H_new);
+      if (H_goal == nullptr || H_new->f < H_goal->f) 
+      {
+        OPEN.push(H_new);
+      }
     }
   }
 
@@ -267,6 +292,11 @@ Solution Planner::solve(std::string& additional_info)
   {
     H_goal = curr_best;
     cout<<"lacam failed"<<endl;
+    for (int i = 0; i < H_goal->reach_goal.size();i++)
+    {
+      if (!H_goal->reach_goal[i])
+        cout<<"not reached goal "<<i<<" "<<H_goal->C[i]->index<<" goal "<<ins->goals[i]->index<<"current order "<<H_goal->priorities[i]<<endl;
+    }
   }
 
   // backtrack
@@ -391,6 +421,9 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     // set occupied now
     a->v_now = H->C[a->id];
 
+    if (a->id == 371 && a->v_now->index == 18)
+      cout<<"reached 371"<<endl;
+
     // if (a->v_now->id == ins->goals[a->id]->id)
     //   H->reach_goal[a->id] = true;
     if (H->reach_goal[a->id])
@@ -439,6 +472,13 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     A[i]->v_next = L->where[k];
     
     occupied_next[l] = A[i];
+    if (occupied_now[l] != nullptr && occupied_now[l] != A[i] && !funcPIBT(occupied_now[l]))
+    {
+      cout<<"constraint failed"<<endl;
+      return false;
+    }
+    if (!A[i]->reached_goal)
+      cout<<"constrainted on not reached goal "<<i<<endl;
   }
 
 
@@ -448,6 +488,9 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     auto a = A[k];
     if (a->v_next == nullptr && !funcPIBT(a))
     {
+      cout<<"pibt failed due to agent "<<a->id<<" at "<<a->v_now<<" goal "<<H->priorities[a->id]<<endl;
+      if (a->reached_goal)
+        cout<<"reached goal"<<endl;
      return false;  // planning failure
     }
   }
@@ -457,6 +500,11 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
 bool Planner::funcPIBT(LACAMAgent* ai)
 {
+  // cout<<"pibt for agent "<<ai->id<<" ";
+  // if (ai->reached_goal)
+  //   cout<<"reached goal"<<endl;
+  // else
+  //   cout<<"not reached goal"<<endl;
   const auto i = ai->id;
   const auto K = ai->v_now->neighbor.size();
 
@@ -495,19 +543,23 @@ bool Planner::funcPIBT(LACAMAgent* ai)
 
   //}
 
-    if (swap_agent != nullptr)
-    {
-      std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
-    }
+  if (swap_agent != nullptr)
+  {
+    std::reverse(C_next[i].begin(), C_next[i].begin() + K + 1);
+  }
     
   // main operation
   for (auto k = 0; k < K + 1; ++k) {
-    if (ai->id == 381 && C_next[i][k]->index == 895)
-      cout<<"agent 381 considered 895"<<endl;
     auto u = C_next[i][k];
 
     // avoid vertex conflicts
-    if (occupied_next[u->id] != nullptr) continue;
+    if (occupied_next[u->id] != nullptr) 
+    {
+      continue;
+    }
+
+
+
 
     auto& ak = occupied_now[u->id];
 
@@ -569,6 +621,7 @@ LACAMAgent* Planner::swap_possible_and_required(LACAMAgent* ai)
 bool Planner::is_swap_required(const uint pusher, const uint puller,
                                Vertex* v_pusher_origin, Vertex* v_puller_origin)
 {
+  
   auto v_pusher = v_pusher_origin;
   auto v_puller = v_puller_origin;
   int pusher_vpuller = A[pusher]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[pusher]->index, v_puller->index) : D.get(pusher, v_puller);
@@ -594,6 +647,11 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
     if (n <= 0) break;
     v_pusher = v_puller;
     v_puller = tmp;
+
+    pusher_vpuller = A[pusher]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[pusher]->index, v_puller->index) : D.get(pusher, v_puller);
+    pusher_vpusher = A[pusher]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[pusher]->index, v_pusher->index) : D.get(pusher, v_pusher);
+    puller_vpuller = A[puller]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[puller]->index, v_puller->index) : D.get(puller, v_puller);
+    puller_vpusher = A[puller]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[puller]->index, v_pusher->index) : D.get(puller, v_pusher);
   }
 
   // judge based on distance
