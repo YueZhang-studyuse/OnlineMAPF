@@ -229,8 +229,18 @@ Solution Planner::solve(std::string& additional_info)
         //     H->priorities[i] = H->parent->priorities[i] + 1;
         // }
       }
-      // if (reached > 390)
-      //   cout<<"reached goal "<<reached<<endl;
+      if (reached > 390)
+        cout<<"reached goal "<<reached<<endl;
+      if (reached > 390)
+      {
+        for (size_t i = 0; i < N; ++i) 
+        {
+          if (!H->reach_goal[i])
+          {
+            cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<"goal at "<<ins->goals[i]<<endl;
+          }
+        }
+      }
       if (allreached)
       {
         cout<<"reached goal loop at "<< loop_cnt<<endl;
@@ -306,11 +316,13 @@ Solution Planner::solve(std::string& additional_info)
   {
     H_goal = curr_best;
     cout<<"lacam failed"<<endl;
+    auto loc = -1;
     for (int i = 0; i < H_goal->reach_goal.size();i++)
     {
       if (!H_goal->reach_goal[i])
         cout<<"not reached goal "<<i<<" "<<H_goal->C[i]->index<<" goal "<<ins->goals[i]->index<<"current order "<<H_goal->priorities[i]<<endl;
     }
+    //cout<<"agent 178 goal "<< ins->goals[178]->index<<" dummy goal " << ins->dummy_goals[178]<<endl;
   }
 
   // backtrack
@@ -420,12 +432,12 @@ void Planner::expand_lowlevel_tree(HNode* H, LNode* L)
 
 bool Planner::get_new_config(HNode* H, LNode* L)
 {
-  //cout<<"current config"<<endl;
   // setup cache
   for (auto a : A) {
     // clear previous cache
     if (a->v_now != nullptr && occupied_now[a->v_now->id] == a) {
       occupied_now[a->v_now->id] = nullptr;
+      a->reached_goal = false;
     }
     if (a->v_next != nullptr) {
       occupied_next[a->v_next->id] = nullptr;
@@ -464,7 +476,8 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
 
   }
-  //cout<<endl;
+
+  //cout<<"current config for 178 "<<A[178]->v_now->index<<" for 282 "<<A[282]->v_now->index<<endl;
 
 
   // add constraints
@@ -490,8 +503,10 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     // }
     // if (!A[i]->reached_goal)
     //   cout<<"constrainted on not reached goal "<<i<<endl;
+
   }
 
+  //cout<<"starting pibt"<<endl;
 
   // perform PIBT
   for (auto k : H->order) {
@@ -499,12 +514,12 @@ bool Planner::get_new_config(HNode* H, LNode* L)
     auto a = A[k];
     if (a->v_next == nullptr && !funcPIBT(a))
     {
-      // cout<<"pibt failed due to agent "<<a->id<<" at "<<a->v_now<<" goal "<<H->priorities[a->id]<<endl;
-      // if (a->reached_goal)
-      //   cout<<"reached goal"<<endl;
-     return false;  // planning failure
+      cout<<"failed"<<endl;
+      return false;  // planning failure
     }
   }
+
+  cout<<"pibt success and return "<<endl;
 
   return true;
 }
@@ -534,7 +549,7 @@ bool Planner::funcPIBT(LACAMAgent* ai)
                       D.get(i, u) + tie_breakers[u->id];
               });
 
-    swap_agent = swap_possible_and_required(ai);
+    //swap_agent = swap_possible_and_required(ai);
   
   }
   else
@@ -546,6 +561,19 @@ bool Planner::funcPIBT(LACAMAgent* ai)
               });
     //swap_agent = swap_possible_and_required(ai);
   }
+
+  swap_agent = swap_possible_and_required(ai);
+
+  // if (ai->id == 178)
+  // {
+  //   cout<<"agent 178 now consider ";
+  //   for (auto k = 0; k < K + 1; ++k)
+  //    cout<<C_next[i][k]->index<<" h "<<instance.getAllpairDistance(C_next[i][k]->index,instance.getDummyGoals()[i]);
+  //   cout<<endl; 
+  // }
+
+  // if (swap_agent != nullptr && ai->id == 282)
+  //   cout<<"swap with "<<swap_agent->id<<endl;
 
   // if (swap_agent != nullptr && ins->goals[swap_agent->id] == ins->goals[ai->id] && !ai->reached_goal && !swap_agent->reached_goal)
   // {
@@ -635,13 +663,12 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
                                Vertex* v_pusher_origin, Vertex* v_puller_origin)
 {
 
-  // auto pusher_goal = A[pusher]->reached_goal ? ins->dummy_goals[pusher] : ins->goals[pusher];
-  // auto puller_goal = A[puller]->reached_goal ? ins->dummy_goals[puller] : ins->goals[puller];
-  // if (pusher_goal->id == puller_goal->id)
-  // {
-  //   cout<<"wrong"<<endl;
-  //   return false;
-  // }
+  auto pusher_goal = A[pusher]->reached_goal ? ins->dummy_goals[pusher] : ins->goals[pusher];
+  auto puller_goal = A[puller]->reached_goal ? ins->dummy_goals[puller] : ins->goals[puller];
+  if (pusher_goal->id == puller_goal->id)
+  {
+    return false; //no need to swap with same goal
+  }
   
   auto v_pusher = v_pusher_origin;
   auto v_puller = v_puller_origin;
