@@ -15,6 +15,8 @@ struct LACAMInstance {
 
   Config dummy_goals;
 
+  //vector<Config> goal_seqs;
+
   const uint N;  // number of agents
 
   // for testing

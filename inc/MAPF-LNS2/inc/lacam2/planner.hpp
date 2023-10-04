@@ -49,7 +49,8 @@ struct HNode {
 
   //reached goal once
   std::vector<bool> reach_goal;
-  int reached_goal_count = 0;
+  std::vector<int> goal_label; //each agent reached which goal
+  std::vector<int> reached_goal_count; // how many agents reached the nth goal
 
   // for low-level search
   std::vector<float> priorities;

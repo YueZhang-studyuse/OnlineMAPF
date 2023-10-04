@@ -23,8 +23,6 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
     lns->setIterations(0);
 }
 
-
-// plan using simple A* that ignores the time dimension
 void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
 {
     bool new_task = instance.updateStartGoals();

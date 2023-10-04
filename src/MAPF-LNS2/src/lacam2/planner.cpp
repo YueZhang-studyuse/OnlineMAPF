@@ -56,18 +56,18 @@ HNode::HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
       reach_goal[i] = (D.get(i, C[i]) == 0);
       if (parent->reach_goal[i]) reach_goal[i] = true;
     }
-    auto check_curr = parent;
-    while (check_curr != nullptr)
-    {
-      for (size_t i = 0; i < N; ++i)
-      {
-        if (reach_goal[i])
-          continue;
-        if (D.get(i, check_curr->C[i]) == 0)
-          reach_goal[i] = true;
-      }
-      check_curr = check_curr->parent;
-    }
+    // auto check_curr = parent;
+    // while (check_curr != nullptr)
+    // {
+    //   for (size_t i = 0; i < N; ++i)
+    //   {
+    //     if (reach_goal[i])
+    //       continue;
+    //     if (D.get(i, check_curr->C[i]) == 0)
+    //       reach_goal[i] = true;
+    //   }
+    //   check_curr = check_curr->parent;
+    // }
     // dynamic priorities, akin to PIBT
     for (size_t i = 0; i < N; ++i) { //the orders
 
