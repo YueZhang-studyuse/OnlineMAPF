@@ -1452,7 +1452,7 @@ CBS::CBS(vector<SingleAgentSolver*>& search_engines,
 CBS::CBS(vector<SingleAgentSolver*>& search_engines, int screen, const PathTable* path_table = nullptr) :
     screen(screen), suboptimality(1),
     initial_constraints(search_engines.size(), ConstraintTable(
-            search_engines[0]->instance.num_of_cols, search_engines[0]->instance.map_size, path_table)),
+            search_engines[0]->instance.env->cols, search_engines[0]->instance.env->map.size(), path_table)),
     search_engines(search_engines),
     mdd_helper(initial_constraints, search_engines),
     rectangle_helper(search_engines[0]->instance),
@@ -1484,7 +1484,7 @@ CBS::CBS(const Instance& instance, bool sipp, int screen) :
         else
             search_engines[i] = new SpaceTimeAStar(instance, i);
 
-        initial_constraints.emplace_back(instance.num_of_cols, instance.map_size);
+        initial_constraints.emplace_back(instance.env->cols, instance.env->map.size());
     }
     mutex_helper.search_engines = search_engines;
 	runtime_preprocessing = (double)(clock() - t) / CLOCKS_PER_SEC;

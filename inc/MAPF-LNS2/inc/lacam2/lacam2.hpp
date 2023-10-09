@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dist_table.hpp"
+//#include "dist_table.hpp"
 #include "graph.hpp"
 #include "./lacam2/lacam_instance.hpp"
 #include "planner.hpp"

@@ -178,8 +178,8 @@ bool GCBS::findPathForSingleAgent(GCBSNode* node, int agent)
 {
     // build constraint table
     auto t = clock();
-    ConstraintTable constraint_table(search_engines[agent]->instance.num_of_cols,
-                    search_engines[agent]->instance.map_size, &path_tables->at(agent));
+    ConstraintTable constraint_table(search_engines[agent]->instance.env->cols,
+                    search_engines[agent]->instance.env->map.size(), &path_tables->at(agent));
     auto curr = node;
     while (curr->parent != nullptr)
     {

@@ -21,54 +21,76 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
                 true,
                 true,0);
     lns->setIterations(0);
+
+    commited_paths.resize(env->num_of_agents);
+    future_paths.resize(env->num_of_agents);
 }
 
 void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
 {
-    bool new_task = instance.updateStartGoals();
+    //bool new_task = instance.updateStartGoals();
+    bool replan_need = false;
+
+    for (int i = 0; i < env->num_of_agents; i++)
+    {
+        if (future_paths[i].empty())
+        {
+            replan_need = true;
+            break;
+        }
+        if (future_paths[i].front() != env->curr_states[i].location)
+        {
+            replan_need = true;
+            break;
+        }
+        bool arrived = false;
+        for (auto loc: future_paths[i])
+        {
+            if (loc == env->goal_locations[i][0].first)
+            {
+                arrived = true;
+                break;
+            }
+        }
+        if (!arrived)
+        {
+            replan_need = true;
+            break;
+        }
+    }
 
     lns->clearAll("Adaptive");
-    if (new_task)
+
+    if (replan_need)
     {
-    //if (future_paths.empty() || future_paths[0].empty()){
+        //if (future_paths.empty() || future_paths[0].empty()){
         lns->setHasInitialSolution(false);
         initial_run = true;
     }
 
 
-    //the 1st ver. lns complete restart
-    commited_paths.resize(env->num_of_agents);
-    future_paths.resize(env->num_of_agents);
     lns->setRuntimeLimit(time_limit);
-    //Instance instance(env);
-    
-    // LNS lns(instance, time_limit - 0.1,
-    //             "LACAM",
-    //             "PP",
-    //             "Adaptive",
-    //             8,
-    //             MAX_TIMESTEP,
-    //             true,
-    //             "Adaptive",
-    //             true,
-    //             true,3);
-    // lns.setIterations(0);
     
     if (!initial_run)
     {
         lns->loadPaths(future_paths);
         cout<<"loading"<<endl;
     }
+
     for (int i = 0; i < env->num_of_agents; i++)
     {
         future_paths[i].clear();
         commited_paths[i].clear();
     }
+
     bool succ = lns->run();
 
     actions = std::vector<Action>(env->curr_states.size(), Action::WA);
     if (!succ)
+    {
+        cout<<"not success"<<endl;
         return;
+    }
     lns->commitPath(1,commited_paths,future_paths,true,env->curr_timestep);
     initial_run = false;
 

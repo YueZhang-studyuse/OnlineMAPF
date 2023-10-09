@@ -11,11 +11,10 @@
 struct LACAMInstance {
   const Graph G;
   Config starts;
+  //no need for goals and dummy goals (using the same thing in instance)
   Config goals;
 
-  Config dummy_goals;
-
-  //vector<Config> goal_seqs;
+  // Config dummy_goals;
 
   const uint N;  // number of agents
 
@@ -39,7 +38,7 @@ struct LACAMInstance {
   // simple feasibility check of instance
   bool is_valid(const int verbose = 0) const;
 
-  void update_dummygoals(vector<int> dummy_goal);
+  
 };
 
 // solution: a sequence of configurations

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "dist_table.hpp"
+//#include "dist_table.hpp"
 #include "graph.hpp"
 #include "lacam_instance.hpp"
 #include "utils.hpp"
@@ -49,15 +49,18 @@ struct HNode {
 
   //reached goal once
   std::vector<bool> reach_goal;
-  std::vector<int> goal_label; //each agent reached which goal
-  std::vector<int> reached_goal_count; // how many agents reached the nth goal
+  //std::vector<int> goal_label; //each agent reached which goal
+  //std::vector<int> reached_goal_count; // how many agents reached the nth goal
+  int num_agent_reached = 0;
 
   // for low-level search
   std::vector<float> priorities;
   std::vector<uint> order;
   std::queue<LNode*> search_tree;
 
-  HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
+  // HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
+  //       const uint _h);
+  HNode(const Config& _C, const Instance& I, HNode* _parent, const uint _g,
         const uint _h);
   ~HNode();
 };
@@ -77,7 +80,7 @@ struct Planner {
   // solver utils
   const uint N;       // number of agents
   const uint V_size;  // number o vertices
-  DistTable D;
+  //DistTable D; //use my all pair heuristic
   uint loop_cnt;      // auxiliary
 
   // used in PIBT

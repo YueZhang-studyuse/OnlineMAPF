@@ -7,7 +7,7 @@
 InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_limit,
          const string & replan_algo_name, const string & init_destory_name, int neighbor_size, int screen) :
          BasicLNS(instance, time_limit, neighbor_size, screen), agents(agents), replan_algo_name(replan_algo_name),
-         path_table(instance.map_size, agents.size()), collision_graph(agents.size()), goal_table(instance.map_size, -1)
+         path_table(instance.env->map.size(), agents.size()), collision_graph(agents.size()), goal_table(instance.env->map.size(), -1)
  {
      replan_time_limit = time_limit;
      if (init_destory_name == "Adaptive")
@@ -226,7 +226,7 @@ bool InitLNS::runGCBS()
     }
 
     // build path tables
-    vector<PathTable> path_tables(neighbor.agents.size(), PathTable(instance.map_size));
+    vector<PathTable> path_tables(neighbor.agents.size(), PathTable(instance.env->map.size()));
     for (int i = 0; i < (int)neighbor.agents.size(); i++)
     {
         int agent_id = neighbor.agents[i];
@@ -340,7 +340,7 @@ bool InitLNS::runPP()
     runtime = ((fsec)(Time::now() - start_time)).count();
     double T = min(time_limit - runtime, replan_time_limit);
     auto time = Time::now();
-    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, nullptr, &path_table);
+    ConstraintTable constraint_table(instance.env->cols, instance.env->map.size(), nullptr, &path_table);
     while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
     {
         int id = *p;
@@ -413,7 +413,7 @@ bool InitLNS::getInitialSolution()
     }
     int remaining_agents = (int)neighbor.agents.size();
     std::random_shuffle(neighbor.agents.begin(), neighbor.agents.end());
-    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, nullptr, &path_table);
+    ConstraintTable constraint_table(instance.env->cols, instance.env->map.size(), nullptr, &path_table);
     set<pair<int, int>> colliding_pairs;
     for (auto id : neighbor.agents)
     {

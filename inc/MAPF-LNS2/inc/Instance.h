@@ -2,50 +2,59 @@
 #include"lns_common.h"
 #include "SharedEnv.h"
 
+//instance: to save all the instance, heuristic related functions
+
 
 // Currently only works for undirected unweighted 4-nighbor grids
 class Instance 
 {
 public:
-	int num_of_cols;
-	int num_of_rows;
-	int map_size;
+	// some information not needed -> access from env
+	// int num_of_cols;
+	// int num_of_rows;
+	// int map_size;
+
 	SharedEnvironment* env;
 	vector<vector<int>> heuristic;
+	//save map degree - for assigning goals
+	vector<int> degrees = {0,0,0,0};
 
+	//for allpair heuristics
 	void computeAllPair();
 
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
 	Instance()=default;
-	//Instance(SharedEnvironment* env);
 
 	void initMap(SharedEnvironment* simulate_env);
-	bool updateStartGoals();
-
+	//bool updateStartGoals();
 
 	//void printAgents() const;
-    vector<int> getStarts() const {return start_locations;};
-    vector<list<int>> getGoals() const {return goal_location_seqs;};
+    // vector<int> getStarts() const {return start_locations;};
+    // vector<list<int>> getGoals() const {return goal_location_seqs;};
 
 
-    inline bool isObstacle(int loc) const { return my_map[loc]; }
+    inline bool isObstacle(int loc) const 
+	{ 
+		//return my_map[loc]; 
+		return (env->map[loc] == 1);
+	}
     inline bool validMove(int curr, int next) const
     {
-        if (next < 0 || next >= map_size)
+        if (next < 0 || next >= env->map.size())
             return false;
-        if (my_map[next])
+        if (env->map[next] == 1)
             return false;
         return getManhattanDistance(curr, next) < 2;
     }
     list<int> getNeighbors(int curr) const;
 
 
-    inline int linearizeCoordinate(int row, int col) const { return ( this->num_of_cols * row + col); }
-    inline int getRowCoordinate(int id) const { return id / this->num_of_cols; }
-    inline int getColCoordinate(int id) const { return id % this->num_of_cols; }
-    inline pair<int, int> getCoordinate(int id) const { return make_pair(id / this->num_of_cols, id % this->num_of_cols); }
-    inline int getCols() const { return num_of_cols; }
+    inline int linearizeCoordinate(int row, int col) const { return ( this->env->cols * row + col); }
+    inline int getRowCoordinate(int id) const { return id / this->env->cols; }
+    inline int getColCoordinate(int id) const { return id % this->env->cols; }
+    inline pair<int, int> getCoordinate(int id) const { return make_pair(id / this->env->cols, id % this->env->cols); }
+    inline int getCols() const { return env->cols; }
 
     inline int getManhattanDistance(int loc1, int loc2) const
     {
@@ -68,47 +77,46 @@ public:
 
 	int getDegree(int loc) const
 	{
-		assert(loc >= 0 && loc < map_size && !my_map[loc]);
+		assert(loc >= 0 && loc < env->map.size() && env->map[loc] != 1);
 		int degree = 0;
-		if (0 < loc - num_of_cols && !my_map[loc - num_of_cols])
+		if (0 < loc - env->cols && env->map[loc - env->cols] != 1)
 			degree++;
-		if (loc + num_of_cols < map_size && !my_map[loc + num_of_cols])
+		if (loc + env->cols < env->map.size() && env->map[loc + env->cols] != 1)
 			degree++;
-		if (loc % num_of_cols > 0 && !my_map[loc - 1])
+		if (loc % env->cols > 0 && env->map[loc - 1] != 1)
 			degree++;
-		if (loc % num_of_cols < num_of_cols - 1 && !my_map[loc + 1])
+		if (loc % env->cols < env->cols - 1 && env->map[loc + 1] != 1)
 			degree++;
 		return degree;
 	}
 
-	int getDefaultNumberOfAgents() const { return num_of_agents; }
+	int getDefaultNumberOfAgents() const { return env->num_of_agents; }
     void savePaths(const string & file_name, const vector<Path*>& paths) const;
     //bool validateSolution(const vector<Path*>& paths, int sum_of_costs, int num_of_colliding_pairs) const;
     bool hasCollision(const Path& p1, const Path& p2) const;
 
-	void setStart(int agent, int location){start_locations[agent] = location;}
+	//void setStart(int agent, int location){start_locations[agent] = location;}
 
-	void createDummyGoals();
+	//void createDummyGoals();
+	void assignDummyGoals (int agent) const;
 
 	vector<int> getDummyGoals() const { return dummy_goals;};
 	
 private:
 	  // int moves_offset[MOVE_COUNT];
-	  vector<bool> my_map;
+	  //vector<bool> my_map;
 	  string map_fname;
 	  string agent_fname;
 
-	  int num_of_agents;
-	  vector<int> start_locations;
+	  //int num_of_agents;
+	  //vector<int> start_locations;
 	  //vector<int> goal_locations;
-	  vector<list<int>> goal_location_seqs;
-	  vector<int> dummy_goals;
+	  //vector<list<int>> goal_location_seqs;
+	  mutable vector<int> dummy_goals;
 
 	  bool nathan_benchmark = true;
 	  void printMap() const;
 	  void saveMap() const;
-
-	  int dummy_goal_accpetance = 4;
 
 	  // Class  SingleAgentSolver can access private members of Node 
 	  friend class SingleAgentSolver;

@@ -119,12 +119,18 @@ public:
 	// int getStartLocation() const {return instance.start_locations[agent]; }
 	// int getGoalLocation() const {return instance.goal_locations[agent]; }
 
+	// SingleAgentSolver(const Instance& instance, int agent) :
+	// 	instance(instance), //agent(agent), 
+	// 	start_location(instance.env->curr_states[agent].location),
+	// 	goal_location(instance.env->goal_locations[agent].front().first)
+	// {
+	// 	//compute_heuristics();
+	// }
+
 	SingleAgentSolver(const Instance& instance, int agent) :
-		instance(instance), //agent(agent), 
-		start_location(instance.start_locations[agent]),
-		goal_location(instance.goal_location_seqs[agent].front())
+		instance(instance) //no start and goal location in pre-processing phase
 	{
-		compute_heuristics();
+		//compute_heuristics();
 	}
 	virtual ~SingleAgentSolver()= default;
     void reset()

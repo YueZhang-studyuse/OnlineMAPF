@@ -4,111 +4,67 @@
 #include <chrono>       // std::chrono::system_clock
 #include"Instance.h"
 
-
-// Instance::Instance(SharedEnvironment* env)
-// {
-//     my_env = env;
-// 	num_of_rows = env->rows;
-// 	num_of_cols = env->cols;
-// 	num_of_agents = env->num_of_agents;
-// 	map_size = env->map.size();
-//     my_map.resize(map_size);
-// 	//read map to my_map
-// 	for (int i = 0; i < map_size; i++)
-// 	{
-// 		my_map[i] = (env->map[i] == 1);
-//  	}
-
-//     start_locations.resize(num_of_agents);
-// 	goal_locations.resize(num_of_agents);
-
-//     for (int i = 0; i < num_of_agents; i++)
-//     {
-//         start_locations[i] = env->curr_states[i].location;
-//         goal_locations[i] = env->goal_locations[i][0].first;
-//     }
-// }
-
 void Instance::initMap(SharedEnvironment* simulate_env)
 {
     env = simulate_env;
-	num_of_rows = env->rows;
-	num_of_cols = env->cols;
-	num_of_agents = env->num_of_agents;
-	map_size = env->map.size();
+	// num_of_rows = env->rows;
+	// num_of_cols = env->cols;
+	// num_of_agents = env->num_of_agents;
+	// map_size = env->map.size();
     //cout<<env->num_of_agents<<endl;
-    my_map.resize(map_size);
+    //my_map.resize(map_size);
 	//read map to my_map
-	for (int i = 0; i < map_size; i++)
-	{
-		my_map[i] = (env->map[i] == 1);
- 	}
-
-    vector<int> degrees = {0,0,0,0};
-    for (int i = 0; i < map_size; i++)
+	// for (int i = 0; i < map_size; i++)
+	// {
+	// 	my_map[i] = (env->map[i] == 1);
+ 	// }
+    for (int i = 0; i < env->map.size(); i++)
     {
-        if (my_map[i])
+        if (env->map[i] == 1)
             continue;
         int index = getDegree(i)-1;
         degrees[index]++;
     }
 
-    // for (int i = 0; i < 4; i ++)
-    // {
-    //     cout<<"degrees "<<i+1<< " " << degrees[i]<<endl;
-    // }
-
-    //we estimate ie. if 4-degree grid is enough?
-    int temp_locations = 0;
-    for (int i = 3; i >=0; i--)
-    {
-        temp_locations += degrees[i];
-        if (temp_locations >= num_of_agents)
-        {
-            dummy_goal_accpetance = i+1;
-            break;
-        }
-    }
-
-    start_locations.resize(num_of_agents);
-	goal_location_seqs.resize(num_of_agents);
-    dummy_goals = std::vector<int>(num_of_agents,-1);
+    // start_locations.resize(num_of_agents);
+	// goal_location_seqs.resize(num_of_agents);
+    dummy_goals = std::vector<int>(env->num_of_agents,-1);
 }
 
-bool Instance::updateStartGoals()
-{
-    //cout<<"dummy goals degree"<<dummy_goal_accpetance<<endl;
-    bool new_task = false;
-    for (int i = 0; i < num_of_agents; i++)
-    {
-        start_locations[i] = env->curr_states[i].location;
-        if (goal_location_seqs[i].empty()|| (goal_location_seqs[i].front() != env->goal_locations[i][0].first))
-        {
-            goal_location_seqs[i].push_back(env->goal_locations[i].back().first);
-            dummy_goals[i] = -1;
-            //goal_locations[i] = env->goal_locations[i][0].first;
-            new_task = true;
-        }
-    }
-    if (new_task)
-        createDummyGoals();
+// bool Instance::updateStartGoals()
+// {
+//     //cout<<"dummy goals degree"<<dummy_goal_accpetance<<endl;
+//     bool new_task = false;
+//     for (int i = 0; i < num_of_agents; i++)
+//     {
+//         start_locations[i] = env->curr_states[i].location;
+//         if (goal_location_seqs[i].empty()|| (goal_location_seqs[i].front() != env->goal_locations[i][0].first))
+//         {
+//             goal_location_seqs[i].push_back(env->goal_locations[i].back().first);
+//             dummy_goals[i] = -1;
+//             //goal_locations[i] = env->goal_locations[i][0].first;
+//             new_task = true;
+//         }
+//     }
+//     if (new_task)
+//         createDummyGoals();
 
-    // for (int i = 0; i < num_of_agents; i++)
-    // {
-    //     cout<<"agent "<<i<<endl;
-    //     cout<<"start "<<start_locations[i]<<" goal "<<goal_location_seqs[i].front()<<" degree "<<getDegree(goal_location_seqs[i].front())<<" dummy goal "<<dummy_goals[i]<<" degree "<<getDegree(dummy_goals[i])<<endl;
-    // }
-    return new_task;
-}
+//     // for (int i = 0; i < num_of_agents; i++)
+//     // {
+//     //     cout<<"agent "<<i<<endl;
+//     //     cout<<"start "<<start_locations[i]<<" goal "<<goal_location_seqs[i].front()<<" degree "<<getDegree(goal_location_seqs[i].front())<<" dummy goal "<<dummy_goals[i]<<" degree "<<getDegree(dummy_goals[i])<<endl;
+//     // }
+//     return new_task;
+// }
 
 
 void Instance::printMap() const
 {
-	for (int i = 0; i< num_of_rows; i++)
+	for (int i = 0; i< env->rows; i++)
 	{
-		for (int j = 0; j < num_of_cols; j++)
+		for (int j = 0; j < env->cols;j++)
 		{
-			if (this->my_map[linearizeCoordinate(i, j)])
+			if (this->env->map[linearizeCoordinate(i, j)] == 1)
 				cout << '@';
 			else
 				cout << '.';
@@ -127,12 +83,12 @@ void Instance::saveMap() const
 		cout << "Fail to save the map to " << map_fname << endl;
 		return;
 	}
-	myfile << num_of_rows << "," << num_of_cols << endl;
-	for (int i = 0; i < num_of_rows; i++)
+	myfile << env->rows << "," << env->cols << endl;
+	for (int i = 0; i < env->rows; i++)
 	{
-		for (int j = 0; j < num_of_cols; j++)
+		for (int j = 0; j < env->cols; j++)
 		{
-			if (my_map[linearizeCoordinate(i, j)])
+			if (env->map[linearizeCoordinate(i, j)] == 1)
 				myfile << "@";
 			else
 				myfile << ".";
@@ -157,7 +113,7 @@ void Instance::saveMap() const
 list<int> Instance::getNeighbors(int curr) const
 {
 	list<int> neighbors;
-	int candidates[4] = {curr + 1, curr - 1, curr + num_of_cols, curr - num_of_cols};
+	int candidates[4] = {curr + 1, curr - 1, curr + env->cols, curr - env->cols};
 	for (int next : candidates)
 	{
 		if (validMove(curr, next))
@@ -189,7 +145,7 @@ void Instance::savePaths(const string & file_name, const vector<Path*>& paths) c
 void Instance::computeAllPair()
 {
     cout<<"computing all pair"<<endl;
-    heuristic.resize(my_map.size());
+    heuristic.resize(env->map.size());
 
     struct Node
 	{
@@ -211,14 +167,14 @@ void Instance::computeAllPair()
 
     for (int i = 0; i < heuristic.size(); i++)
     {
-        if (my_map[i])
+        if (env->map[i] == 1)
             continue;
         //heuristic[i] = std::vector<int>(heuristic.size()-i, MAX_TIMESTEP);
         heuristic[i] = std::vector<int>(heuristic.size(), MAX_TIMESTEP);
     }
     for (int i = 0; i < heuristic.size(); i++)
     {
-        if (my_map[i])
+        if (env->map[i] == 1)
             continue;
         // generate a heap that can save nodes (and a open_handle)
         boost::heap::pairing_heap< Node, boost::heap::compare<Node::compare_node> > heap;
@@ -248,7 +204,6 @@ void Instance::computeAllPair()
         // }
         // cout<<endl;
     }
-
 
 }
 
@@ -368,6 +323,55 @@ void Instance::computeAllPair()
 //     return true;
 // }
 
+void Instance::assignDummyGoals(int agent) const
+{
+    vector<int> sum_degree = {0,0,0,0};
+    unordered_set<int> current_goals;
+
+    for (int i = 0; i < env->num_of_agents; i++)
+    {
+        if (i == agent)
+            continue;
+        int goal = (dummy_goals[i] == -1 ? env->goal_locations[i][0].first : dummy_goals[i]);
+        sum_degree[getDegree(goal)-1]++;
+    }
+
+    //assign dummy goals according to a start location
+    int accept_degree = 4;
+    while (degrees[accept_degree-1] <= sum_degree[accept_degree-1])
+    {
+        accept_degree--;
+    }
+    //use bfs to find nearst dummy goals (including current location)
+    std::queue<int> open;
+    unordered_set<int> close;
+    open.push(env->goal_locations[agent][0].first);
+    while(!open.empty())
+    {
+        int curr = open.front();
+        open.pop();
+        if (current_goals.find(curr) == current_goals.end() && env->map[curr] != 1 && 
+        getDegree(curr) >= accept_degree)
+        {
+            //return curr;
+            dummy_goals[agent] = curr;
+            return;
+        }
+        if (close.find(curr) != close.end())
+        {
+            continue;
+        }
+        close.insert(curr);
+        auto neighbor = getNeighbors(curr);
+        for (auto location: neighbor)
+        {
+            if (close.find(location) == close.end())
+                open.push(location);
+        }
+    }
+    dummy_goals[agent] = -1;
+}
+
 bool Instance::hasCollision(const Path& p1, const Path& p2) const
 {
     int t = 1;
@@ -396,58 +400,58 @@ bool Instance::hasCollision(const Path& p1, const Path& p2) const
     return false;
 }
 
-void Instance::createDummyGoals()
-{
-    unordered_set<int> dummy_goals_set;
-    unordered_set<int> goals;
-    dummy_goal_accpetance = 0;
-    for (int agent = 0; agent < num_of_agents; agent++)
-    {
-        // if (dummy_goals[agent] != -1)
-        // {
-        //     dummy_goals_set.insert(dummy_goals[agent]);
-        // }
-        goals.insert(env->goal_locations[agent][0].first);
-    }
+// void Instance::createDummyGoals()
+// {
+//     unordered_set<int> dummy_goals_set;
+//     unordered_set<int> goals;
+//     dummy_goal_accpetance = 0;
+//     for (int agent = 0; agent < num_of_agents; agent++)
+//     {
+//         // if (dummy_goals[agent] != -1)
+//         // {
+//         //     dummy_goals_set.insert(dummy_goals[agent]);
+//         // }
+//         goals.insert(env->goal_locations[agent][0].first);
+//     }
 
-    for (int agent = 0; agent < num_of_agents; agent++)
-    {
-        if (goals.find(dummy_goals[agent]) != goals.end())
-            dummy_goals[agent] = -1;
-        if (dummy_goals[agent] != -1)
-        {
-            dummy_goals_set.insert(dummy_goals[agent]);
-        }
-    }
-    for (int agent = 0; agent < num_of_agents; agent++)
-    {
-        if (dummy_goals[agent] != -1)
-            continue;
-        //use bfs to find nearst dummy goals (including current location)
-        std::queue<int> open;
-        unordered_set<int> close;
-        open.push(goal_location_seqs[agent].back());
-        while(!open.empty())
-        {
-            int curr = open.front();
-            open.pop();
-            if (dummy_goals_set.find(curr) == dummy_goals_set.end() && goals.find(curr) == goals.end() && getDegree(curr) >= dummy_goal_accpetance)
-            {
-                dummy_goals[agent] = curr;
-                dummy_goals_set.insert(curr);
-                break;
-            }
-            if (close.find(curr) != close.end())
-            {
-                continue;
-            }
-            close.insert(curr);
-            auto neighbor = getNeighbors(curr);
-            for (auto loc: neighbor)
-            {
-                if (close.find(loc) == close.end())
-                    open.push(loc);
-            }
-        }
-    }
-}
+//     for (int agent = 0; agent < num_of_agents; agent++)
+//     {
+//         if (goals.find(dummy_goals[agent]) != goals.end())
+//             dummy_goals[agent] = -1;
+//         if (dummy_goals[agent] != -1)
+//         {
+//             dummy_goals_set.insert(dummy_goals[agent]);
+//         }
+//     }
+//     for (int agent = 0; agent < num_of_agents; agent++)
+//     {
+//         if (dummy_goals[agent] != -1)
+//             continue;
+//         //use bfs to find nearst dummy goals (including current location)
+//         std::queue<int> open;
+//         unordered_set<int> close;
+//         open.push(goal_location_seqs[agent].back());
+//         while(!open.empty())
+//         {
+//             int curr = open.front();
+//             open.pop();
+//             if (dummy_goals_set.find(curr) == dummy_goals_set.end() && goals.find(curr) == goals.end() && getDegree(curr) >= dummy_goal_accpetance)
+//             {
+//                 dummy_goals[agent] = curr;
+//                 dummy_goals_set.insert(curr);
+//                 break;
+//             }
+//             if (close.find(curr) != close.end())
+//             {
+//                 continue;
+//             }
+//             close.insert(curr);
+//             auto neighbor = getNeighbors(curr);
+//             for (auto loc: neighbor)
+//             {
+//                 if (close.find(loc) == close.end())
+//                     open.push(loc);
+//             }
+//         }
+//     }
+// }

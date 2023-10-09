@@ -14,7 +14,7 @@ LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, str
          num_of_iterations(num_of_iterations),
          use_init_lns(use_init_lns), init_destory_name(std::move(init_destory_name)),
          truncate_initial_paths(truncate_initial_paths),
-         path_table(instance.map_size)
+         path_table(instance.env->map.size())
 {
     start_time = Time::now();
     replan_time_limit = time_limit / 100;
@@ -60,7 +60,8 @@ bool LNS::run()
     sum_of_distances = 0;
     for (const auto & agent : agents)
     {
-        sum_of_distances += agent.path_planner->my_heuristic[agent.path_planner->start_location];
+        sum_of_distances += instance.getAllpairDistance(instance.env->curr_states[agent.id].location, instance.env->goal_locations[agent.id][0].first);
+        //agent.path_planner->my_heuristic[agent.path_planner->start_location];
     }
 
     initial_solution_runtime = 0;
@@ -577,7 +578,7 @@ bool LNS::runPP()
     if (!iteration_stats.empty()) // replan
         T = min(T, replan_time_limit);
     auto time = Time::now();
-    ConstraintTable constraint_table(instance.num_of_cols, instance.map_size, &path_table);
+    ConstraintTable constraint_table(instance.env->cols, instance.env->map.size(), &path_table);
     while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
     {
         int id = *p;
@@ -750,7 +751,7 @@ bool LNS::runLACAM2()
     // actions = std::vector<Action>(env->curr_states.size(), Action::WA);
 
     LACAMInstance ins = LACAMInstance(instance.env);
-    ins.update_dummygoals(instance.getDummyGoals());
+    //ins.update_dummygoals(instance.getDummyGoals());
     string verbose = "";
     auto MT = std::mt19937(0);
     const auto deadline = Deadline((time_limit-0.3) * 1000);
@@ -851,7 +852,7 @@ bool LNS::generateNeighborByIntersection()
 {
     if (intersections.empty())
     {
-        for (int i = 0; i < instance.map_size; i++)
+        for (int i = 0; i < instance.env->map.size(); i++)
         {
             if (!instance.isObstacle(i) && instance.getDegree(i) > 2)
                 intersections.push_back(i);
@@ -1518,11 +1519,11 @@ void LNS::clearAll(const string & destory_name)
     //tabu_list.clear();
     //intersections.clear();
     int i = 0;
-    auto starts = instance.getStarts();
+    auto starts = instance.env->curr_states;
     for (auto& a: agents)
     {
         a.path.clear();
-        a.path_planner->start_location = starts[i];
+        a.path_planner->start_location = starts[i].location;
         i++;
     }
     //start_time = Time::now();

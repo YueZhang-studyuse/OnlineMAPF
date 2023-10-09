@@ -6,7 +6,7 @@ void AnytimeBCBS::run()
 {
     int num_of_agents = instance.getDefaultNumberOfAgents();
     bool improvements = true;
-    double w = (double) MAX_COST / (instance.num_of_cols + instance.num_of_rows)
+    double w = (double) MAX_COST / (instance.env->cols + instance.env->rows)
             / 10 / num_of_agents; // a large enough w without integer overflow issue
     CBS bcbs(instance, false, screen);
     bcbs.setPrioritizeConflicts(improvements);

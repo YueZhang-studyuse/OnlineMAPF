@@ -5,7 +5,7 @@ LACAMInstance::LACAMInstance(const std::string& map_filename,
                    const std::vector<uint>& goal_indexes)
     : G(map_filename),
       starts(Config()),
-      goals(Config()),
+      //goals(Config()),
       N(start_indexes.size())
 {
   for (auto k : start_indexes) starts.push_back(G.U[k]);
@@ -14,7 +14,7 @@ LACAMInstance::LACAMInstance(const std::string& map_filename,
 
 //for start kit
 LACAMInstance::LACAMInstance(SharedEnvironment* env)
-  :G(env->map,env->rows,env->cols),starts(Config()), goals(Config()),dummy_goals(Config()),N(env->num_of_agents)
+  :G(env->map,env->rows,env->cols),starts(Config()), goals(Config()),N(env->num_of_agents)
 {
   //curr states is the start location
   cout<<"start"<<endl;
@@ -130,13 +130,13 @@ std::ostream& operator<<(std::ostream& os, const Solution& solution)
 }
 
 
-void LACAMInstance::update_dummygoals(vector<int> dummy_goal)
-{
-  cout<<"update dummy goals"<<endl;
-  for (int i = 0; i < dummy_goal.size(); i++)
-  {
-    dummy_goals.push_back(G.U[dummy_goal[i]]);
-    cout<<dummy_goal[i]<<" ";
-  }
-  cout<<endl;
-}
+// void LACAMInstance::update_dummygoals(vector<int> dummy_goal)
+// {
+//   cout<<"update dummy goals"<<endl;
+//   for (int i = 0; i < dummy_goal.size(); i++)
+//   {
+//     dummy_goals.push_back(G.U[dummy_goal[i]]);
+//     cout<<dummy_goal[i]<<" ";
+//   }
+//   cout<<endl;
+// }
