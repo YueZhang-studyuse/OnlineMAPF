@@ -1318,6 +1318,7 @@ bool LNS::loadPaths(vector<list<int>> paths)
         {
             agents[agent_id].path.emplace_back(location);
         }
+        path_table.insertPath(agent_id, agents[agent_id].path);
         initial_sum_of_costs+=agents[agent_id].path.size()-1;
         if (agents[agent_id].path.front().location != agents[agent_id].path_planner->start_location)
         {

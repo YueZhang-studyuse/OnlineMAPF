@@ -12,7 +12,7 @@ void PathTable::insertPath(int agent_id, const Path& path)
         table[path[t].location][t] = agent_id;
     }
     assert(goals[path.back().location] == MAX_TIMESTEP);
-    //goals[path.back().location] = (int) path.size() - 1;
+    goals[path.back().location] = (int) path.size() - 1;
     makespan = max(makespan, (int) path.size() - 1);
 }
 
@@ -48,11 +48,11 @@ bool PathTable::constrained(int from, int to, int to_time) const
                  table[to][to_time - 1] != NO_AGENT && table[from][to_time] == table[to][to_time - 1])
             return true;  // edge conflict with agent table[to][to_time - 1]
     }
-    if (!goals.empty())
-    {
-        if (goals[to] <= to_time)
-            return true; // target conflict
-    }
+    // if (!goals.empty())
+    // {
+    //     // if (goals[to] <= to_time)
+    //     //     return true; // target conflict
+    // }
     return false;
 }
 
@@ -207,7 +207,7 @@ void PathTableWC::insertPath(int agent_id, const Path& path)
         table[path[t].location][t].push_back(agent_id);
     }
     assert(goals[path.back().location] == MAX_TIMESTEP);
-    //goals[path.back().location] = (int) path.size() - 1;
+    goals[path.back().location] = (int) path.size() - 1;
     makespan = max(makespan, (int) path.size() - 1);
 }
 void PathTableWC::insertPath(int agent_id)

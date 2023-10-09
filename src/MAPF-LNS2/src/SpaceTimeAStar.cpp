@@ -66,8 +66,9 @@ Path SpaceTimeAStar::findPath(const ConstraintTable& constraint_table)
             updatePath(curr, path);
             break;
         }
-        else if (curr->reached_goal) // the agent can hold the goal location afterward
-         {
+        else if (curr->location == goal_location) // the agent can hold the goal location afterward
+        {
+			curr->is_goal = true;
 			updatePath(curr, path);
             break;
             // int future_collisions = constraint_table.getFutureNumOfCollisions(curr->location, curr->timestep);
@@ -167,7 +168,7 @@ Path SpaceTimeAStar::findPath(const ConstraintTable& constraint_table)
             auto existing_next = *it;
 
             if (existing_next->num_of_conflicts > next->num_of_conflicts  || 
-				existing_next->reached_goal_at >  next->reached_goal_at ||
+				//existing_next->reached_goal_at >  next->reached_goal_at ||
                 (existing_next->num_of_conflicts == next->num_of_conflicts &&
                 existing_next->getFVal() > next->getFVal()))
             {
