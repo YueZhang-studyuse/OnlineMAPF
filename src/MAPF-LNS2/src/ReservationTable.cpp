@@ -207,7 +207,9 @@ void ReservationTable::updateSIT(int location)
                 }
             }
             if (constraint_table.path_table_for_CT->goals[location] < MAX_TIMESTEP) // target conflict
+            {
                 insert2SIT(location, constraint_table.path_table_for_CT->goals[location], MAX_TIMESTEP + 1);
+            }
         }
         else // edge conflict
         {
@@ -321,15 +323,29 @@ list<tuple<int, int, int, bool, bool>> ReservationTable::get_safe_intervals(int 
 
     for(auto interval : sit[to])
     {
+        if (to == 765)
+        cout<<"interveral: "<<get<0>(interval)<<" "<<get<1>(interval)<<endl;
         if (lower_bound >= get<1>(interval))
+        {
+            if (to == 765)
+            cout<<"lower bound sit"<<endl;
             continue;
+        }
         else if (upper_bound <= get<0>(interval))
+        {
+            if (to == 765)
+            cout<<"failed sit"<<endl;
             break;
+        }
         // the interval overlaps with [lower_bound, upper_bound)
         auto t1 = get_earliest_arrival_time(from, to,
                 max(lower_bound, get<0>(interval)), min(upper_bound, get<1>(interval)));
         if (t1 < 0) // the interval is not reachable
+        {
+            if (to == 765)
+            cout<<"not reachable sit"<<endl;
             continue;
+        }
         else if (get<2>(interval)) // the interval has collisions
         {
             rst.emplace_back(get<1>(interval), t1, get<1>(interval), true, false);

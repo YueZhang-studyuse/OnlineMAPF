@@ -14,12 +14,13 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
                 "LACAM",
                 "PP",
                 "Adaptive",
+                //"Random",
                 8,
                 MAX_TIMESTEP,
                 true,
                 "Adaptive",
                 true,
-                true,0);
+                true,1);
     lns->setIterations(0);
 
     commited_paths.resize(env->num_of_agents);
@@ -70,6 +71,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
 
 
     lns->setRuntimeLimit(time_limit);
+    lns->setIterations(MAX_TIMESTEP);
     
     if (!initial_run)
     {

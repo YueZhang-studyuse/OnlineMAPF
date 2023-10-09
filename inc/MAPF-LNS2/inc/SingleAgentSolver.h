@@ -14,40 +14,90 @@ public:
 	bool in_openlist = false;
 	bool wait_at_goal = false; // the action is to wait at the goal vertex or not. This is used for >lenghth constraints
     bool is_goal = false;
+
+	bool reached_goal = false; //for reach true goal location
+	int reached_goal_at = MAX_TIMESTEP;
+
+	// // the following is used to comapre nodes in the OPEN list
+	// struct compare_node
+	// {
+	// 	// returns true if n1 > n2 (note -- this gives us *min*-heap).
+	// 	bool operator()(const LLNode* n1, const LLNode* n2) const
+	// 	{
+    //         if (n1->g_val + n1->h_val == n2->g_val + n2->h_val)
+    //         {
+    //             if (n1->h_val == n2->h_val)
+    //             {
+    //                 return rand() % 2 == 0;   // break ties randomly
+    //             }
+    //             return n1->h_val >= n2->h_val;  // break ties towards smaller h_vals (closer to goal location)
+    //         }
+	// 		return n1->g_val + n1->h_val >= n2->g_val + n2->h_val;
+	// 	}
+	// };  // used by OPEN (heap) to compare nodes (top of the heap has min f-val, and then highest g-val)
+
 	// the following is used to comapre nodes in the OPEN list
 	struct compare_node
 	{
 		// returns true if n1 > n2 (note -- this gives us *min*-heap).
 		bool operator()(const LLNode* n1, const LLNode* n2) const
 		{
-            if (n1->g_val + n1->h_val == n2->g_val + n2->h_val)
-            {
-                if (n1->h_val == n2->h_val)
-                {
-                    return rand() % 2 == 0;   // break ties randomly
-                }
-                return n1->h_val >= n2->h_val;  // break ties towards smaller h_vals (closer to goal location)
-            }
-			return n1->g_val + n1->h_val >= n2->g_val + n2->h_val;
+			if (n1->reached_goal_at == n2->reached_goal_at)
+			{
+				if (n1->g_val + n1->h_val == n2->g_val + n2->h_val)
+				{
+					if (n1->h_val == n2->h_val)
+					{
+						return rand() % 2 == 0;   // break ties randomly
+					}
+					return n1->h_val >= n2->h_val;  // break ties towards smaller h_vals (closer to goal location)
+				}
+				return n1->g_val + n1->h_val >= n2->g_val + n2->h_val;
+			}
+			cout<<"comapre "<<n1->reached_goal_at<<" "<<n2->reached_goal_at<<endl;
+			return n1->reached_goal_at >= n2->reached_goal_at;
 		}
 	};  // used by OPEN (heap) to compare nodes (top of the heap has min f-val, and then highest g-val)
 
 		// the following is used to compare nodes in the FOCAL list
+	// struct secondary_compare_node
+	// {
+	// 	bool operator()(const LLNode* n1, const LLNode* n2) const // returns true if n1 > n2
+	// 	{
+	// 		if (n1->num_of_conflicts == n2->num_of_conflicts)
+	// 		{
+    //             if (n1->g_val + n1->h_val == n2->g_val + n2->h_val)
+    //             {
+    //                 if (n1->h_val == n2->h_val)
+    //                 {
+    //                     return rand() % 2 == 0;   // break ties randomly
+    //                 }
+    //                 return n1->h_val >= n2->h_val;  // break ties towards smaller h_vals (closer to goal location)
+    //             }
+    //             return n1->g_val+n1->h_val >= n2->g_val+n2->h_val;  // break ties towards smaller f_vals (prefer shorter solutions)
+	// 		}
+	// 		return n1->num_of_conflicts >= n2->num_of_conflicts;  // n1 > n2 if it has more conflicts
+	// 	}
+	// };  // used by FOCAL (heap) to compare nodes (top of the heap has min number-of-conflicts)
 	struct secondary_compare_node
 	{
 		bool operator()(const LLNode* n1, const LLNode* n2) const // returns true if n1 > n2
 		{
 			if (n1->num_of_conflicts == n2->num_of_conflicts)
 			{
-                if (n1->g_val + n1->h_val == n2->g_val + n2->h_val)
-                {
-                    if (n1->h_val == n2->h_val)
-                    {
-                        return rand() % 2 == 0;   // break ties randomly
-                    }
-                    return n1->h_val >= n2->h_val;  // break ties towards smaller h_vals (closer to goal location)
-                }
-                return n1->g_val+n1->h_val >= n2->g_val+n2->h_val;  // break ties towards smaller f_vals (prefer shorter solutions)
+                if (n1->reached_goal_at == n2->reached_goal_at)
+				{
+					if (n1->g_val + n1->h_val == n2->g_val + n2->h_val)
+					{
+						if (n1->h_val == n2->h_val)
+						{
+							return rand() % 2 == 0;   // break ties randomly
+						}
+						return n1->h_val >= n2->h_val;  // break ties towards smaller h_vals (closer to goal location)
+					}
+					return n1->g_val + n1->h_val >= n2->g_val + n2->h_val;
+				}
+				return n1->reached_goal_at >= n2->reached_goal_at;
 			}
 			return n1->num_of_conflicts >= n2->num_of_conflicts;  // n1 > n2 if it has more conflicts
 		}
@@ -55,9 +105,9 @@ public:
 
 
 	LLNode() {}
-	LLNode(int location, int g_val, int h_val, LLNode* parent, int timestep, int num_of_conflicts) :
+	LLNode(int location, int g_val, int h_val, LLNode* parent, int timestep, int num_of_conflicts, bool reached_goal) :
 		location(location), g_val(g_val), h_val(h_val), parent(parent), timestep(timestep),
-		num_of_conflicts(num_of_conflicts) {}
+		num_of_conflicts(num_of_conflicts), reached_goal(reached_goal) {}
 	LLNode(const LLNode& other) { copy(other); }
     ~LLNode()= default;
 
@@ -91,6 +141,8 @@ public:
 
 	int start_location;
 	int goal_location;
+	int dummy_goal; //for dummy goal location
+
 	vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
 	int compute_heuristic(int from, int to) const  // compute admissible heuristic between two locations
 	{

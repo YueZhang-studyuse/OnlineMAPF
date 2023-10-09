@@ -166,7 +166,6 @@ Solution Planner::solve(std::string& additional_info)
     // DFS
     while (!OPEN.empty() && !is_expired(deadline)) 
     {
-        cout<<"loop "<<loop_cnt<<endl;
 
         // do not pop here!
         auto H = OPEN.top();  // high-level node

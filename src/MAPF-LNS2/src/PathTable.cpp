@@ -13,6 +13,8 @@ void PathTable::insertPath(int agent_id, const Path& path)
     }
     assert(goals[path.back().location] == MAX_TIMESTEP);
     goals[path.back().location] = (int) path.size() - 1;
+    if (path.back().location == 765)
+        cout<<"dummy goal occupy by "<<agent_id<<endl;
     makespan = max(makespan, (int) path.size() - 1);
 }
 
@@ -36,6 +38,8 @@ void PathTable::deletePath(int agent_id, const Path& path)
         }
 
     }
+    if (agent_id == 348 && goals[765] != MAX_TIMESTEP)
+        cout<<"wrong occupied "<<endl;
 }
 
 bool PathTable::constrained(int from, int to, int to_time) const

@@ -101,6 +101,8 @@ public:
 	void assignDummyGoals (int agent) const;
 
 	vector<int> getDummyGoals() const { return dummy_goals;};
+
+	void updateDummyGoal(int agent, int location) const {dummy_goals[agent] = location;}
 	
 private:
 	  // int moves_offset[MOVE_COUNT];

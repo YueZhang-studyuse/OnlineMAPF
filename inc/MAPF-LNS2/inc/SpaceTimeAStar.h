@@ -14,7 +14,22 @@ public:
 	AStarNode() : LLNode() {}
     AStarNode(const AStarNode& other) : LLNode(other) {} // copy everything except for handles
 	AStarNode(int loc, int g_val, int h_val, LLNode* parent, int timestep, int num_of_conflicts) :
-		LLNode(loc, g_val, h_val, parent, timestep, num_of_conflicts) {}
+		LLNode(loc, g_val, h_val, parent, timestep, num_of_conflicts,false) {}
+	
+	AStarNode(int loc, int g_val, int h_val, LLNode* parent, int timestep, int num_of_conflicts, bool reached_goal) :
+		LLNode(loc, g_val, h_val, parent, timestep, num_of_conflicts,reached_goal) 
+	{
+		if (parent != nullptr && parent->reached_goal)
+		{
+			reached_goal = true;
+			reached_goal_at = parent->reached_goal_at;
+		}
+		else
+		{
+			if (reached_goal && !parent->reached_goal) //reached goal at current timestep
+				reached_goal_at = timestep;
+		}
+	}
 
 
 	~AStarNode() {}
@@ -41,7 +56,8 @@ public:
                         s1->location == s2->location &&
                         s1->timestep == s2->timestep &&
 						s1->wait_at_goal == s2->wait_at_goal &&
-						s1->is_goal == s2->is_goal);
+						s1->is_goal == s2->is_goal);// &&
+						//s1->reached_goal == s2->reached_goal);
 		}
 	};
 };

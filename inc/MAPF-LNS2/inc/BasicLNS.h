@@ -11,9 +11,9 @@ struct Agent
 
     Agent(const Instance& instance, int id, bool sipp) : id(id)
     {
-        if(sipp)
-            path_planner = new SIPP(instance, id);
-        else
+        // if(sipp)
+        //     path_planner = new SIPP(instance, id);
+        // else
             path_planner = new SpaceTimeAStar(instance, id);
     }
     ~Agent(){ delete path_planner; }

@@ -8,65 +8,32 @@ InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_li
          const string & replan_algo_name, const string & init_destory_name, int neighbor_size, int screen) :
          BasicLNS(instance, time_limit, neighbor_size, screen), agents(agents), replan_algo_name(replan_algo_name),
          path_table(instance.env->map.size(), agents.size()), collision_graph(agents.size()), goal_table(instance.env->map.size(), -1)
- {
-     replan_time_limit = time_limit;
-     if (init_destory_name == "Adaptive")
-     {
-         ALNS = true;
-         destroy_weights.assign(INIT_COUNT, 1);
-         decay_factor = 0.05;
-         reaction_factor = 0.05;
-     }
-     else if (init_destory_name == "Target")
-         init_destroy_strategy = TARGET_BASED;
-     else if (init_destory_name == "Collision")
-         init_destroy_strategy = COLLISION_BASED;
-     else if (init_destory_name == "Random")
-         init_destroy_strategy = RANDOM_BASED;
-     else
-     {
-         cerr << "Init Destroy heuristic " << init_destory_name << " does not exists. " << endl;
-         exit(-1);
-     }
+{
+    replan_time_limit = time_limit;
+    if (init_destory_name == "Adaptive")
+    {
+        ALNS = true;
+        destroy_weights.assign(INIT_COUNT, 1);
+        decay_factor = 0.05;
+        reaction_factor = 0.05;
+    }
+    else if (init_destory_name == "Target")
+        init_destroy_strategy = TARGET_BASED;
+    else if (init_destory_name == "Collision")
+        init_destroy_strategy = COLLISION_BASED;
+    else if (init_destory_name == "Random")
+        init_destroy_strategy = RANDOM_BASED;
+    else
+    {
+        cerr << "Init Destroy heuristic " << init_destory_name << " does not exists. " << endl;
+        exit(-1);
+    }
 
-     for (auto& i:agents) {
-         goal_table[i.path_planner->goal_location] = i.id;
-     }
+    for (auto& i:agents) {
+        goal_table[i.path_planner->goal_location] = i.id;
+    }
 
- }
-
-
-// void InitLNS::construct_edgecount()
-// {
-//     //search on single agent shorest path
-//     for (int i = 0; i < (int)agents.size(); i++)
-//     {
-//         ConstraintTable constraint_table(instance.num_of_cols, instance.map_size);
-//         auto path = agents[i].path_planner->findPath(constraint_table);
-
-//         for (int t = 1; t < (int)path.size(); t++)
-//         {
-//             int loc1 = path[t-1].location;
-//             int loc2 = path[t].location;
-//             if (loc1 != loc2)
-//             {
-//                 if (edges_count.find(make_pair(loc1,loc2)) == edges_count.end())
-//                 {
-//                     edges_count[make_pair(loc1,loc2)] = 1;
-//                 }
-//                 else
-//                 {
-//                     edges_count[make_pair(loc1,loc2)] += 1;
-//                 }
-//             }
-//         }
-//     }
-//     //see edge count
-//     for (auto c: edges_count)
-//     {
-//         cout<<c.first.first<<" "<<c.first.second<<", "<<c.second<<endl;
-//     }
-// }
+}
 
 bool InitLNS::run()
 {
