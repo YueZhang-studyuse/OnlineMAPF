@@ -14,7 +14,6 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
                 "LACAM",
                 "PP",
                 "Adaptive",
-                //"Random",
                 8,
                 MAX_TIMESTEP,
                 true,
