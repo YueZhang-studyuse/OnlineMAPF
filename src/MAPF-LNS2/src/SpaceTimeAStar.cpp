@@ -35,7 +35,7 @@ Path SpaceTimeAStar::findPath(const ConstraintTable& constraint_table)
 		//cout<<"start constrainted"<<endl;
         return path;
     }
-    auto holding_time = constraint_table.getHoldingTime(dummy_goal, constraint_table.length_min); // the earliest timestep that the agent can hold its goal location. The length_min is considered here.
+    auto holding_time = constraint_table.getHoldingTime(goal_location, constraint_table.length_min); // the earliest timestep that the agent can hold its goal location. The length_min is considered here.
 	//cout<<"holding time "<<holding_time<<endl;
     auto static_timestep = constraint_table.getMaxTimestep() + 1; // everything is static after this timestep
 	//cout<<"static "<<static_timestep<<endl;
@@ -43,7 +43,7 @@ Path SpaceTimeAStar::findPath(const ConstraintTable& constraint_table)
     auto last_target_collision_time = constraint_table.getLastCollisionTimestep(goal_location);
 	//cout<<"last target collision "<<last_target_collision_time<<endl;
     // generate start and add it to the OPEN & FOCAL list
-    auto h = get_heuristic(start_location,goal_location) + get_heuristic(goal_location,dummy_goal);
+    auto h = get_heuristic(start_location,goal_location);
 	//max(max(my_heuristic[start_location], holding_time), last_target_collision_time + 1);
     auto start = new AStarNode(start_location, 0, h, nullptr, 0, 0, (start_location == goal_location));
     num_generated++;
@@ -51,7 +51,6 @@ Path SpaceTimeAStar::findPath(const ConstraintTable& constraint_table)
     start->focal_handle = focal_list.push(start); // we only use focal list; no open list is used
     allNodes_table.insert(start);
 
-	//cout<<"start "<<start_location<<" goal "<<goal_location<<" dummy goal "<<dummy_goal<<endl;
 
     while (!focal_list.empty())
     {
@@ -67,48 +66,47 @@ Path SpaceTimeAStar::findPath(const ConstraintTable& constraint_table)
             updatePath(curr, path);
             break;
         }
-        else if (curr->reached_goal and
-				curr->location == dummy_goal and // arrive at the goal location
-                 !curr->wait_at_goal and // not wait at the goal location
-                 curr->timestep >= holding_time) // the agent can hold the goal location afterward
+        else if (curr->reached_goal) // the agent can hold the goal location afterward
          {
-            int future_collisions = constraint_table.getFutureNumOfCollisions(curr->location, curr->timestep);
-            if (future_collisions == 0)
-            {
-                updatePath(curr, path);
-                break;
-            }
-            // generate a goal node
-            auto goal = new AStarNode(*curr);
-            goal->is_goal = true;
-            goal->parent = curr;
-            goal->num_of_conflicts += future_collisions;
-            goal->h_val = 0;
-            // try to retrieve it from the hash table
-            auto it = allNodes_table.find(goal);
-            if (it == allNodes_table.end())
-            {
-                goal->focal_handle = focal_list.push(goal);
-                goal->in_openlist = true;
-                num_generated++;
-                allNodes_table.insert(goal);
-            }
-            else // update existing node's if needed (only in the open_list)
-            {
-                auto existing_next = *it;
-                if (existing_next->num_of_conflicts > goal->num_of_conflicts ||
-					//existing_next->reached_goal_at > next->reached_goal_at ||
-                   (//existing_next->reached_goal_at > goal->reached_goal_at &&
-					existing_next->num_of_conflicts == goal->num_of_conflicts &&
-                    existing_next->getFVal() > goal->getFVal()))
-                {
-                    assert(existing_next->in_openlist);
-                    existing_next->copy(*goal);	// update existing node
-                    focal_list.update(existing_next->focal_handle);
-                    num_generated++; // reopen is considered as a new node
-                }
-                delete (goal);
-            }
+			updatePath(curr, path);
+            break;
+            // int future_collisions = constraint_table.getFutureNumOfCollisions(curr->location, curr->timestep);
+            // if (future_collisions == 0)
+            // {
+            //     updatePath(curr, path);
+            //     break;
+            // }
+            // // generate a goal node
+            // auto goal = new AStarNode(*curr);
+            // goal->is_goal = true;
+            // goal->parent = curr;
+            // goal->num_of_conflicts += future_collisions;
+            // goal->h_val = 0;
+            // // try to retrieve it from the hash table
+            // auto it = allNodes_table.find(goal);
+            // if (it == allNodes_table.end())
+            // {
+            //     goal->focal_handle = focal_list.push(goal);
+            //     goal->in_openlist = true;
+            //     num_generated++;
+            //     allNodes_table.insert(goal);
+            // }
+            // else // update existing node's if needed (only in the open_list)
+            // {
+            //     auto existing_next = *it;
+            //     if (existing_next->num_of_conflicts > goal->num_of_conflicts ||
+			// 		//existing_next->reached_goal_at > next->reached_goal_at ||
+            //        (//existing_next->reached_goal_at > goal->reached_goal_at &&
+			// 		existing_next->num_of_conflicts == goal->num_of_conflicts &&
+            //         existing_next->getFVal() > goal->getFVal()))
+            //     {
+            //         assert(existing_next->in_openlist);
+            //         existing_next->copy(*goal);	// update existing node
+            //         focal_list.update(existing_next->focal_handle);
+            //         num_generated++; // reopen is considered as a new node
+            //     }
+            //     delete (goal);
+            // }
         }
         if (curr->timestep >= constraint_table.length_max)
             continue;
@@ -144,10 +142,7 @@ Path SpaceTimeAStar::findPath(const ConstraintTable& constraint_table)
             //     next_h_val = max(next_h_val, curr->getFVal() - next_g_val);  // path max
             // else
             //     next_h_val = max(next_h_val, holding_time - next_g_val); // path max
-			if (curr->reached_goal)
-				next_h_val = get_heuristic(next_location,dummy_goal);
-			else
-				next_h_val = get_heuristic(next_location,goal_location) + get_heuristic(goal_location,dummy_goal);
+			next_h_val = get_heuristic(next_location,goal_location);
 			
             // generate (maybe temporary) node
             auto next = new AStarNode(next_location, next_g_val, next_h_val,

@@ -58,19 +58,8 @@ HNode::HNode(const Config& _C, const Instance& I, HNode* _parent, const uint _g,
             {
                 reach_goal[i] = true;
                 num_agent_reached++;
-                //priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
-                auto dummy_goal_index = I.getDummyGoals()[i];
-                if (dummy_goal_index == -1)
-                    I.assignDummyGoals(i);
-                if (I.getAllpairDistance(dummy_goal_index, C[i]->index) == 0)
-                {
-                    priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
-                }
-                else
-                {
-                    priorities[i] = parent->priorities[i] + 1;
-                }
-              }
+                priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
+            }
             else
             {
                 auto goal_index = I.env->goal_locations[i][0].first; //current we only consider plan for the first goal
@@ -79,27 +68,12 @@ HNode::HNode(const Config& _C, const Instance& I, HNode* _parent, const uint _g,
                     reach_goal[i] = true;
                     num_agent_reached++;
                     priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
-                    I.assignDummyGoals(i);
                 }
                 else //still not arrived
                 {
                     priorities[i] = parent->priorities[i] + 1;
                 }
             }
-            //the orders
-            // auto goal_index;
-            // if (reach_goal[i]) //reached goal before
-            //     goal_index = 
-                //reach_goal[i] = (D.get(i, C[i]) == 0);
-              //->reached goal get lowest prority
-            // if (!reach_goal[i])
-            // {
-            //   priorities[i] = parent->priorities[i] + 1;
-            // } 
-            // else 
-            // {
-            //   priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
-            // }
         }
     }
 
@@ -418,7 +392,10 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
         if (H->reach_goal[a->id]) a->reached_goal = true;
 
-        occupied_now[a->v_now->id] = a;
+        if (H->parent == nullptr || !a->reached_goal)
+            occupied_now[a->v_now->id] = a;
+        else
+            a->v_next = a->v_now;
 
         // -->discard because pushed away
         // if (H->reach_goal[a->id] && H->parent != nullptr && H->parent->parent != nullptr)
@@ -496,7 +473,8 @@ bool Planner::funcPIBT(LACAMAgent* ai)
     LACAMAgent* swap_agent = nullptr;
 
 
-    int goal_loc = ai->reached_goal ? instance.getDummyGoals()[i] : instance.env->goal_locations[i][0].first;
+    int goal_loc = instance.env->goal_locations[i][0].first;
+    //ai->reached_goal ? instance.getDummyGoals()[i] : instance.env->goal_locations[i][0].first;
 
     //sort
     std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
@@ -593,8 +571,8 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
                                Vertex* v_pusher_origin, Vertex* v_puller_origin)
 {
 
-    auto pusher_goal = A[pusher]->reached_goal ? instance.getDummyGoals()[pusher] : instance.env->goal_locations[pusher][0].first;
-    auto puller_goal = A[puller]->reached_goal ? instance.getDummyGoals()[puller] : instance.env->goal_locations[puller][0].first;
+    auto pusher_goal = instance.env->goal_locations[pusher][0].first;
+    auto puller_goal = instance.env->goal_locations[puller][0].first;
     if (pusher_goal == puller_goal)
     {
         return false; //no need to swap with same goal

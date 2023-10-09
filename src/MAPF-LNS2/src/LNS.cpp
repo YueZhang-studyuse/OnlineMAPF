@@ -806,24 +806,21 @@ bool LNS::runLACAM2()
 
     int soc = 0;
 
-    unordered_set<int> goals;
-
     for (int agent = 0; agent < instance.getDefaultNumberOfAgents(); agent++)
     {
-        bool reach_goal = false;
-
-        agents[agent].path.resize(solution.size());
+        int reached_goal_time = -1;
         for (size_t t = 0; t < solution.size(); t++)
         {
             auto curr_loc = solution[t][agent]->index;
-            agents[agent].path[t].location = curr_loc;
+            // agents[agent].path[t].location = curr_loc;
             if (curr_loc == instance.env->goal_locations[agent][0].first)
-                reach_goal = true;
-            if (!reach_goal)
-                soc++;
+            {
+                reached_goal_time = t;
+                break;
+            }
         }
 
-        if (!reach_goal)
+        if (reached_goal_time == -1)
         {
             cout<<"lacam plan for agent "<<agent<<" failed"<<endl;
             agents[agent].path.clear();
@@ -831,17 +828,21 @@ bool LNS::runLACAM2()
         }
         else
         {
+            agents[agent].path.resize(reached_goal_time+1);
+            for (size_t t = 0; t <= reached_goal_time; t++)
+            {
+                auto curr_loc = solution[t][agent]->index;
+                agents[agent].path[t].location = curr_loc;
+            }
             path_table.insertPath(agents[agent].id, agents[agent].path);
-            //soc+=agents[agent].path.size()-1;
-            instance.updateDummyGoal(agent,agents[agent].path.back().location);
-            agents[agent].path_planner->dummy_goal = agents[agent].path.back().location;
-            if (goals.find(agents[agent].path_planner->dummy_goal) != goals.end())
-                cout<<"wrong"<<endl;
-            goals.insert(agents[agent].path_planner->dummy_goal);
+            soc+=agents[agent].path.size()-1;
+            //instance.updateDummyGoal(agent,agents[agent].path.back().location);
+            //agents[agent].path_planner->dummy_goal = agents[agent].path.back().location;
             //cout<<"update agent dummy goal: agent "<<agent<<" current dummy goal "<<instance.getDummyGoals()[agent]<<" degree "<<instance.getDegree(instance.getDummyGoals()[agent])<<endl;
         }
 
     }
+
 
     neighbor.sum_of_costs =soc;
 
@@ -1317,6 +1318,7 @@ bool LNS::loadPaths(vector<list<int>> paths)
         {
             agents[agent_id].path.emplace_back(location);
         }
+        initial_sum_of_costs+=agents[agent_id].path.size()-1;
         if (agents[agent_id].path.front().location != agents[agent_id].path_planner->start_location)
         {
             cerr << "Agent " << agent_id <<"'s path starts at " << agents[agent_id].path.front().location

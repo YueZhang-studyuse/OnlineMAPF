@@ -19,7 +19,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
                 true,
                 "Adaptive",
                 true,
-                true,1);
+                true,3);
     lns->setIterations(0);
 
     commited_paths.resize(env->num_of_agents);

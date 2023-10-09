@@ -12,9 +12,7 @@ void PathTable::insertPath(int agent_id, const Path& path)
         table[path[t].location][t] = agent_id;
     }
     assert(goals[path.back().location] == MAX_TIMESTEP);
-    goals[path.back().location] = (int) path.size() - 1;
-    if (path.back().location == 765)
-        cout<<"dummy goal occupy by "<<agent_id<<endl;
+    //goals[path.back().location] = (int) path.size() - 1;
     makespan = max(makespan, (int) path.size() - 1);
 }
 
@@ -38,8 +36,6 @@ void PathTable::deletePath(int agent_id, const Path& path)
         }
 
     }
-    if (agent_id == 348 && goals[765] != MAX_TIMESTEP)
-        cout<<"wrong occupied "<<endl;
 }
 
 bool PathTable::constrained(int from, int to, int to_time) const
@@ -211,7 +207,7 @@ void PathTableWC::insertPath(int agent_id, const Path& path)
         table[path[t].location][t].push_back(agent_id);
     }
     assert(goals[path.back().location] == MAX_TIMESTEP);
-    goals[path.back().location] = (int) path.size() - 1;
+    //goals[path.back().location] = (int) path.size() - 1;
     makespan = max(makespan, (int) path.size() - 1);
 }
 void PathTableWC::insertPath(int agent_id)
@@ -275,11 +271,11 @@ int PathTableWC::getNumOfCollisions(int from, int to, int to_time) const
             }
         }
     }
-    if (!goals.empty())
-    {
-        if (goals[to] < to_time)
-            rst++; // target conflict
-    }
+    // if (!goals.empty())
+    // {
+    //     if (goals[to] < to_time)
+    //         rst++; // target conflict
+    // }
     return rst;
 }
 bool PathTableWC::hasCollisions(int from, int to, int to_time) const
@@ -300,11 +296,11 @@ bool PathTableWC::hasCollisions(int from, int to, int to_time) const
             }
         }
     }
-    if (!goals.empty())
-    {
-        if (goals[to] < to_time)
-            return true; // target conflict
-    }
+    // if (!goals.empty())
+    // {
+    //     if (goals[to] < to_time)
+    //         return true; // target conflict
+    // }
     return false;
 }
 bool PathTableWC::hasEdgeCollisions(int from, int to, int to_time) const
