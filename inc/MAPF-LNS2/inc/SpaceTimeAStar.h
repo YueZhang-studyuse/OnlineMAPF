@@ -74,16 +74,12 @@ public:
 	// Returns a shortest path that satisfies the constraints of the give node  while
 	// minimizing the number of internal conflicts (that is conflicts with known_paths for other agents found so far).
 	// lowerbound is an underestimation of the length of the path in order to speed up the search.
-	Path findOptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
-						const vector<Path*>& paths, int agent, int lower_bound);
 
     // find path by time-space A* search
     // Returns a path that satisfies the constraint_table while
     // minimizing the number of conflicts with constraint_table, breaking ties by the path length.
     Path findPath(const ConstraintTable& constraint_table);
 
-	pair<Path, int> findSuboptimalPath(const HLNode& node, const ConstraintTable& initial_constraints,
-		const vector<Path*>& paths, int agent, int lowerbound, double w);  // return the path and the lowerbound
 
 
     int getTravelTime(int start, int end, const ConstraintTable& constraint_table, int upper_bound);

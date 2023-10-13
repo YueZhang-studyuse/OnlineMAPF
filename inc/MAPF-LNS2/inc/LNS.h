@@ -83,12 +83,7 @@ private:
     //for commitment
     vector<int> stay_target;
 
-    bool runEECBS();
-    bool runCBS();
     bool runPP();
-    //bool runPIBT();
-    //bool runPPS();
-    //bool runWinPIBT();
     bool runLACAM2(); 
 
 
