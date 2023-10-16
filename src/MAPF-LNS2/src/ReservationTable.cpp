@@ -227,8 +227,8 @@ void ReservationTable::updateSIT(int location)
                         constraint_table.path_table_for_CT->table[from][t])
                     {
                         insert2SIT(location, t, t+1);
-                        if (location == 627)
-                            cout<<"edge conflict "<< constraint_table.path_table_for_CT->table[to][t - 1]<<endl;
+                        // if (location == 627)
+                        //     cout<<"edge conflict "<< constraint_table.path_table_for_CT->table[to][t - 1]<<endl;
                     }
                 }
             }
@@ -328,8 +328,8 @@ list<tuple<int, int, int, bool, bool>> ReservationTable::get_safe_intervals(int 
 
     for(auto interval : sit[to])
     {
-        if (to == 627)
-            cout<<get<0>(interval)<<" "<<get<1>(interval)<<" "<<get<2>(interval)<<endl;
+        // if (to == 627)
+        //     cout<<get<0>(interval)<<" "<<get<1>(interval)<<" "<<get<2>(interval)<<endl;
         if (lower_bound >= get<1>(interval))
             continue;
         else if (upper_bound <= get<0>(interval))

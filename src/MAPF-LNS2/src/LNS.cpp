@@ -368,14 +368,19 @@ bool LNS::fixInitialSolution()
                 complete_agents.emplace_back(agent.id);
                 makespan = max(makespan, (int)agent.path.size() - 1);
             }
-
+            instance.existing_path[agent.id].resize(agent.path.size());
+            for (int i = 0; i < (int)agent.path.size(); i++)
+            {
+                instance.existing_path[agent.id][i] = agent.path[i].location;
+            }
         }
     }
     if (screen == 2)
         cout << complete_agents.size() << " collision-free agents at timestep " << makespan << endl;
     neighbor.old_sum_of_costs = MAX_COST;
     neighbor.sum_of_costs = 0;
-    auto succ = runPP();
+    //auto succ = runPP();
+    auto succ = runLACAM2();
     if (succ)
     {
         initial_sum_of_costs += neighbor.sum_of_costs;
@@ -430,18 +435,6 @@ bool LNS::getInitialSolution()
 
 bool LNS::runPP()
 {
-    cout<<"current solution for 167: "<<endl;
-    for (auto pa: agents[167].path)
-    {
-        cout<<pa.location<<" ";
-    }
-    cout<<endl;
-    cout<<"current solution for 54: "<<endl;
-    for (auto pa: agents[54].path)
-    {
-        cout<<pa.location<<" ";
-    }
-    cout<<endl;
     auto shuffled_agents = neighbor.agents;
     std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
     if (screen >= 2) 
@@ -477,6 +470,7 @@ bool LNS::runPP()
             cout<<"sipp failed"<<endl;
             break;
         } 
+        cout<<"current cost "<<(int)agents[id].path.size() - 1;
         neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs)
         {
@@ -485,11 +479,6 @@ bool LNS::runPP()
         remaining_agents--;
         path_table.insertPath(agents[id].id, agents[id].path);
         ++p;
-        cout<<"current solution for 54: "<<endl;
-        for (auto pa: agents[54].path)
-        {
-            cout<<pa.location<<" ";
-        }
         cout<<endl;
     }
     if (remaining_agents == 0 && neighbor.sum_of_costs <= neighbor.old_sum_of_costs) // accept new paths
@@ -1032,6 +1021,8 @@ bool LNS::loadPaths(vector<list<int>> paths)
 {
     for (int agent_id = 0; agent_id < instance.getDefaultNumberOfAgents(); agent_id++)
     {
+        if (paths[agent_id].empty())
+            continue;
         for(auto location: paths[agent_id])
         {
             agents[agent_id].path.emplace_back(location);
@@ -1170,6 +1161,8 @@ void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<lis
 {
     for (const auto &agent : agents)
     {
+        if (agent.path.empty())
+            cout<<"error "<<agent.id<<endl;
         if (screen == 3)
             cout<<"Commiting: "<<agent.id<<"current location "<<agent.path.front().location<<endl;
         //agent reach target before, but need to de-tour due to resolving conflict, so we add the time reach target as waiting

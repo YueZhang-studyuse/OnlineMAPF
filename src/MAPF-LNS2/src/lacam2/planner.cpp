@@ -51,6 +51,7 @@ HNode::HNode(const Config& _C, const Instance& I, HNode* _parent, const uint _g,
     } 
     else 
     {
+        curr_time = parent->curr_time + 1;
         // dynamic priorities, akin to PIBT
         for (size_t i = 0; i < N; ++i) 
         { 
@@ -194,7 +195,6 @@ Solution Planner::solve(std::string& additional_info)
         expand_lowlevel_tree(H, L); //generate constraint 
 
         if (is_expired(deadline)) break;
-
 
         // create successors at the high-level search
         const auto res = get_new_config(H, L);
@@ -386,9 +386,11 @@ bool Planner::get_new_config(HNode* H, LNode* L)
         }
         //clear previous reached goal flag
         a->reached_goal = false;
+        a->curr_timestep = 0;
 
         // set occupied now
         a->v_now = H->C[a->id];
+        a->curr_timestep = H->curr_time;
 
         if (H->reach_goal[a->id]) a->reached_goal = true;
 
@@ -475,15 +477,16 @@ bool Planner::funcPIBT(LACAMAgent* ai)
 
     int goal_loc = instance.env->goal_locations[i][0].first;
     //ai->reached_goal ? instance.getDummyGoals()[i] : instance.env->goal_locations[i][0].first;
-
     //sort
     std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
               [&](Vertex* const v, Vertex* const u) 
               {
                   // return D.get(i, v) + tie_breakers[v->id] <
                   //       D.get(i, u) + tie_breakers[u->id];
-                  return instance.getAllpairDistance(goal_loc,v->index) + tie_breakers[v->id] <
-                          instance.getAllpairDistance(goal_loc,u->index) + tie_breakers[u->id];
+                //   return instance.getAllpairDistance(goal_loc,v->index) + tie_breakers[v->id] <
+                //           instance.getAllpairDistance(goal_loc,u->index) + tie_breakers[u->id];
+                return instance.getAllpairDistance(ai->id,ai->curr_timestep+1,goal_loc,v->index) + tie_breakers[v->id] <
+                          instance.getAllpairDistance(ai->id,ai->curr_timestep+1,goal_loc,u->index) + tie_breakers[u->id];
               });
 
     swap_agent = swap_possible_and_required(ai);
@@ -617,6 +620,10 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
         v_pusher = v_puller;
         v_puller = tmp;
 
+        // int pusher_vpuller = instance.getAllpairDistance(pusher_goal,v_puller->index);
+        // int pusher_vpusher = instance.getAllpairDistance(pusher_goal,v_pusher->index);
+        // int puller_vpuller = instance.getAllpairDistance(puller_goal,v_puller->index);
+        // int puller_vpusher = instance.getAllpairDistance(puller_goal,v_pusher->index);
         int pusher_vpuller = instance.getAllpairDistance(pusher_goal,v_puller->index);
         int pusher_vpusher = instance.getAllpairDistance(pusher_goal,v_pusher->index);
         int puller_vpuller = instance.getAllpairDistance(puller_goal,v_puller->index);

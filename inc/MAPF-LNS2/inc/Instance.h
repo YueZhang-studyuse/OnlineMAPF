@@ -19,6 +19,8 @@ public:
 	//save map degree - for assigning goals
 	vector<int> degrees = {0,0,0,0};
 
+	mutable vector<vector<int>> existing_path;
+
 	//for allpair heuristics
 	void computeAllPair();
 
@@ -72,6 +74,16 @@ public:
 
 	int getAllpairDistance(int loc1, int loc2) const
 	{
+		return heuristic[loc1][loc2];
+	}
+
+	int getAllpairDistance(int agent, int timestep, int loc1, int loc2) const
+	{
+		if (!existing_path[agent].size() > timestep)
+		{
+			if (existing_path[agent][timestep] == loc2)
+				return 0; //follow current path as much as possible
+		}
 		return heuristic[loc1][loc2];
 	}
 

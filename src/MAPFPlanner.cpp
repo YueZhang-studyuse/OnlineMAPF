@@ -29,33 +29,36 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     //bool new_task = instance.updateStartGoals();
     bool replan_need = false;
 
-    for (int i = 0; i < env->num_of_agents; i++)
-    {
-        if (future_paths[i].empty())
-        {
-            replan_need = true;
-            break;
-        }
-        if (future_paths[i].front() != env->curr_states[i].location)
-        {
-            replan_need = true;
-            break;
-        }
-        bool arrived = false;
-        for (auto loc: future_paths[i])
-        {
-            if (loc == env->goal_locations[i][0].first)
-            {
-                arrived = true;
-                break;
-            }
-        }
-        if (!arrived)
-        {
-            replan_need = true;
-            break;
-        }
-    }
+    // for (int i = 0; i < env->num_of_agents; i++)
+    // {
+    //     if (future_paths[i].empty())
+    //     {
+    //         replan_need = true;
+    //         break;
+    //     }
+    //     if (future_paths[i].front() != env->curr_states[i].location)
+    //     {
+    //         replan_need = true;
+    //         break;
+    //     }
+    //     bool arrived = false;
+    //     for (auto loc: future_paths[i])
+    //     {
+    //         if (loc == env->goal_locations[i][0].first)
+    //         {
+    //             arrived = true;
+    //             break;
+    //         }
+    //     }
+    //     if (!arrived)
+    //     {
+    //         replan_need = true;
+    //         break;
+    //     }
+    // }
+
+    if (env->curr_timestep == 0)
+        replan_need = true;
 
     lns->clearAll("Adaptive");
 

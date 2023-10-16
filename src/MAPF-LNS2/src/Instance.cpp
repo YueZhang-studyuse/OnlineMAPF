@@ -29,6 +29,7 @@ void Instance::initMap(SharedEnvironment* simulate_env)
     // start_locations.resize(num_of_agents);
 	// goal_location_seqs.resize(num_of_agents);
     dummy_goals = std::vector<int>(env->num_of_agents,-1);
+    existing_path.resize(env->num_of_agents);
 }
 
 // bool Instance::updateStartGoals()

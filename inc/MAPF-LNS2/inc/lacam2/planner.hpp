@@ -20,6 +20,7 @@ struct LACAMAgent {
   Vertex* v_now;   // current location
   Vertex* v_next;  // next location
   bool reached_goal = false; //for reach goal disappear
+  int curr_timestep = 0;
   LACAMAgent(uint _id) : id(_id), v_now(nullptr), v_next(nullptr) {}
 };
 using LACAMAgents = std::vector<LACAMAgent*>;
@@ -46,6 +47,8 @@ struct HNode {
   uint g;        // g-value (might be updated)
   const uint h;  // h-value
   uint f;        // g + h (might be updated)
+
+  int curr_time = 0;
 
   //reached goal once
   std::vector<bool> reach_goal;
