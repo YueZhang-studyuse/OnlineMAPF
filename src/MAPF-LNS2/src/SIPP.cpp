@@ -30,7 +30,7 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
 {
     reset();
     //ReservationTable reservation_table(constraint_table, goal_location);
-    ReservationTable reservation_table(constraint_table, dummy_goal);
+    ReservationTable reservation_table(constraint_table, goal_location);
     Path path;
     Interval interval = reservation_table.get_first_safe_interval(start_location);
     if (get<0>(interval) > 0) //cannot hold this location at timestep 0
@@ -39,8 +39,6 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
     //auto last_target_collision_time = constraint_table.getLastCollisionTimestep(goal_location); only need touched goal, no requirement for stay at goal
     // generate start and add it to the OPEN & FOCAL list
     auto h = get_heuristic(start_location,goal_location);
-    //we add the distance from goal to dummy goal
-    h+= get_heuristic(goal_location,dummy_goal);
 
     auto start = new SIPPNode(start_location, 0, h, nullptr, 0, get<1>(interval), get<1>(interval),
                                 get<2>(interval), get<2>(interval), (start_location == goal_location));
@@ -56,30 +54,17 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
         num_expanded++;
         assert(curr->location >= 0);
 
-        // check if the popped node is a goal
-        if (curr->is_goal) //happends in lns2
+        // // check if the popped node is a goal
+        // if (curr->is_goal) //happends in lns2
+        // {
+        //     updatePath(curr, path);
+        //     break;
+        // }
+        // else 
+        if (curr->location == goal_location) //reached goal once and disappear, so we do not need to care about future collisions
         {
             updatePath(curr, path);
             break;
-        }
-        else if (curr->reached_goal && curr->location == dummy_goal) //reached goal once and stay at dummy goal
-        {
-            int future_collisions = constraint_table.getFutureNumOfCollisions(curr->location, curr->timestep);
-            if (future_collisions == 0) //agent can stay at goal location
-            {
-                updatePath(curr, path);
-                break;
-            }
-            // generate a goal node
-            auto goal = new SIPPNode(*curr);
-            goal->is_goal = true;
-            goal->h_val = 0;
-            goal->num_of_conflicts += future_collisions;
-            // try to retrieve it from the hash table
-            if (dominanceCheck(goal))
-                pushNodeToFocal(goal);
-            else
-                delete goal;
         }
 
         for (int next_location : instance.getNeighbors(curr->location)) // move to neighboring locations
@@ -90,18 +75,9 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                 int next_high_generation, next_timestep, next_high_expansion;
                 bool next_v_collision, next_e_collision;
                 tie(next_high_generation, next_timestep, next_high_expansion, next_v_collision, next_e_collision) = i;
-                //if (next_timestep + my_heuristic[next_location] > constraint_table.length_max)
-                // if (next_timestep + get_heuristic(next_location,goal_location) > constraint_table.length_max) //for cbs, comment now
-                //     break;
                 auto next_collisions = curr->num_of_conflicts +
                                       (int)next_v_collision + (int)next_e_collision;
-                //auto next_h_val = max(my_heuristic[next_location], (next_collisions > 0?
-                int next_h_val = 0;
-                // if (!curr->reached_goal)
-                //     next_h_val= max(get_heuristic(next_location,goal_location), (next_collisions > 0?
-                //                 holding_time : curr->getFVal()) - next_timestep) + get_heuristic(goal_location,dummy_goal); // path max
-                // else
-                //     next_h_val= get_heuristic(next_location,dummy_goal);
+                auto next_h_val= get_heuristic(next_location,goal_location); // path max
                 
                 // generate (maybe temporary) node
                 auto next = new SIPPNode(next_location, next_timestep, next_h_val, curr, next_timestep,
@@ -109,14 +85,10 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                 // try to retrieve it from the hash table
                 if (dominanceCheck(next))
                 {
-                    if (next->reached_goal)
-                        cout<<"pushed "<<next->reached_goal_at<<endl;
                     pushNodeToFocal(next);
                 }
                 else
                 {
-                    if (next->reached_goal)
-                        cout<<"delete "<<next->reached_goal_at<<endl;
                     delete next;
                 }
             }
@@ -408,15 +380,12 @@ bool SIPP::dominanceCheck(SIPPNode* new_node)
     for (auto & old_node : ptr->second)
     {
         
-        if (old_node->reached_goal_at <= new_node->reached_goal_at and
-            old_node->timestep <= new_node->timestep and
+        if (old_node->timestep <= new_node->timestep and
             old_node->num_of_conflicts <= new_node->num_of_conflicts)
         { // the new node is dominated by the old node
-            if (new_node->reached_goal)
             return false;
         }
-        else if (old_node->reached_goal_at >= new_node->reached_goal_at and
-                old_node->timestep >= new_node->timestep and
+        else if (old_node->timestep >= new_node->timestep and
                 old_node->num_of_conflicts >= new_node->num_of_conflicts) // the old node is dominated by the new node
         { // delete the old node
             if (old_node->in_openlist) // the old node has not been expanded yet
@@ -428,8 +397,7 @@ bool SIPP::dominanceCheck(SIPPNode* new_node)
             num_generated--; // this is because we later will increase num_generated when we insert the new node into lists.
             return true;
         }
-        else if( old_node->reached_goal_at >= new_node->reached_goal_at and
-            old_node->timestep < new_node->high_expansion and new_node->timestep < old_node->high_expansion)
+        else if(old_node->timestep < new_node->high_expansion and new_node->timestep < old_node->high_expansion)
         { // intervals overlap --> we need to split the node to make them disjoint
             if (old_node->timestep <= new_node->timestep)
             {

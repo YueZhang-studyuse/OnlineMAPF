@@ -12,7 +12,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
                 "LACAM",
                 "PP",
                 "Adaptive",
-                8,
+                1,
                 MAX_TIMESTEP,
                 true,
                 "Adaptive",

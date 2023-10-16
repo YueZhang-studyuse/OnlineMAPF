@@ -596,9 +596,6 @@ bool LNS::runLACAM2()
             }
             path_table.insertPath(agents[agent].id, agents[agent].path);
             soc+=agents[agent].path.size()-1;
-            //instance.updateDummyGoal(agent,agents[agent].path.back().location);
-            //agents[agent].path_planner->dummy_goal = agents[agent].path.back().location;
-            //cout<<"update agent dummy goal: agent "<<agent<<" current dummy goal "<<instance.getDummyGoals()[agent]<<" degree "<<instance.getDegree(instance.getDummyGoals()[agent])<<endl;
         }
 
     }
@@ -690,35 +687,17 @@ bool LNS::generateNeighborByRandomWalk()
     
     set<int> neighbors_set;
     neighbors_set.insert(a);
-    int max_sic = 0;
-    for (auto p: agents[a].path)
-    {
-        if (p.location == agents[a].path_planner->goal_location)
-            break;
-        max_sic++;
-    }
-    //randomWalk(a, agents[a].path[0].location, 0, neighbors_set, neighbor_size, (int) agents[a].path.size() - 1);
-    randomWalk(a, agents[a].path[0].location, 0, neighbors_set, neighbor_size, max_sic);
-    //randomWalk(a, agents[a].path[0].location, 0, neighbors_set, neighbor_size, 2);
+    randomWalk(a, agents[a].path[0].location, 0, neighbors_set, neighbor_size, (int) agents[a].path.size() - 1);
     int count = 0;
     while (neighbors_set.size() < neighbor_size && count < 10)
     {
-        max_sic = 0;
-        for (auto p: agents[a].path)
-        {
-            if (p.location == agents[a].path_planner->goal_location)
-                break;
-            max_sic++;
-        }
-        //int t = rand() % agents[a].path.size();
-        int t = rand() % max_sic+1;
+        int t = rand() % agents[a].path.size();
     
         // if (target_considered)
         //     randomWalkwithStayTarget(a, agents[a].path[t].location, t, neighbors_set, neighbor_size, (int) agents[a].path.size() - 1);
         //     //randomWalkwithStayTarget(a, agents[a].path[t].location, t, neighbors_set, neighbor_size, 2);
         // else
-        //     randomWalk(a, agents[a].path[t].location, t, neighbors_set, neighbor_size, (int) agents[a].path.size() - 1);
-        randomWalk(a, agents[a].path[t].location, t, neighbors_set, neighbor_size, max_sic);
+        randomWalk(a, agents[a].path[t].location, t, neighbors_set, neighbor_size, (int) agents[a].path.size() - 1);
         count++;
         // select the next agent randomly
         int idx = rand() % neighbors_set.size();
@@ -754,15 +733,7 @@ int LNS::findMostDelayedAgent()
     {
         if (tabu_list.find(i) != tabu_list.end())
             continue;
-        //int delays = agents[i].getNumOfDelays();
-        int reached_goal_cost = 0;
-        for (auto p: agents[i].path)
-        {
-            if (p.location == agents[i].path_planner->goal_location)
-                break;
-            reached_goal_cost++;
-        }
-        int delays = reached_goal_cost -  instance.getAllpairDistance(agents[i].path_planner->start_location, agents[i].path_planner->goal_location);
+        int delays = (int) agents[i].path.size() - 1 -  instance.getAllpairDistance(agents[i].path_planner->start_location, agents[i].path_planner->goal_location);
         if (max_delays < delays)
         {
             a = i;

@@ -78,7 +78,7 @@ Please refer to the [Submission_Instruction.md](./Submission_Instruction.md).
 
 ## This version:
 
-In planner, treat agents reached goal once than can be pushed away.
+In planner, treat agents reached goal once than disapppear
 
 
 
