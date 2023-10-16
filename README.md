@@ -76,4 +76,9 @@ It is able to visualise the output of the start-kit program and help participant
 Please refer to the [Submission_Instruction.md](./Submission_Instruction.md).
 
 
+## This version:
+
+In planner, treat agents reached goal once than can be pushed away.
+
+
 
