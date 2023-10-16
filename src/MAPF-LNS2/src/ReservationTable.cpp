@@ -175,7 +175,25 @@ void ReservationTable::insertSoftConstraint2SIT(int location, int t_min, int t_m
 void ReservationTable::updateSIT(int location)
 {
     assert(sit[location].empty());
-    sit[location].emplace_back(0, MAX_TIMESTEP, false);
+    // length constraints for the goal location
+    if (location == goal_location) // we need to divide the same intervals into 2 parts [0, length_min) and [length_min, length_max + 1)
+    {
+        if (constraint_table.length_min > constraint_table.length_max) // the location is blocked for the entire time horizon
+        {
+            sit[location].emplace_back(0, 0, false);
+            return;
+        }
+        if (0 < constraint_table.length_min)
+        {
+            sit[location].emplace_back(0, constraint_table.length_min, false);
+        }
+        assert(constraint_table.length_min >= 0);
+        sit[location].emplace_back(constraint_table.length_min, min(constraint_table.length_max + 1, MAX_TIMESTEP), false);
+    }
+    else
+    {
+        sit[location].emplace_back(0, min(constraint_table.length_max, MAX_TIMESTEP - 1) + 1, false);
+    }
     // path table
     if (constraint_table.path_table_for_CT != nullptr and !constraint_table.path_table_for_CT->table.empty())
     {
@@ -186,8 +204,13 @@ void ReservationTable::updateSIT(int location)
                 if (constraint_table.path_table_for_CT->table[location][t] != NO_AGENT)
                 {
                     insert2SIT(location, t, t+1);
+                    // if (location == 628)
+                    //     cout<<"conflict "<< constraint_table.path_table_for_CT->table[location][t]<<" "<<t<<endl;
                 }
             }
+            //if (constraint_table.path_table_for_CT->goals[location] < MAX_TIMESTEP) // target conflict
+                //insert2SIT(location, constraint_table.path_table_for_CT->goals[location], MAX_TIMESTEP + 1);
+                //insert2SIT(location, constraint_table.path_table_for_CT->goals[location], constraint_table.path_table_for_CT->goals[location] + 1);
         }
         else // edge conflict
         {
@@ -204,8 +227,30 @@ void ReservationTable::updateSIT(int location)
                         constraint_table.path_table_for_CT->table[from][t])
                     {
                         insert2SIT(location, t, t+1);
+                        if (location == 627)
+                            cout<<"edge conflict "<< constraint_table.path_table_for_CT->table[to][t - 1]<<endl;
                     }
                 }
+            }
+        }
+    }
+
+    // negative constraints
+    const auto& it = constraint_table.ct.find(location);
+    if (it != constraint_table.ct.end())
+    {
+        for (auto time_range : it->second)
+            insert2SIT(location, time_range.first, time_range.second);
+    }
+
+    // positive constraints
+    if (location < constraint_table.map_size)
+    {
+        for (auto landmark : constraint_table.landmarks)
+        {
+            if (landmark.second != location)
+            {
+                insert2SIT(location, landmark.first, landmark.first + 1);
             }
         }
     }
@@ -223,6 +268,9 @@ void ReservationTable::updateSIT(int location)
                     insertSoftConstraint2SIT(location, t, t+1);
                 }
             }
+            //if (constraint_table.path_table_for_CAT->goals[location] < MAX_TIMESTEP) // target conflict
+                //insertSoftConstraint2SIT(location, constraint_table.path_table_for_CAT->goals[location], MAX_TIMESTEP + 1);
+                //insertSoftConstraint2SIT(location, constraint_table.path_table_for_CAT->goals[location], constraint_table.path_table_for_CAT->goals[location] + 1);
         }
         else // edge conflict
         {
@@ -253,6 +301,19 @@ void ReservationTable::updateSIT(int location)
             }
         }
     }
+
+    // soft constraints
+    if (!constraint_table.cat.empty())
+    {
+        for (auto t = 0; t < constraint_table.cat[location].size(); t++)
+        {
+            if (constraint_table.cat[location][t])
+                insertSoftConstraint2SIT(location, t, t + 1);
+        }
+        //if (constraint_table.cat_goals[location] < MAX_TIMESTEP)
+            //insertSoftConstraint2SIT(location, constraint_table.cat_goals[location], MAX_TIMESTEP + 1);
+        //insertSoftConstraint2SIT(location, constraint_table.cat_goals[location], constraint_table.cat_goals[location] + 1);
+    }
 }
 
 // return <upper_bound, low, high,  vertex collision, edge collision>
@@ -267,17 +328,18 @@ list<tuple<int, int, int, bool, bool>> ReservationTable::get_safe_intervals(int 
 
     for(auto interval : sit[to])
     {
+        if (to == 627)
+            cout<<get<0>(interval)<<" "<<get<1>(interval)<<" "<<get<2>(interval)<<endl;
         if (lower_bound >= get<1>(interval))
-        {
             continue;
-        }
-        else if (upper_bound <= get<0>(interval)) //t_max exceed the maxtime agent can stay at current location
-        {
+        else if (upper_bound <= get<0>(interval))
             break;
-        }
         // the interval overlaps with [lower_bound, upper_bound)
-        auto t1 = get_earliest_arrival_time(from, to, max(lower_bound, get<0>(interval)), min(upper_bound, get<1>(interval)));
-        if (get<2>(interval)) // the interval has collisions
+        auto t1 = get_earliest_arrival_time(from, to,
+                max(lower_bound, get<0>(interval)), min(upper_bound, get<1>(interval)));
+        if (t1 < 0) // the interval is not reachable
+            continue;
+        else if (get<2>(interval)) // the interval has collisions
         {
             rst.emplace_back(get<1>(interval), t1, get<1>(interval), true, false);
         }
@@ -288,7 +350,7 @@ list<tuple<int, int, int, bool, bool>> ReservationTable::get_safe_intervals(int 
                 rst.emplace_back(get<1>(interval), t1, get<1>(interval), false, false);
             else if (t2 < 0)
                 rst.emplace_back(get<1>(interval), t1, get<1>(interval), false, true);
-            else //seems for sipps?
+            else
             {
                 rst.emplace_back(get<1>(interval), t1, t2, false, true);
                 rst.emplace_back(get<1>(interval), t2, get<1>(interval), false, false);

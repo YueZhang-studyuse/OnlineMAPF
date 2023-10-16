@@ -83,6 +83,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     }
 
     bool succ = lns->run();
+    cout<<"stop lns"<<endl;
 
     actions = std::vector<Action>(env->curr_states.size(), Action::WA);
     if (!succ)

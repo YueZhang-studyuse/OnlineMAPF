@@ -68,16 +68,12 @@ bool LNS::run()
     bool succ;
     if (has_initial_solution)
         //return true;
-        //succ = fixInitialSolution();
-        succ = true;
+        succ = fixInitialSolution();
     else
         succ = getInitialSolution();
     initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
     if (!succ && initial_solution_runtime < time_limit) //if lacam failed, we use lns2
     {
-        // if (use_init_lns)
-        // {
-        cout<<"lacam failed within runtime limit, use lns2 to fix the path "<<endl;
         init_lns = new InitLNS(instance, agents, time_limit - initial_solution_runtime,
                 replan_algo_name,init_destory_name, neighbor_size, screen);
 
@@ -94,16 +90,6 @@ bool LNS::run()
             sum_of_costs = initial_sum_of_costs;
         }
         initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
-        // }
-        // else // use random restart
-        // {
-        //     while (!succ && initial_solution_runtime < time_limit)
-        //     {
-        //         succ = getInitialSolution();
-        //         initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
-        //         restart_times++;
-        //     }
-        // }
     }
 
     iteration_stats.emplace_back(neighbor.agents.size(),
@@ -125,6 +111,8 @@ bool LNS::run()
     while (runtime < time_limit && iteration_stats.size() <= num_of_iterations)
     {
         runtime =((fsec)(Time::now() - start_time)).count();
+
+        ALNS = false;
 
         if (ALNS)
             chooseDestroyHeuristicbyALNS();
@@ -164,14 +152,7 @@ bool LNS::run()
             if (replan_algo_name == "PP")
                 neighbor.old_paths[i] = agents[neighbor.agents[i]].path;
             path_table.deletePath(neighbor.agents[i], agents[neighbor.agents[i]].path);
-            //neighbor.old_sum_of_costs += agents[neighbor.agents[i]].path.size() - 1;
-            //sum of cost only compare with start -> true goal
-            for (auto p: agents[neighbor.agents[i]].path)
-            {
-                if (p.location == agents[neighbor.agents[i]].path_planner->goal_location)
-                    break;
-                neighbor.old_sum_of_costs++;
-            }
+            neighbor.old_sum_of_costs += agents[neighbor.agents[i]].path.size() - 1;
         }
         
         if (replan_algo_name == "PP")
@@ -399,6 +380,7 @@ bool LNS::fixInitialSolution()
     {
         initial_sum_of_costs += neighbor.sum_of_costs;
         sum_of_costs = initial_sum_of_costs;
+        cout<<"success"<<endl;
         return true;
     }
     else
@@ -448,21 +430,26 @@ bool LNS::getInitialSolution()
 
 bool LNS::runPP()
 {
+    cout<<"current solution for 167: "<<endl;
+    for (auto pa: agents[167].path)
+    {
+        cout<<pa.location<<" ";
+    }
+    cout<<endl;
+    cout<<"current solution for 54: "<<endl;
+    for (auto pa: agents[54].path)
+    {
+        cout<<pa.location<<" ";
+    }
+    cout<<endl;
     auto shuffled_agents = neighbor.agents;
     std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
     if (screen >= 2) 
     {
         for (auto id : shuffled_agents)
         {
-            int sic = 0;
-            for (auto p: agents[id].path)
-            {
-                if (p.location == agents[id].path_planner->goal_location)
-                    break;
-                sic++;
-            }
             cout << id << "(" << instance.getAllpairDistance(agents[id].path_planner->start_location, agents[id].path_planner->goal_location) <<
-                "->" << sic <<", "<<agents[id].path.size()-1<< "), ";
+                "->" <<agents[id].path.size()-1<< "), ";
         }
         cout << endl;
     }
@@ -490,14 +477,7 @@ bool LNS::runPP()
             cout<<"sipp failed"<<endl;
             break;
         } 
-        //neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
-        for (auto p: agents[id].path)
-        {
-            if (p.location == agents[id].path_planner->goal_location)
-                break;
-            neighbor.sum_of_costs++;
-        }
-        cout<<"old sic "<< neighbor.old_sum_of_costs<<" current sic "<<neighbor.sum_of_costs<<endl;
+        neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs)
         {
             break;
@@ -505,6 +485,12 @@ bool LNS::runPP()
         remaining_agents--;
         path_table.insertPath(agents[id].id, agents[id].path);
         ++p;
+        cout<<"current solution for 54: "<<endl;
+        for (auto pa: agents[54].path)
+        {
+            cout<<pa.location<<" ";
+        }
+        cout<<endl;
     }
     if (remaining_agents == 0 && neighbor.sum_of_costs <= neighbor.old_sum_of_costs) // accept new paths
     {
@@ -672,6 +658,7 @@ bool LNS::generateNeighborByIntersection()
 
 bool LNS::generateNeighborByRandomWalk()
 {
+    cout<<"random wal start"<<endl;
     if (neighbor_size >= (int)agents.size())
     {
         neighbor.agents.resize(agents.size());
@@ -1184,7 +1171,7 @@ void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<lis
     for (const auto &agent : agents)
     {
         if (screen == 3)
-            cout<<"Commiting: "<<agent.id<<endl;
+            cout<<"Commiting: "<<agent.id<<"current location "<<agent.path.front().location<<endl;
         //agent reach target before, but need to de-tour due to resolving conflict, so we add the time reach target as waiting
         // if (current_time != 0 && agent.path.size() > 1 && commit_path[agent.id].size() <= current_time)
         // {
