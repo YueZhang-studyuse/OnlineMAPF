@@ -176,24 +176,24 @@ void ReservationTable::updateSIT(int location)
 {
     assert(sit[location].empty());
     // length constraints for the goal location
-    if (location == goal_location) // we need to divide the same intervals into 2 parts [0, length_min) and [length_min, length_max + 1)
-    {
-        if (constraint_table.length_min > constraint_table.length_max) // the location is blocked for the entire time horizon
-        {
-            sit[location].emplace_back(0, 0, false);
-            return;
-        }
-        if (0 < constraint_table.length_min)
-        {
-            sit[location].emplace_back(0, constraint_table.length_min, false);
-        }
-        assert(constraint_table.length_min >= 0);
-        sit[location].emplace_back(constraint_table.length_min, min(constraint_table.length_max + 1, MAX_TIMESTEP), false);
-    }
-    else
-    {
-        sit[location].emplace_back(0, min(constraint_table.length_max, MAX_TIMESTEP - 1) + 1, false);
-    }
+    // if (location == goal_location) // we need to divide the same intervals into 2 parts [0, length_min) and [length_min, length_max + 1)
+    // {
+    //     if (constraint_table.length_min > constraint_table.length_max) // the location is blocked for the entire time horizon
+    //     {
+    //         sit[location].emplace_back(0, 0, false);
+    //         return;
+    //     }
+    //     if (0 < constraint_table.length_min)
+    //     {
+    //         sit[location].emplace_back(0, constraint_table.length_min, false);
+    //     }
+    //     assert(constraint_table.length_min >= 0);
+    //     sit[location].emplace_back(constraint_table.length_min, min(constraint_table.length_max + 1, MAX_TIMESTEP), false);
+    // }
+    // else
+    // {
+    sit[location].emplace_back(0, min(constraint_table.length_max, MAX_TIMESTEP - 1) + 1, false);
+    //}
     // path table
     if (constraint_table.path_table_for_CT != nullptr and !constraint_table.path_table_for_CT->table.empty())
     {
@@ -234,6 +234,11 @@ void ReservationTable::updateSIT(int location)
             }
         }
     }
+    // cout<<"after insert2sit interval for location: "<<location<<endl;
+    // for(auto interval : sit[location])
+    // {
+    //     cout<<get<0>(interval)<<" "<<get<1>(interval)<<" "<<get<2>(interval)<<endl;
+    // }
 
     // negative constraints
     const auto& it = constraint_table.ct.find(location);
@@ -314,6 +319,12 @@ void ReservationTable::updateSIT(int location)
             //insertSoftConstraint2SIT(location, constraint_table.cat_goals[location], MAX_TIMESTEP + 1);
         //insertSoftConstraint2SIT(location, constraint_table.cat_goals[location], constraint_table.cat_goals[location] + 1);
     }
+
+    // cout<<"after all interval for location: "<<location<<endl;
+    // for(auto interval : sit[location])
+    // {
+    //     cout<<get<0>(interval)<<" "<<get<1>(interval)<<" "<<get<2>(interval)<<endl;
+    // }
 }
 
 // return <upper_bound, low, high,  vertex collision, edge collision>
@@ -329,7 +340,8 @@ list<tuple<int, int, int, bool, bool>> ReservationTable::get_safe_intervals(int 
     for(auto interval : sit[to])
     {
         // if (to == 627)
-        //     cout<<get<0>(interval)<<" "<<get<1>(interval)<<" "<<get<2>(interval)<<endl;
+        // cout<<"interval for location: "<<to<<endl;
+        // cout<<get<0>(interval)<<" "<<get<1>(interval)<<" "<<get<2>(interval)<<endl;
         if (lower_bound >= get<1>(interval))
             continue;
         else if (upper_bound <= get<0>(interval))

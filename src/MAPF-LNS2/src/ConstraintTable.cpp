@@ -86,7 +86,7 @@ void ConstraintTable::insert2CAT(const Path& path)
         cat_goals.resize(map_size, MAX_TIMESTEP);
     }
     assert(cat_goals[path.back().location] == MAX_TIMESTEP);
-    cat_goals[path.back().location] = path.size() - 1;
+    //cat_goals[path.back().location] = path.size() - 1;
     for (auto timestep = (int)path.size() - 1; timestep >= 0; timestep--)
     {
         int loc = path[timestep].location;
@@ -193,8 +193,8 @@ int ConstraintTable::getNumOfConflictsForStep(size_t curr_id, size_t next_id, in
         if (curr_id != next_id and cat[next_id].size() >= next_timestep and cat[curr_id].size() > next_timestep and
                 cat[next_id][next_timestep - 1]and cat[curr_id][next_timestep])
             rst++;
-        if (cat_goals[next_id] < next_timestep)
-            rst++;
+        // if (cat_goals[next_id] < next_timestep)
+        //     rst++;
     }
     return rst;
 }
@@ -209,8 +209,8 @@ bool ConstraintTable::hasConflictForStep(size_t curr_id, size_t next_id, int nex
         if (curr_id != next_id and cat[next_id].size() >= next_timestep and cat[curr_id].size() > next_timestep and
             cat[next_id][next_timestep - 1]and cat[curr_id][next_timestep])
             return true;
-        if (cat_goals[next_id] < next_timestep)
-            return true;
+        // if (cat_goals[next_id] < next_timestep)
+        //     return true;
     }
     return false;
 }
