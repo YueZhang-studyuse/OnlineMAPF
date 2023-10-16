@@ -18,14 +18,6 @@ int ConstraintTable::getLastCollisionTimestep(int location) const
     int rst = -1;
     if (path_table_for_CAT != nullptr)
         rst = path_table_for_CAT->getLastCollisionTimestep(location);
-    if (!cat.empty())
-    {
-        for (auto t = cat[location].size() - 1; t > rst; t--)
-        {
-            if (cat[location][t])
-                return t;
-        }
-    }
     return rst;
 }
 void ConstraintTable::insert2CT(size_t from, size_t to, int t_min, int t_max)

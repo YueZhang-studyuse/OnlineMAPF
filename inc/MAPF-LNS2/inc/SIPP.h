@@ -11,8 +11,8 @@ public:
 	typedef boost::heap::pairing_heap< SIPPNode*, compare<SIPPNode::secondary_compare_node> >::handle_type focal_handle_t;
 	open_handle_t open_handle;
 	focal_handle_t focal_handle;
-	int high_generation; // the upper bound with respect to generation
-    int high_expansion; // the upper bound with respect to expansion
+	int high_generation; // the upper bound with respect to generation ->seems the maximum time agents can stay here
+    int high_expansion; // the upper bound with respect to expansion ->seems the maximum time agents can stay here
 	bool collision_v;
     SIPPNode() : LLNode() {}
 	SIPPNode(int loc, int g_val, int h_val, SIPPNode* parent, int timestep, int high_generation, int high_expansion,
@@ -71,8 +71,7 @@ public:
 			            (n1 && n2 && n1->location == n2->location &&
 				        n1->wait_at_goal == n2->wait_at_goal &&
 				        n1->is_goal == n2->is_goal &&
-                         n1->high_generation == n2->high_generation &&
-						 n1->reached_goal == n2->reached_goal);
+                         n1->high_generation == n2->high_generation);
 						//   &&
 						//  n1->reached_goal_at == n2->reached_goal_at);
                         //max(n1->timestep, n2->timestep) <
