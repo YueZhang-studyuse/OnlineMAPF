@@ -1080,10 +1080,14 @@ bool LNS::loadPaths(vector<list<int>> paths)
 {
     for (int agent_id = 0; agent_id < instance.getDefaultNumberOfAgents(); agent_id++)
     {
+        if (paths[agent_id].empty())
+            continue;
         for(auto location: paths[agent_id])
         {
             agents[agent_id].path.emplace_back(location);
         }
+        path_table.insertPath(agent_id, agents[agent_id].path);
+        initial_sum_of_costs+=agents[agent_id].path.size()-1;
         if (agents[agent_id].path.front().location != agents[agent_id].path_planner->start_location)
         {
             cerr << "Agent " << agent_id <<"'s path starts at " << agents[agent_id].path.front().location
