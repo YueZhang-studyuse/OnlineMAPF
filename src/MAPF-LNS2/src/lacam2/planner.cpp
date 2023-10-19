@@ -209,8 +209,21 @@ Solution Planner::solve(std::string& additional_info)
         {
             if (H->num_agent_reached == ins->N)
             {
-                H_goal = H;
-                break;
+                // bool allreached = true;
+                // for (int i = 0; i < N; i++)
+                // {
+                //     if (H->C[i]->index != instance.getDummyGoals()[i])
+                //     {
+                //         cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<instance.getDummyGoals()[i]<<endl; 
+                //         allreached = false;
+                //         //break;
+                //     }
+                // }
+                // if(allreached)
+                // {
+                    H_goal = H;
+                    break;
+                //}
             }
         }
 

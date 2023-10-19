@@ -82,6 +82,8 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                 delete goal;
         }
 
+        //cout<<"curr "<<curr->location<<" "<<curr->timestep<<" "<<curr->reached_goal_at<<endl;
+
         for (int next_location : instance.getNeighbors(curr->location)) // move to neighboring locations
         {
             for (auto & i : reservation_table.get_safe_intervals(
@@ -93,15 +95,17 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                 //if (next_timestep + my_heuristic[next_location] > constraint_table.length_max)
                 // if (next_timestep + get_heuristic(next_location,goal_location) > constraint_table.length_max) //for cbs, comment now
                 //     break;
+                auto holding_time = constraint_table.getHoldingTime(goal_location, constraint_table.length_min);
                 auto next_collisions = curr->num_of_conflicts +
                                       (int)next_v_collision + (int)next_e_collision;
+                //cout<<"next "<<next_location<<" "<<next_timestep<<" "<<next_collisions<<endl;
                 //auto next_h_val = max(my_heuristic[next_location], (next_collisions > 0?
                 int next_h_val = 0;
-                // if (!curr->reached_goal)
-                //     next_h_val= max(get_heuristic(next_location,goal_location), (next_collisions > 0?
-                //                 holding_time : curr->getFVal()) - next_timestep) + get_heuristic(goal_location,dummy_goal); // path max
-                // else
-                //     next_h_val= get_heuristic(next_location,dummy_goal);
+                if (!curr->reached_goal)
+                    next_h_val= max(get_heuristic(next_location,goal_location), (next_collisions > 0?
+                                holding_time : curr->getFVal()) - next_timestep) + get_heuristic(goal_location,dummy_goal); // path max
+                else
+                    next_h_val= get_heuristic(next_location,dummy_goal);
                 
                 // generate (maybe temporary) node
                 auto next = new SIPPNode(next_location, next_timestep, next_h_val, curr, next_timestep,
@@ -109,14 +113,11 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                 // try to retrieve it from the hash table
                 if (dominanceCheck(next))
                 {
-                    if (next->reached_goal)
-                        cout<<"pushed "<<next->reached_goal_at<<endl;
                     pushNodeToFocal(next);
+                    //cout<<"pushed "<<next->reached_goal_at<<endl;
                 }
                 else
                 {
-                    if (next->reached_goal)
-                        cout<<"delete "<<next->reached_goal_at<<endl;
                     delete next;
                 }
             }
@@ -407,12 +408,13 @@ bool SIPP::dominanceCheck(SIPPNode* new_node)
         return true;
     for (auto & old_node : ptr->second)
     {
-        
+        // cout<<"old node: "<<old_node->location<<" "<<old_node->reached_goal_at<<" "<<old_node->timestep<<endl;
+        // cout<<"new node: "<<new_node->reached_goal_at<<" "<<new_node->timestep<<endl;
         if (old_node->reached_goal_at <= new_node->reached_goal_at and
             old_node->timestep <= new_node->timestep and
             old_node->num_of_conflicts <= new_node->num_of_conflicts)
         { // the new node is dominated by the old node
-            if (new_node->reached_goal)
+            //cout<<"dominate"<<endl;
             return false;
         }
         else if (old_node->reached_goal_at >= new_node->reached_goal_at and
@@ -426,6 +428,7 @@ bool SIPP::dominanceCheck(SIPPNode* new_node)
             useless_nodes.push_back(old_node);
             ptr->second.remove(old_node);
             num_generated--; // this is because we later will increase num_generated when we insert the new node into lists.
+
             return true;
         }
         else if( old_node->reached_goal_at >= new_node->reached_goal_at and

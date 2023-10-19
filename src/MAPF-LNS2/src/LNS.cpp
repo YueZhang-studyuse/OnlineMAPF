@@ -530,6 +530,12 @@ bool LNS::runPP()
             {
                 int a = *p2;
                 agents[a].path = neighbor.old_paths[i];
+                cout<<"old path"<<endl;
+                for (auto p: agents[a].path)
+                {
+                    cout<<p.location<<" ";
+                }
+                cout<<endl;
                 path_table.insertPath(agents[a].id, agents[a].path);
                 ++p2;
             }
@@ -593,8 +599,9 @@ bool LNS::runLACAM2()
         {
             path_table.insertPath(agents[agent].id, agents[agent].path);
             //soc+=agents[agent].path.size()-1;
+            //if (instance.getDummyGoals()[agent] == -1)
             instance.updateDummyGoal(agent,agents[agent].path.back().location);
-            agents[agent].path_planner->dummy_goal = agents[agent].path.back().location;
+            agents[agent].path_planner->dummy_goal = instance.getDummyGoals()[agent];
             if (goals.find(agents[agent].path_planner->dummy_goal) != goals.end())
                 cout<<"wrong"<<endl;
             goals.insert(agents[agent].path_planner->dummy_goal);
