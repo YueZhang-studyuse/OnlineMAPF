@@ -110,15 +110,15 @@ public:
 		num_of_conflicts(num_of_conflicts), reached_goal(reached_goal)
 		{
 			if (parent != nullptr && parent->reached_goal)
-				{
-					this->reached_goal = true;
-					this->reached_goal_at = parent->reached_goal_at;
-				}
-				else
-				{
-					if (this->reached_goal && parent->location != location) //reached goal at current timestep
-						this->reached_goal_at = timestep;
-				}
+			{
+				this->reached_goal = true;
+				this->reached_goal_at = parent->reached_goal_at;
+			}
+			else if (parent != nullptr)
+			{
+				if (this->reached_goal && !parent->reached_goal) //reached goal at current timestep
+					this->reached_goal_at = timestep;
+			}
 		}
 	LLNode(const LLNode& other) { copy(other); }
     ~LLNode()= default;
