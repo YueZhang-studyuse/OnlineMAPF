@@ -156,7 +156,9 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
     Path path;
     Interval interval = reservation_table.get_first_safe_interval(start_location);
     if (get<0>(interval) > 0)
+    {
         return path;
+    }
     auto holding_time = constraint_table.getHoldingTime(goal_location, constraint_table.length_min);
     if (holding_time == 0)
     {

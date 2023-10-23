@@ -204,8 +204,6 @@ void ReservationTable::updateSIT(int location)
                 if (constraint_table.path_table_for_CT->table[location][t] != NO_AGENT)
                 {
                     insert2SIT(location, t, t+1);
-                    // if (location == 628)
-                    //     cout<<"conflict "<< constraint_table.path_table_for_CT->table[location][t]<<" "<<t<<endl;
                 }
             }
             //if (constraint_table.path_table_for_CT->goals[location] < MAX_TIMESTEP) // target conflict

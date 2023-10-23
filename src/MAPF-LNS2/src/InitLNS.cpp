@@ -61,16 +61,19 @@ bool InitLNS::run()
         assert(instance.validateSolution(paths, sum_of_costs, num_of_colliding_pairs));
         if (ALNS)
             chooseDestroyHeuristicbyALNS();
-
         switch (init_destroy_strategy)
         {
             case TARGET_BASED:
+                cout<<"target"<<endl;
                 succ = generateNeighborByTarget();
+                //succ = generateNeighborRandomly();
                 break;
             case COLLISION_BASED:
+                cout<<"collision"<<endl;
                 succ = generateNeighborByCollisionGraph();
                 break;
             case RANDOM_BASED:
+                cout<<"random"<<endl;
                 succ = generateNeighborRandomly();
                 break;
             default:
@@ -503,6 +506,7 @@ bool InitLNS::generateNeighborByTarget()
     agents[a].path_planner->findMinimumSetofColldingTargets(goal_table,A_target);// generate non-wait path and collect A_target
 
 
+
     if (screen >= 3){
         cout<<"     Selected a : "<< a<<endl;
         cout<<"     Select A_start: ";
@@ -519,14 +523,17 @@ bool InitLNS::generateNeighborByTarget()
 
     neighbors_set.insert(a);
 
-    if(A_start.size() + A_target.size() >= neighbor_size-1){
-        if (A_start.empty()){
+    if(A_start.size() + A_target.size() >= neighbor_size-1)
+    {
+        if (A_start.empty())
+        {
             vector<int> shuffled_agents;
             shuffled_agents.assign(A_target.begin(),A_target.end());
             std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
             neighbors_set.insert(shuffled_agents.begin(), shuffled_agents.begin() + neighbor_size-1);
         }
-        else if (A_target.size() >= neighbor_size){
+        else if (A_target.size() >= neighbor_size)
+        {
             vector<int> shuffled_agents;
             shuffled_agents.assign(A_target.begin(),A_target.end());
             std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
@@ -534,9 +541,11 @@ bool InitLNS::generateNeighborByTarget()
 
             neighbors_set.insert(A_start.begin()->second);
         }
-        else{
+        else
+        {
             neighbors_set.insert(A_target.begin(), A_target.end());
-            for(auto e : A_start){
+            for(auto e : A_start)
+            {
                 //A_start is ordered by time.
                 if (neighbors_set.size()>= neighbor_size)
                     break;

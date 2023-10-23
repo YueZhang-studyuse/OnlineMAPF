@@ -2,3 +2,5 @@ build
 .vscode
 Dockerfile
 local
+example_problems
+exps

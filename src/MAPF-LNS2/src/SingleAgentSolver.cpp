@@ -97,7 +97,8 @@ void SingleAgentSolver::findMinimumSetofColldingTargets(vector<int>& goal_table,
     Path path;
 
     // generate start and add it to the OPEN
-    auto start = new Node(start_location, 0, my_heuristic[start_location], 0, nullptr);
+    // auto start = new Node(start_location, 0, my_heuristic[start_location], 0, nullptr);
+    auto start = new Node(start_location, 0, instance.getAllpairDistance(start_location,goal_location), 0, nullptr);
     start->open_handle = open_list.push(start);
     start->expanded = true;
     visited[start->location] = start;
@@ -135,7 +136,9 @@ void SingleAgentSolver::findMinimumSetofColldingTargets(vector<int>& goal_table,
             if (visited[next_location] == nullptr)
             {
                 // generate (maybe temporary) node
-                auto next = new Node(next_location, next_g_val, my_heuristic[next_location],
+                // auto next = new Node(next_location, next_g_val, my_heuristic[next_location],
+                //         num_of_visited_targets, curr);
+                auto next = new Node(next_location, next_g_val, instance.getAllpairDistance(next_location,goal_location),
                         num_of_visited_targets, curr);
                 next->open_handle = open_list.push(next);
                 visited[next_location] = next;

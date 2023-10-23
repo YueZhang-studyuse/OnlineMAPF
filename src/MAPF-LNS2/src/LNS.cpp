@@ -379,17 +379,17 @@ bool LNS::fixInitialSolution()
         cout << complete_agents.size() << " collision-free agents at timestep " << makespan << endl;
     neighbor.old_sum_of_costs = MAX_COST;
     neighbor.sum_of_costs = 0;
-    //auto succ = runPP();
-    auto succ = runLACAM2();
+    auto succ = runPP();
+    //auto succ = runLACAM2();
     if (succ)
     {
         initial_sum_of_costs += neighbor.sum_of_costs;
         sum_of_costs = initial_sum_of_costs;
-        cout<<"success"<<endl;
         return true;
     }
     else
     {
+        cout<<"pp failed"<<endl;
         return false;
     }
 }
@@ -1027,7 +1027,7 @@ bool LNS::loadPaths(vector<list<int>> paths)
         {
             agents[agent_id].path.emplace_back(location);
         }
-        path_table.insertPath(agent_id, agents[agent_id].path);
+        //path_table.insertPath(agent_id, agents[agent_id].path);
         initial_sum_of_costs+=agents[agent_id].path.size()-1;
         if (agents[agent_id].path.front().location != agents[agent_id].path_planner->start_location)
         {
