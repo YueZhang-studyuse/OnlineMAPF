@@ -34,9 +34,31 @@ bool is_same_config(
 // hash function of configuration
 // c.f.
 // https://stackoverflow.com/questions/10405030/c-unordered-map-fail-when-used-with-a-vector-as-key
+
 struct ConfigHasher {
   uint operator()(const Config& C) const;
 };
+
+struct RConfigHasher {
+  uint operator()(const std::pair<Config, std::vector<bool> > &RC) const;
+};
+
+struct RCEqual
+{
+  bool operator()(const std::pair<Config, std::vector<bool> > &RC1, const std::pair<Config, std::vector<bool> > &RC2) const
+  {
+    if (!is_same_config(RC1.first, RC2.first))
+      return false;
+    for (int i = 0; i < RC2.first.size(); i++)
+    {
+      if (RC2.second[i] != RC2.second[i])
+        return false;
+    }
+    return true;
+  }
+};
+
+
 
 std::ostream& operator<<(std::ostream& os, const Vertex* v);
 std::ostream& operator<<(std::ostream& os, const Config& config);

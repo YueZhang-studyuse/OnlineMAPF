@@ -152,21 +152,24 @@ Solution Planner::solve(std::string& additional_info)
     // setup search
     auto OPEN = std::stack<HNode*>();
     auto EXPLORED = std::unordered_map<Config, HNode*, ConfigHasher>();
+    //auto EXPLORED = std::unordered_map<pair<Config,vector<bool>>, HNode*, RConfigHasher, RCEqual>();
     // insert initial node, 'H': high-level node
     // auto H_init = new HNode(ins->starts, D, nullptr, 0, get_h_value(ins->starts));
     auto H_init = new HNode(ins->starts, instance, nullptr, 0, get_h_value(ins->starts));
     OPEN.push(H_init);
+    //EXPLORED[make_pair(H_init->C, H_init->reach_goal)] = H_init;
     EXPLORED[H_init->C] = H_init;
 
     std::vector<Config> solution;
     auto C_new = Config(N, nullptr);  // for new configuration
     HNode* H_goal = nullptr;          // to store goal node
     HNode* curr_best = nullptr;
+    //list<HNode*> solutions;
 
     // DFS
     while (!OPEN.empty() && !is_expired(deadline)) 
     {
-
+        loop_cnt+=1;
         // do not pop here!
         auto H = OPEN.top();  // high-level node
 
@@ -209,23 +212,26 @@ Solution Planner::solve(std::string& additional_info)
         {
             if (H->num_agent_reached == ins->N)
             {
-                // bool allreached = true;
-                // for (int i = 0; i < N; i++)
-                // {
-                //     if (H->C[i]->index != instance.getDummyGoals()[i])
-                //     {
-                //         cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<instance.getDummyGoals()[i]<<endl; 
-                //         allreached = false;
-                //         //break;
-                //     }
-                // }
-                // if(allreached)
-                // {
+                cout<<"checking "<<endl;
+                bool allreached = true;
+                for (int i = 0; i < N; i++)
+                {
+                    if (H->C[i]->index != instance.getDummyGoals()[i])
+                    {
+                        cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<instance.getDummyGoals()[i]<<" orders "<<H->priorities[i]<<endl; 
+                        allreached = false;
+                        //break;
+                    }
+                }
+                if(allreached)
+                {
                     H_goal = H;
                     break;
-                //}
+                }
             }
         }
+
+        cout<<"loop "<<loop_cnt<<" "<<H->num_agent_reached<<endl;
 
         // create successors at the low-level search
         auto L = H->search_tree.front();
@@ -247,16 +253,21 @@ Solution Planner::solve(std::string& additional_info)
         }
 
 
+        vector<bool> reached;
+        reached.resize(A.size());
         // create new configuration
         for (auto a : A) 
         {
           C_new[a->id] = a->v_next;
+          reached[a->id] = a->reached_goal;
         }
 
         // check explored list
+        //const auto iter = EXPLORED.find(make_pair(C_new,reached));
         const auto iter = EXPLORED.find(C_new);
         if (iter != EXPLORED.end()) 
         {
+            cout<<"found"<<endl;
             // case found
             rewrite(H, iter->second, H_goal, OPEN);
             // re-insert or random-restart
@@ -267,12 +278,17 @@ Solution Planner::solve(std::string& additional_info)
             {
                 OPEN.push(H_insert);
             }
+            else
+            {
+                cout<<"pruned "<<endl;
+            }
         } 
         else 
         {
             // insert new search node
             const auto H_new = new HNode(C_new, instance, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new));
-            EXPLORED[H_new->C] = H_new;
+            //EXPLORED[make_pair(H->C,H->reach_goal)] = H_new;
+            EXPLORED[H->C] = H_new;
             if (H_goal == nullptr || H_new->f < H_goal->f) 
             {
                 OPEN.push(H_new);
@@ -486,6 +502,8 @@ bool Planner::get_new_config(HNode* H, LNode* L)
         {
           return false;  // planning failure
         }
+        if (a->v_now->index == instance.env->goal_locations[a->id][0].first)
+            a->reached_goal = true;
     }
 
     return true;
