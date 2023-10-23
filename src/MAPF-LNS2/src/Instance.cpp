@@ -323,6 +323,55 @@ void Instance::computeAllPair()
 //     return true;
 // }
 
+// void Instance::assignDummyGoals(int agent) const
+// {
+//     vector<int> sum_degree = {0,0,0,0};
+//     unordered_set<int> current_goals;
+
+//     for (int i = 0; i < env->num_of_agents; i++)
+//     {
+//         if (i == agent)
+//             continue;
+//         int goal = (dummy_goals[i] == -1 ? env->goal_locations[i][0].first : dummy_goals[i]);
+//         sum_degree[getDegree(goal)-1]++;
+//     }
+
+//     //assign dummy goals according to a start location
+//     int accept_degree = 4;
+//     while (degrees[accept_degree-1] <= sum_degree[accept_degree-1])
+//     {
+//         accept_degree--;
+//     }
+//     //use bfs to find nearst dummy goals (including current location)
+//     std::queue<int> open;
+//     unordered_set<int> close;
+//     open.push(env->goal_locations[agent][0].first);
+//     while(!open.empty())
+//     {
+//         int curr = open.front();
+//         open.pop();
+//         if (current_goals.find(curr) == current_goals.end() && env->map[curr] != 1 && 
+//         getDegree(curr) >= accept_degree)
+//         {
+//             //return curr;
+//             dummy_goals[agent] = curr;
+//             return;
+//         }
+//         if (close.find(curr) != close.end())
+//         {
+//             continue;
+//         }
+//         close.insert(curr);
+//         auto neighbor = getNeighbors(curr);
+//         for (auto location: neighbor)
+//         {
+//             if (close.find(location) == close.end())
+//                 open.push(location);
+//         }
+//     }
+//     dummy_goals[agent] = -1;
+// }
+
 void Instance::assignDummyGoals(int agent) const
 {
     vector<int> sum_degree = {0,0,0,0};
@@ -333,6 +382,7 @@ void Instance::assignDummyGoals(int agent) const
         if (i == agent)
             continue;
         int goal = (dummy_goals[i] == -1 ? env->goal_locations[i][0].first : dummy_goals[i]);
+        current_goals.insert(goal);
         sum_degree[getDegree(goal)-1]++;
     }
 
@@ -342,6 +392,8 @@ void Instance::assignDummyGoals(int agent) const
     {
         accept_degree--;
     }
+
+
     //use bfs to find nearst dummy goals (including current location)
     std::queue<int> open;
     unordered_set<int> close;

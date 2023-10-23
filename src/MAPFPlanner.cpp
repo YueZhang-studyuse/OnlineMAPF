@@ -61,6 +61,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     lns->clearAll("Adaptive");
 
     if (replan_need)
+    //if (initial_run)
     {
         //if (future_paths.empty() || future_paths[0].empty()){
         lns->setHasInitialSolution(false);
