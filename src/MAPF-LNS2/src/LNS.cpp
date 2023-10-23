@@ -78,8 +78,8 @@ bool LNS::run()
                 replan_algo_name,init_destory_name, neighbor_size, screen);
 
         succ = init_lns->run();
-        if (succ) // accept new paths
-        {
+        //if (succ) // accept new paths
+        //{ //accept path anyway because we at least need one path for the replan agent
             path_table.reset();
             for (const auto & agent : agents)
             {
@@ -88,7 +88,7 @@ bool LNS::run()
             init_lns->clear();
             initial_sum_of_costs = init_lns->sum_of_costs;
             sum_of_costs = initial_sum_of_costs;
-        }
+        //}
         initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
     }
 
@@ -467,10 +467,12 @@ bool LNS::runPP()
         agents[id].path = agents[id].path_planner->findPath(constraint_table);
         if (agents[id].path.empty())
         {
-            cout<<"sipp failed"<<endl;
+            if (screen >= 3)
+                cout<<"sipp failed"<<endl;
             break;
         } 
-        cout<<"current cost "<<(int)agents[id].path.size() - 1;
+        if (screen >= 3)
+            cout<<"current cost "<<(int)agents[id].path.size() - 1;
         neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs)
         {
@@ -479,7 +481,8 @@ bool LNS::runPP()
         remaining_agents--;
         path_table.insertPath(agents[id].id, agents[id].path);
         ++p;
-        cout<<endl;
+        if (screen >= 3)
+            cout<<endl;
     }
     if (remaining_agents == 0 && neighbor.sum_of_costs <= neighbor.old_sum_of_costs) // accept new paths
     {
@@ -487,7 +490,7 @@ bool LNS::runPP()
     }
     else // stick to old paths
     {
-        if (neighbor.sum_of_costs > neighbor.old_sum_of_costs)
+        if (neighbor.sum_of_costs > neighbor.old_sum_of_costs && screen >= 3)
             cout<<"solution worse"<<endl;
         if (p != shuffled_agents.end())
             num_of_failures++;
@@ -647,7 +650,6 @@ bool LNS::generateNeighborByIntersection()
 
 bool LNS::generateNeighborByRandomWalk()
 {
-    cout<<"random wal start"<<endl;
     if (neighbor_size >= (int)agents.size())
     {
         neighbor.agents.resize(agents.size());
@@ -1342,9 +1344,9 @@ void LNS::clearAll(const string & destory_name)
 }
 
 
-void LNS::validateCommitSolution(vector<list<int>> commited_paths) const
+bool LNS::validateCommitSolution(vector<list<int>> commited_paths) const
 {
-    cerr << "validation"<<endl;
+    cout<<"validation "<<endl;
     vector<Agent> commited_agents;
     int N = instance.getDefaultNumberOfAgents();
     commited_agents.reserve(N);
@@ -1364,10 +1366,11 @@ void LNS::validateCommitSolution(vector<list<int>> commited_paths) const
         {
             if (!instance.validMove(a1_.path[t - 1].location, a1_.path[t].location))
             {
-                cerr << "The path of agent " << a1_.id << " jump from "
-                     << a1_.path[t - 1].location << " to " << a1_.path[t].location
-                     << " between timesteps " << t - 1 << " and " << t << endl;
+                // cerr << "The path of agent " << a1_.id << " jump from "
+                //      << a1_.path[t - 1].location << " to " << a1_.path[t].location
+                //      << " between timesteps " << t - 1 << " and " << t << endl;
                 //exit(-1);
+                return false;
             }
         }
         sum += (int) a1_.path.size() - 1;
@@ -1382,30 +1385,32 @@ void LNS::validateCommitSolution(vector<list<int>> commited_paths) const
             {
                 if (a1.path[t].location == a2.path[t].location) // vertex conflict
                 {
-                    cerr << "Find a vertex conflict between agents " << a1.id << " and " << a2.id <<
-                            " at location " << a1.path[t].location << " at timestep " << t << endl;
+                    // cerr << "Find a vertex conflict between agents " << a1.id << " and " << a2.id <<
+                    //         " at location " << a1.path[t].location << " at timestep " << t << endl;
                     //exit(-1);
+                    return false;
                 }
                 else if (a1.path[t].location == a2.path[t - 1].location &&
                         a1.path[t - 1].location == a2.path[t].location) // edge conflict
                 {
-                    cerr << "Find an edge conflict between agents " << a1.id << " and " << a2.id <<
-                         " at edge (" << a1.path[t - 1].location << "," << a1.path[t].location <<
-                         ") at timestep " << t << endl;
+                    // cerr << "Find an edge conflict between agents " << a1.id << " and " << a2.id <<
+                    //      " at edge (" << a1.path[t - 1].location << "," << a1.path[t].location <<
+                    //      ") at timestep " << t << endl;
                     //exit(-1);
+                    return false;
                 }
             }
-            int target = a1.path.back().location;
-            for (; t < (int) a2.path.size(); t++)
-            {
-                if (a2.path[t].location == target)  // target conflict
-                {
-                    cerr << "Find a target conflict where agent " << a2.id << " (of length " << a2.path.size() - 1<<
-                         ") traverses agent " << a1.id << " (of length " << a1.path.size() - 1<<
-                         ")'s target location " << target << " at timestep " << t << endl;
-                    //exit(-1);
-                }
-            }
+            // int target = a1.path.back().location;
+            // for (; t < (int) a2.path.size(); t++)
+            // {
+            //     if (a2.path[t].location == target)  // target conflict
+            //     {
+            //         cerr << "Find a target conflict where agent " << a2.id << " (of length " << a2.path.size() - 1<<
+            //              ") traverses agent " << a1.id << " (of length " << a1.path.size() - 1<<
+            //              ")'s target location " << target << " at timestep " << t << endl;
+            //         //exit(-1);
+            //     }
+            // }
         }
     }
     // if (sum_of_costs != sum)
@@ -1414,6 +1419,7 @@ void LNS::validateCommitSolution(vector<list<int>> commited_paths) const
     //          " is different from the sum of the paths in the solution " << sum << endl;
     //     exit(-1);
     // }
+    return true;
 }
 
 

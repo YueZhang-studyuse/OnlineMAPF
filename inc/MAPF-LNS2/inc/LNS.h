@@ -53,7 +53,7 @@ public:
 
     bool loadPaths(vector<list<int>> paths);
     void commitPath(int step, vector<list<int>> &commit_path, vector<list<int>> &future_path,bool skip_start,int current_time);
-    void validateCommitSolution(vector<list<int>> commited_paths) const;
+    bool validateCommitSolution(vector<list<int>> commited_paths) const;
 
     void setIterations(int iterations){ num_of_iterations = iterations;}
     void setRuntimeLimit(int time){time_limit = time; replan_time_limit = time_limit / 100;}

@@ -64,16 +64,13 @@ bool InitLNS::run()
         switch (init_destroy_strategy)
         {
             case TARGET_BASED:
-                cout<<"target"<<endl;
                 succ = generateNeighborByTarget();
                 //succ = generateNeighborRandomly();
                 break;
             case COLLISION_BASED:
-                cout<<"collision"<<endl;
                 succ = generateNeighborByCollisionGraph();
                 break;
             case RANDOM_BASED:
-                cout<<"random"<<endl;
                 succ = generateNeighborRandomly();
                 break;
             default:
@@ -310,7 +307,10 @@ bool InitLNS::updateCollidingPairs(set<pair<int, int>>& colliding_pairs, int age
 {
     bool succ = false;
     if (path.size() < 2)
+    {
+        cout<<"short path"<<endl;
         return succ;
+    }
     for (int t = 1; t < (int)path.size(); t++)
     {
         int from = path[t - 1].location;

@@ -17,7 +17,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
                 true,
                 "Adaptive",
                 true,
-                true,3);
+                true,0);
     lns->setIterations(0);
 
     commited_paths.resize(env->num_of_agents);
@@ -92,9 +92,44 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     if (!succ)
     {
         cout<<"not success"<<endl;
-        return;
+        lns->commitPath(1,commited_paths,future_paths,false,env->curr_timestep);
+        if (!lns->validateCommitSolution(commited_paths))
+        {
+            cout<<"has collisions"<<endl;
+            for (int i = 0; i <commited_paths.size(); i++)
+            {
+                future_paths[i].push_front(env->curr_states[i].location);
+            }
+            return;
+        }
+        else
+        {
+            for (int i = 0; i <commited_paths.size(); i++)
+            {
+                commited_paths[i].pop_front();
+            }
+        }
     }
-    lns->commitPath(1,commited_paths,future_paths,true,env->curr_timestep);
+    else
+    {
+        lns->commitPath(1,commited_paths,future_paths,false,env->curr_timestep);
+        if (!lns->validateCommitSolution(commited_paths))
+        {
+            cout<<"wrong lns with collisions"<<endl;
+            for (int i = 0; i <commited_paths.size(); i++)
+            {
+                future_paths[i].push_front(env->curr_states[i].location);
+            }
+            return;
+        }
+        else
+        {
+            for (int i = 0; i <commited_paths.size(); i++)
+            {
+                commited_paths[i].pop_front();
+            }
+        }
+    }
     initial_run = false;
 
     
