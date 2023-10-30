@@ -487,7 +487,7 @@ bool LNS::runPP()
         agents[id].path = agents[id].path_planner->findPath(constraint_table);
         if (agents[id].path.empty())
         {
-            cout<<"sipp failed"<<endl;
+            //cout<<"sipp failed"<<endl;
             break;
         } 
         //neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
@@ -497,7 +497,7 @@ bool LNS::runPP()
                 break;
             neighbor.sum_of_costs++;
         }
-        cout<<"old sic "<< neighbor.old_sum_of_costs<<" current sic "<<neighbor.sum_of_costs<<endl;
+        //cout<<"old sic "<< neighbor.old_sum_of_costs<<" current sic "<<neighbor.sum_of_costs<<endl;
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs)
         {
             break;
@@ -513,7 +513,7 @@ bool LNS::runPP()
     else // stick to old paths
     {
         if (neighbor.sum_of_costs > neighbor.old_sum_of_costs)
-            cout<<"solution worse"<<endl;
+            //cout<<"solution worse"<<endl;
         if (p != shuffled_agents.end())
             num_of_failures++;
         auto p2 = shuffled_agents.begin();
@@ -530,12 +530,12 @@ bool LNS::runPP()
             {
                 int a = *p2;
                 agents[a].path = neighbor.old_paths[i];
-                cout<<"old path"<<endl;
-                for (auto p: agents[a].path)
-                {
-                    cout<<p.location<<" ";
-                }
-                cout<<endl;
+                //cout<<"old path"<<endl;
+                // for (auto p: agents[a].path)
+                // {
+                //     cout<<p.location<<" ";
+                // }
+                // cout<<endl;
                 path_table.insertPath(agents[a].id, agents[a].path);
                 ++p2;
             }

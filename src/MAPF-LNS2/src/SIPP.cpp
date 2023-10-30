@@ -46,7 +46,7 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                                 get<2>(interval), get<2>(interval), (start_location == goal_location));
     pushNodeToFocal(start);
 
-    cout<<"start "<< start_location <<" goal "<<goal_location<<" dummy goal "<<dummy_goal<<endl;
+    //cout<<"start "<< start_location <<" goal "<<goal_location<<" dummy goal "<<dummy_goal<<endl;
 
     while (!focal_list.empty())
     {

@@ -18,7 +18,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
                 true,
                 "Adaptive",
                 true,
-                true,3);
+                true,0);
     lns->setIterations(0);
 
     commited_paths.resize(env->num_of_agents);
@@ -64,6 +64,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     //if (initial_run)
     {
         //if (future_paths.empty() || future_paths[0].empty()){
+        
         lns->setHasInitialSolution(false);
         initial_run = true;
     }
