@@ -44,13 +44,14 @@ HNode::HNode(const Config& _C, const Instance& I, HNode* _parent, const uint _g,
         // initialize
         for (uint i = 0; i < N; ++i)
         {
-          //priorities[i] = (float)D.get(i, C[i]) / N; //do not according to the distance in our online ver
           priorities[i] = (float)i/N;
           reach_goal[i] = false; //do not reach goal at the start stage
         }
+        depth = 0;
     } 
     else 
     {
+        depth = parent->depth+1;
         curr_time = parent->curr_time + 1;
         // dynamic priorities, akin to PIBT
         for (size_t i = 0; i < N; ++i) 
@@ -59,7 +60,13 @@ HNode::HNode(const Config& _C, const Instance& I, HNode* _parent, const uint _g,
             {
                 reach_goal[i] = true;
                 num_agent_reached++;
-                priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
+                //priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
+                //parent reached goal before, so the current goal is dummy goal
+                auto dummy_goal = I.getDummyGoals()[i];
+                if (I.getAllpairDistance(dummy_goal, C[i]->index) == 0) //also reached dummy goal
+                {
+                    priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
+                }
             }
             else
             {
@@ -119,19 +126,18 @@ Planner::~Planner() {}
 
 Solution Planner::solve(std::string& additional_info)
 {
-    solver_info(1, "start search");
     // setup agents
     for (auto i = 0; i < N; ++i) A[i] = new LACAMAgent(i);
 
-
     // setup search
     auto OPEN = std::stack<HNode*>();
-    auto EXPLORED = std::unordered_map<Config, HNode*, ConfigHasher>();
+    //auto EXPLORED = std::unordered_map<Config, HNode*, ConfigHasher>();
+    auto EXPLORED = std::unordered_map<pair<Config,vector<bool>>, HNode*, RConfigHasher, RCEqual>();
     // insert initial node, 'H': high-level node
-    // auto H_init = new HNode(ins->starts, D, nullptr, 0, get_h_value(ins->starts));
     auto H_init = new HNode(ins->starts, instance, nullptr, 0, get_h_value(ins->starts));
     OPEN.push(H_init);
-    EXPLORED[H_init->C] = H_init;
+    //EXPLORED[H_init->C] = H_init;
+    EXPLORED[make_pair(H_init->C, H_init->reach_goal)] = H_init;
 
     std::vector<Config> solution;
     auto C_new = Config(N, nullptr);  // for new configuration
@@ -141,9 +147,9 @@ Solution Planner::solve(std::string& additional_info)
     // DFS
     while (!OPEN.empty() && !is_expired(deadline)) 
     {
-
         // do not pop here!
         auto H = OPEN.top();  // high-level node
+
 
 
         // low-level search end search tree refers to constraint tree
@@ -153,6 +159,7 @@ Solution Planner::solve(std::string& additional_info)
             continue;
         }
 
+
         //record the current best, in case no solution found
         if (curr_best == nullptr)
             curr_best = H;
@@ -161,22 +168,6 @@ Solution Planner::solve(std::string& additional_info)
             if (curr_best->num_agent_reached < H->num_agent_reached)
                 curr_best = H;
         }
-
-        // // check lower bounds, this is used in anytime after finding goal
-        // if (H_goal != nullptr && H->f >= H_goal->f) {
-        //   OPEN.pop();
-        //   continue;
-        // }
-
-        // // check goal condition
-        // if (H_goal == nullptr && is_same_config(H->C, ins->goals)) {
-        //   H_goal = H;
-        //   solver_info(1, "found solution, cost: ", H->g);
-        //   // if (objective == OBJ_NONE) break;
-        //   // continue;
-        //   break;
-        // }
-
 
         // check goal condition -- reach goal once
         //should all reached the current goal and after that reach the dummy goal
@@ -196,6 +187,7 @@ Solution Planner::solve(std::string& additional_info)
 
         if (is_expired(deadline)) break;
 
+
         // create successors at the high-level search
         const auto res = get_new_config(H, L);
 
@@ -208,14 +200,18 @@ Solution Planner::solve(std::string& additional_info)
         }
 
 
+        vector<bool> reached;
+        reached.resize(A.size());
         // create new configuration
         for (auto a : A) 
         {
           C_new[a->id] = a->v_next;
+          reached[a->id] = a->reached_goal;
         }
 
         // check explored list
-        const auto iter = EXPLORED.find(C_new);
+        //const auto iter = EXPLORED.find(C_new);
+        const auto iter = EXPLORED.find(make_pair(C_new,reached));
         if (iter != EXPLORED.end()) 
         {
             // case found
@@ -233,7 +229,8 @@ Solution Planner::solve(std::string& additional_info)
         {
             // insert new search node
             const auto H_new = new HNode(C_new, instance, H, H->g + get_edge_cost(H->C, C_new), get_h_value(C_new));
-            EXPLORED[H_new->C] = H_new;
+            //EXPLORED[H_new->C] = H_new;
+            EXPLORED[make_pair(H->C,H->reach_goal)] = H_new;
             if (H_goal == nullptr || H_new->f < H_goal->f) 
             {
                 OPEN.push(H_new);
@@ -244,13 +241,9 @@ Solution Planner::solve(std::string& additional_info)
     if (H_goal == nullptr)
     {
       H_goal = curr_best;
-      cout<<"lacam failed"<<endl;
-      for (int i = 0; i < H_goal->reach_goal.size();i++)
-      {
-          if (!H_goal->reach_goal[i])
-              cout<<"not reached goal "<<i<<" "<<H_goal->C[i]->index<<" goal "<<ins->goals[i]->index<<"current order "<<H_goal->priorities[i]<<endl;
-      }
     }
+
+    cout<<"num of goal reached "<<H_goal->num_agent_reached<<endl;
 
     // backtrack
     if (H_goal != nullptr) 
@@ -263,30 +256,6 @@ Solution Planner::solve(std::string& additional_info)
         }
         std::reverse(solution.begin(), solution.end());
     }
-
-    // print result
-    if (H_goal != nullptr && OPEN.empty()) 
-    {
-        solver_info(1, "solved optimally, objective: ", objective);
-    } 
-    else if (H_goal != nullptr) 
-    {
-        solver_info(1, "solved sub-optimally, objective: ", objective);
-    } 
-    else if (OPEN.empty()) 
-    {
-        solver_info(1, "no solution");
-    } 
-    else 
-    {
-        solver_info(1, "timeout");
-    }
-
-    // logging
-    additional_info += "optimal=" + std::to_string(H_goal != nullptr && OPEN.empty()) + "\n";
-    additional_info += "objective=" + std::to_string(objective) + "\n";
-    additional_info += "loop_cnt=" + std::to_string(loop_cnt) + "\n";
-    additional_info += "num_node_gen=" + std::to_string(EXPLORED.size()) + "\n";
 
     // memory management
     for (auto a : A) delete a;
@@ -326,18 +295,6 @@ void Planner::rewrite(HNode* H_from, HNode* H_to, HNode* H_goal,
 
 uint Planner::get_edge_cost(const Config& C1, const Config& C2) //comment because we only use lacam for one shot
 {
-    // if (objective == OBJ_SUM_OF_LOSS) 
-    // {
-    //   uint cost = 0;
-    //   for (uint i = 0; i < N; ++i) {
-    //     if (C1[i] != ins->goals[i] || C2[i] != ins->goals[i]) {
-    //       cost += 1;
-    //     }
-    //   }
-    //   return cost;
-    // }
-
-    // default: makespan
     return 1; 
 }
 
@@ -349,11 +306,6 @@ uint Planner::get_edge_cost(HNode* H_from, HNode* H_to)
 uint Planner::get_h_value(const Config& C) //commment due to only need one shot at this moment
 {
     uint cost = 0;
-    // if (objective == OBJ_MAKESPAN) {
-    //   for (auto i = 0; i < N; ++i) cost = std::max(cost, D.get(i, C[i]));
-    // } else if (objective == OBJ_SUM_OF_LOSS) {
-    //   for (auto i = 0; i < N; ++i) cost += D.get(i, C[i]);
-    // }
     return cost;
 }
 
@@ -394,32 +346,10 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
         if (H->reach_goal[a->id]) a->reached_goal = true;
 
-        if (H->parent == nullptr || !a->reached_goal)
+        if (H->depth <= commit_window || !a->reached_goal) //cannot reach goal at timestep 0
             occupied_now[a->v_now->id] = a;
         else
             a->v_next = a->v_now;
-
-        // -->discard because pushed away
-        // if (H->reach_goal[a->id] && H->parent != nullptr && H->parent->parent != nullptr)
-        // {
-        //   a->v_next = a->v_now;
-        // }
-
-        //cout<<a->v_now->index<<" ";
-
-        // //if already reached goal, we do not set the occupied now
-        // //we skip the start and target are the same (start, start->children)
-        // if (H->parent != nullptr && H->parent->parent != nullptr && H->parent->reach_goal[a->id] && H->reach_goal[a->id])
-        //   continue;
-        //cout<<a->v_now->index<<" ";
-
-        //if already reached goal, we do not set the occupied now
-        //we skip the start and target are the same (start, start->children)
-        // if (H->parent != nullptr && H->parent->parent != nullptr &&
-        //  H->parent->reach_goal[a->id] && H->reach_goal[a->id])
-        //   continue;
-
-
     }
 
     // add constraints
@@ -475,18 +405,15 @@ bool Planner::funcPIBT(LACAMAgent* ai)
     LACAMAgent* swap_agent = nullptr;
 
 
-    int goal_loc = instance.env->goal_locations[i][0].first;
-    //ai->reached_goal ? instance.getDummyGoals()[i] : instance.env->goal_locations[i][0].first;
+    int goal_loc = ai->reached_goal ? instance.getDummyGoals()[i] : instance.env->goal_locations[i][0].first;
     //sort
     std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
               [&](Vertex* const v, Vertex* const u) 
               {
                   // return D.get(i, v) + tie_breakers[v->id] <
                   //       D.get(i, u) + tie_breakers[u->id];
-                //   return instance.getAllpairDistance(goal_loc,v->index) + tie_breakers[v->id] <
-                //           instance.getAllpairDistance(goal_loc,u->index) + tie_breakers[u->id];
-                return instance.getAllpairDistance(ai->id,ai->curr_timestep+1,goal_loc,v->index) + tie_breakers[v->id] <
-                          instance.getAllpairDistance(ai->id,ai->curr_timestep+1,goal_loc,u->index) + tie_breakers[u->id];
+                  return instance.getAllpairDistance(goal_loc,v->index) + tie_breakers[v->id] <
+                          instance.getAllpairDistance(goal_loc,u->index) + tie_breakers[u->id];
               });
 
     swap_agent = swap_possible_and_required(ai);
@@ -574,8 +501,8 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
                                Vertex* v_pusher_origin, Vertex* v_puller_origin)
 {
 
-    auto pusher_goal = instance.env->goal_locations[pusher][0].first;
-    auto puller_goal = instance.env->goal_locations[puller][0].first;
+    auto pusher_goal = A[pusher]->reached_goal ? instance.getDummyGoals()[pusher] : instance.env->goal_locations[pusher][0].first;
+    auto puller_goal = A[puller]->reached_goal ? instance.getDummyGoals()[puller] : instance.env->goal_locations[puller][0].first;
     if (pusher_goal == puller_goal)
     {
         return false; //no need to swap with same goal

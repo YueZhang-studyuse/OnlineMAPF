@@ -170,3 +170,16 @@ std::ostream& operator<<(std::ostream& os, const Config& config)
   os << ">";
   return os;
 }
+
+uint RConfigHasher::operator()(const std::pair<Config, std::vector<bool> > &RC) const
+{
+  auto C = RC.first;
+  uint hash = C.size();
+  int index = 0;
+  for (auto& v : C) 
+  {
+    hash ^= v->id*(int(RC.second[index]) + 1) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+    index++;
+  }
+  return hash;
+}

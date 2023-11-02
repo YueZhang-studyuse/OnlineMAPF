@@ -61,6 +61,8 @@ struct HNode {
   std::vector<uint> order;
   std::queue<LNode*> search_tree;
 
+  int depth = 0;
+
   // HNode(const Config& _C, DistTable& D, HNode* _parent, const uint _g,
   //       const uint _h);
   HNode(const Config& _C, const Instance& I, HNode* _parent, const uint _g,
@@ -85,6 +87,8 @@ struct Planner {
   const uint V_size;  // number o vertices
   //DistTable D; //use my all pair heuristic
   uint loop_cnt;      // auxiliary
+
+  int commit_window = 1;
 
   // used in PIBT
   std::vector<std::array<Vertex*, 5> > C_next;  // next locations, used in PIBT

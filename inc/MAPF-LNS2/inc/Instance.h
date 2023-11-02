@@ -91,6 +91,21 @@ public:
 	{
 		assert(loc >= 0 && loc < env->map.size() && env->map[loc] != 1);
 		int degree = 0;
+		if (0 <= loc - env->cols && env->map[loc - env->cols] != 1)
+			degree++;
+		if (loc + env->cols < env->map.size() && env->map[loc + env->cols] != 1)
+			degree++;
+		if (loc % env->cols > 0 && env->map[loc - 1] != 1)
+			degree++;
+		if (loc % env->cols < env->cols - 1 && env->map[loc + 1] != 1)
+			degree++;
+		return degree;
+	}
+
+	int getDegreeAdvanced(int loc) const //more details, up to 8 degrees (including diagonal neighbors)
+	{
+		assert(loc >= 0 && loc < env->map.size() && env->map[loc] != 1);
+		int degree = 0;
 		if (0 < loc - env->cols && env->map[loc - env->cols] != 1)
 			degree++;
 		if (loc + env->cols < env->map.size() && env->map[loc + env->cols] != 1)
@@ -98,6 +113,15 @@ public:
 		if (loc % env->cols > 0 && env->map[loc - 1] != 1)
 			degree++;
 		if (loc % env->cols < env->cols - 1 && env->map[loc + 1] != 1)
+			degree++;
+		//diagonal
+		if (0 <= loc - env->cols - 1 && loc % env->cols > 0 && env->map[loc - env->cols - 1] != 1)
+			degree++;
+		if (loc + env->cols + 1 < env->map.size() && loc % env->cols < env->cols - 1 && env->map[loc + env->cols + 1] != 1)
+			degree++;
+		if (0 <= loc - env->cols + 1 && loc % env->cols < env->cols - 1 && env->map[loc - env->cols + 1] != 1)
+			degree++;
+		if (loc + env->cols - 1 < env->map.size() && loc % env->cols > 0 && env->map[loc + env->cols + 1] != 1)
 			degree++;
 		return degree;
 	}
@@ -110,7 +134,7 @@ public:
 	//void setStart(int agent, int location){start_locations[agent] = location;}
 
 	//void createDummyGoals();
-	void assignDummyGoals (int agent) const;
+	//void assignDummyGoals (int agent) const;
 
 	vector<int> getDummyGoals() const { return dummy_goals;};
 

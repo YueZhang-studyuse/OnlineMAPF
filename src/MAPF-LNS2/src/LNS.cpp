@@ -16,7 +16,7 @@ LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, str
          path_table(instance.env->map.size())
 {
     start_time = Time::now();
-    replan_time_limit = time_limit / 100;
+    //replan_time_limit = time_limit / 100;
     if (destory_name == "Adaptive")
     {
         ALNS = true;
@@ -70,7 +70,11 @@ bool LNS::run()
         //return true;
         succ = fixInitialSolution();
     else
-        succ = getInitialSolution();
+    {
+        succ = getInitialSolution(); 
+        if (!succ) //we do not have a initial solution when reaching the runtime limit, commit what it have anyway
+            return false;
+    }
     initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
     if (!succ && initial_solution_runtime < time_limit) //if lacam failed, we use lns2
     {
@@ -402,25 +406,7 @@ bool LNS::getInitialSolution()
     neighbor.old_sum_of_costs = MAX_COST;
     neighbor.sum_of_costs = 0;
     bool succ = false;
-    // if (init_algo_name == "EECBS")
-    //     succ = runEECBS();
-    // else if (init_algo_name == "PP")
-         //succ = runTrafficPP();
-         //succ = runPP();
-    // // else if (init_algo_name == "PIBT")
-    // //     succ = runPIBT();
-    // // else if (init_algo_name == "PPS")
-    // //     succ = runPPS();
-    // // else if (init_algo_name == "winPIBT")
-    // //     succ = runWinPIBT();
-    // else if (init_algo_name == "CBS")
-    //     succ = runCBS();
     succ = runLACAM2();
-    // else
-    // {
-    //     cerr <<  "Initial MAPF solver " << init_algo_name << " does not exist!" << endl;
-    //     exit(-1);
-    // }
     if (succ)
     {
         initial_sum_of_costs = neighbor.sum_of_costs;
@@ -532,7 +518,7 @@ bool LNS::runLACAM2()
 
     const Objective objective = static_cast<Objective>(0);
     const float restart_rate = 0.01;
-    const auto solution = solve(instance, ins, verbose, 0, &deadline, &MT, objective, restart_rate);
+    const auto solution = solve(instance, ins, verbose, commit, 0, &deadline, &MT, objective, restart_rate);
 
     auto succ = true;
 
@@ -558,11 +544,18 @@ bool LNS::runLACAM2()
             }
         }
 
-        if (reached_goal_time == -1)
+        if (reached_goal_time == -1 || reached_goal_time < commit)
         {
-            cout<<"lacam plan for agent "<<agent<<" failed"<<endl;
-            agents[agent].path.clear();
-            succ = false;
+            agents[agent].path.resize(solution.size());
+            for (size_t t = 0; t <= solution.size() - 1; t++)
+            {
+                auto curr_loc = solution[t][agent]->index;
+                agents[agent].path[t].location = curr_loc;
+            }
+            path_table.insertPath(agents[agent].id, agents[agent].path);
+            soc+=agents[agent].path.size()-1;
+            if (reached_goal_time == -1)
+                succ = false;
         }
         else
         {
@@ -577,8 +570,6 @@ bool LNS::runLACAM2()
         }
 
     }
-
-
     neighbor.sum_of_costs =soc;
 
     return succ;
@@ -1163,8 +1154,8 @@ void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<lis
 {
     for (const auto &agent : agents)
     {
-        if (agent.path.empty())
-            cout<<"error "<<agent.id<<endl;
+        // if (agent.path.empty())
+        //     cout<<"error "<<agent.id<<endl;
         if (screen == 3)
             cout<<"Commiting: "<<agent.id<<"current location "<<agent.path.front().location<<endl;
         //agent reach target before, but need to de-tour due to resolving conflict, so we add the time reach target as waiting
@@ -1175,10 +1166,10 @@ void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<lis
         //         cout<< "(" << instance.getColCoordinate(commit_path[agent.id].back()) << "," <<
         //                         instance.getRowCoordinate(commit_path[agent.id].back()) << ")->";
         // }
-        if (agent.path.size() == 1)
-        {
-            cout<<"path empty"<<endl;
-        }
+        // if (agent.path.size() == 1)
+        // {
+        //     cout<<"path empty"<<endl;
+        // }
         if (agent.path.size() > commit_step)
         {
             if (stay_target[agent.id] != 0)
@@ -1346,7 +1337,6 @@ void LNS::clearAll(const string & destory_name)
 
 bool LNS::validateCommitSolution(vector<list<int>> commited_paths) const
 {
-    cout<<"validation "<<endl;
     vector<Agent> commited_agents;
     int N = instance.getDefaultNumberOfAgents();
     commited_agents.reserve(N);
@@ -1366,10 +1356,6 @@ bool LNS::validateCommitSolution(vector<list<int>> commited_paths) const
         {
             if (!instance.validMove(a1_.path[t - 1].location, a1_.path[t].location))
             {
-                // cerr << "The path of agent " << a1_.id << " jump from "
-                //      << a1_.path[t - 1].location << " to " << a1_.path[t].location
-                //      << " between timesteps " << t - 1 << " and " << t << endl;
-                //exit(-1);
                 return false;
             }
         }
@@ -1385,40 +1371,16 @@ bool LNS::validateCommitSolution(vector<list<int>> commited_paths) const
             {
                 if (a1.path[t].location == a2.path[t].location) // vertex conflict
                 {
-                    // cerr << "Find a vertex conflict between agents " << a1.id << " and " << a2.id <<
-                    //         " at location " << a1.path[t].location << " at timestep " << t << endl;
-                    //exit(-1);
                     return false;
                 }
                 else if (a1.path[t].location == a2.path[t - 1].location &&
                         a1.path[t - 1].location == a2.path[t].location) // edge conflict
                 {
-                    // cerr << "Find an edge conflict between agents " << a1.id << " and " << a2.id <<
-                    //      " at edge (" << a1.path[t - 1].location << "," << a1.path[t].location <<
-                    //      ") at timestep " << t << endl;
-                    //exit(-1);
                     return false;
                 }
             }
-            // int target = a1.path.back().location;
-            // for (; t < (int) a2.path.size(); t++)
-            // {
-            //     if (a2.path[t].location == target)  // target conflict
-            //     {
-            //         cerr << "Find a target conflict where agent " << a2.id << " (of length " << a2.path.size() - 1<<
-            //              ") traverses agent " << a1.id << " (of length " << a1.path.size() - 1<<
-            //              ")'s target location " << target << " at timestep " << t << endl;
-            //         //exit(-1);
-            //     }
-            // }
         }
     }
-    // if (sum_of_costs != sum)
-    // {
-    //     cerr << "The computed sum of costs " << sum_of_costs <<
-    //          " is different from the sum of the paths in the solution " << sum << endl;
-    //     exit(-1);
-    // }
     return true;
 }
 

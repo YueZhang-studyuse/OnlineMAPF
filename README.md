@@ -78,7 +78,7 @@ Please refer to the [Submission_Instruction.md](./Submission_Instruction.md).
 
 ## This version:
 
-In planner, treat agents reached goal once than disapppear
+In planner, if agent reached goal within current commit window, it will go to dummy goal and disappear after window, if agent reached goal after current commit window, it will disappear at goal location
 
 
 

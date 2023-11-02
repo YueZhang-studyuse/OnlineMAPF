@@ -44,6 +44,8 @@ public:
     double average_group_size = -1;
     int sum_of_costs = 0;
 
+    int commit = 1;
+
     BasicLNS(const Instance& instance, double time_limit, int neighbor_size, int screen);
     virtual string getSolverName() const = 0;
 

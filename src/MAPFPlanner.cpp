@@ -5,7 +5,7 @@
 
 void MAPFPlanner::initialize(int preprocess_time_limit)
 {
-    remain_commit = commit;
+    remain_commit = 0;
     instance.initMap(env);
     instance.computeAllPair();
     lns = new LNS(instance, preprocess_time_limit,
@@ -22,61 +22,99 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
 
     commited_paths.resize(env->num_of_agents);
     future_paths.resize(env->num_of_agents);
+
+    lns->commit = commit;
 }
 
 void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
 {
-    //bool new_task = instance.updateStartGoals();
-    bool replan_need = false;
-
-    // for (int i = 0; i < env->num_of_agents; i++)
-    // {
-    //     if (future_paths[i].empty())
-    //     {
-    //         replan_need = true;
-    //         break;
-    //     }
-    //     if (future_paths[i].front() != env->curr_states[i].location)
-    //     {
-    //         replan_need = true;
-    //         break;
-    //     }
-    //     bool arrived = false;
-    //     for (auto loc: future_paths[i])
-    //     {
-    //         if (loc == env->goal_locations[i][0].first)
-    //         {
-    //             arrived = true;
-    //             break;
-    //         }
-    //     }
-    //     if (!arrived)
-    //     {
-    //         replan_need = true;
-    //         break;
-    //     }
-    // }
-
-    if (env->curr_timestep == 0)
-        replan_need = true;
-
-    lns->clearAll("Adaptive");
-
-    if (replan_need)
+    if (!commited_paths[0].empty())
     {
-        //if (future_paths.empty() || future_paths[0].empty()){
-        lns->setHasInitialSolution(false);
-        initial_run = true;
+        //trans to actions
+        for (int agent = 0; agent < env->num_of_agents; agent++)
+        {
+            int next_loc = commited_paths[agent].front();
+            int diff = next_loc - env->curr_states[agent].location;
+            if (diff == 1)
+                actions[agent] = Action::E;
+            else if (diff == -1)
+                actions[agent] = Action::WE;
+            else if (diff > 0)
+                actions[agent] = Action::S;
+            else if (diff == 0)
+                actions[agent] = Action::WA;
+            else
+                actions[agent] = Action::N;
+            commited_paths[agent].pop_front();
+        }
+        cout<<"commit directly"<<endl;
+        return;
     }
 
 
+    lns->clearAll("Adaptive");
     lns->setRuntimeLimit(time_limit);
     lns->setIterations(MAX_TIMESTEP);
-    
-    if (!initial_run)
+
+    if (initial_run)
     {
-        lns->loadPaths(future_paths);
-        cout<<"loading"<<endl;
+        lns->setRuntimeLimit(1); //1s for initial run
+        if (algo == mapf_algo::LACAM)
+            lns->setIterations(0); //lacam only
+        initial_success = lns->run();
+        initial_run = false;
+    }
+    else if (!initial_success) //restart if current no initional solution
+    {
+        cout<<"initial not success"<<endl;
+        lns->setRuntimeLimit(time_limit);
+        if (algo == mapf_algo::LACAM)
+            lns->setIterations(0); //lacam only
+        initial_success = lns->run();
+    }
+    else 
+    {
+        if (algo == mapf_algo::LACAM)
+        {
+            bool replan_need = false;
+            for (int i = 0; i < env->num_of_agents; i++)
+            {
+                if (future_paths[i].empty())
+                {
+                    replan_need = true;
+                    break;
+                }
+                if (future_paths[i].front() != env->curr_states[i].location)
+                {
+                    replan_need = true;
+                    break;
+                }
+                bool arrived = false;
+                for (auto loc: future_paths[i])
+                {
+                    if (loc == env->goal_locations[i][0].first)
+                    {
+                        arrived = true;
+                        break;
+                    }
+                }
+                if (!arrived)
+                {
+                    replan_need = true;
+                    break;
+                }
+            }
+            if (replan_need)
+            {
+                lns->setRuntimeLimit(time_limit);
+                lns->setIterations(0); //lacam only
+                initial_success = lns->run();
+            }
+            else
+            {
+                lns->loadPaths(future_paths);
+            }
+        }
     }
 
     for (int i = 0; i < env->num_of_agents; i++)
@@ -85,74 +123,20 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         commited_paths[i].clear();
     }
 
-    bool succ = lns->run();
-    cout<<"stop lns"<<endl;
-
     actions = std::vector<Action>(env->curr_states.size(), Action::WA);
-    if (!succ)
+
+    lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
+    if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
     {
-        cout<<"not success"<<endl;
-        lns->commitPath(1,commited_paths,future_paths,false,env->curr_timestep);
-        if (!lns->validateCommitSolution(commited_paths))
+        for (int i = 0; i <commited_paths.size(); i++)
         {
-            cout<<"has collisions"<<endl;
-            for (int i = 0; i <commited_paths.size(); i++)
-            {
-                future_paths[i].push_front(env->curr_states[i].location);
-            }
-            return;
+            future_paths[i].push_front(env->curr_states[i].location);
         }
-        else
-        {
-            for (int i = 0; i <commited_paths.size(); i++)
-            {
-                commited_paths[i].pop_front();
-            }
-        }
+        commited_paths.clear();
+        return;
     }
-    else
-    {
-        lns->commitPath(1,commited_paths,future_paths,false,env->curr_timestep);
-        if (!lns->validateCommitSolution(commited_paths))
-        {
-            cout<<"wrong lns with collisions"<<endl;
-            for (int i = 0; i <commited_paths.size(); i++)
-            {
-                future_paths[i].push_front(env->curr_states[i].location);
-            }
-            return;
-        }
-        else
-        {
-            for (int i = 0; i <commited_paths.size(); i++)
-            {
-                commited_paths[i].pop_front();
-            }
-        }
-    }
-    initial_run = false;
 
-    
-    // auto start1 = std::chrono::steady_clock::now()
-
-    // LACAMInstance ins = LACAMInstance(env);
-    // string verbose = "";
-    // auto MT = std::mt19937(0);
-    // const auto deadline = Deadline((time_limit-0.1) * 1000);
-
-    // const Objective objective = static_cast<Objective>(0);
-    // const float restart_rate = 0.01;
-    // const auto solution = solve(ins, verbose, 0, &deadline, &MT, objective, restart_rate);
-    // auto end1 = std::chrono::steady_clock::now();
-    // auto diff1 = end1-start1;
-    // cout<<"lacam solve ends at.."<<std::chrono::duration<double>(diff1).count()<<endl;
-
-    // if (solution.empty())
-    // {
-    //     cout<<"no solution"<<endl;
-    //     return;
-    // }
-
+    //trans to actions
     for (int agent = 0; agent < env->num_of_agents; agent++)
     {
         int next_loc = commited_paths[agent].front();
@@ -167,12 +151,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
             actions[agent] = Action::WA;
         else
             actions[agent] = Action::N;
-
-        if (future_paths[agent].size()==1)
-        {
-            cout<<"finished"<<endl;
-            //initial_run = true;
-        }
+        commited_paths[agent].pop_front();
     }
 
     return;
