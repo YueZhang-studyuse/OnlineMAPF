@@ -58,6 +58,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
 
     if (initial_run)
     {
+        instance.prepareDummy();
         lns->setRuntimeLimit(1); //1s for initial run
         if (algo == mapf_algo::LACAM)
             lns->setIterations(0); //lacam only

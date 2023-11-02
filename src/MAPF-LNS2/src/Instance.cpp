@@ -7,7 +7,11 @@
 void Instance::initMap(SharedEnvironment* simulate_env)
 {
     env = simulate_env;
+    existing_path.resize(env->num_of_agents);
+}
 
+void Instance::prepareDummy()
+{
     //prepare dummy goals
     vector<list<int>> loc_degrees;
     loc_degrees.resize(8); 
@@ -17,6 +21,10 @@ void Instance::initMap(SharedEnvironment* simulate_env)
         if (env->map[i] == 1)
             continue;
         int d = getDegreeAdvanced(i);
+        if (d == 0)
+            continue;
+        if (getAllpairDistance(env->curr_states[0].location, i) == MAX_TIMESTEP) //do not belongs to the current connectted components
+            continue;
         loc_degrees[d-1].push_back(i);
     }
 
@@ -42,8 +50,6 @@ void Instance::initMap(SharedEnvironment* simulate_env)
     }
     std::random_shuffle(dummy_goals.begin(), dummy_goals.end());
     dummy_goals.resize(env->num_of_agents);
-
-    existing_path.resize(env->num_of_agents);
 }
 
 
@@ -176,7 +182,6 @@ void Instance::computeAllPair()
             }
         }
     }
-
 }
 
 // bool Instance::validateSolution(const vector<Path*>& paths, int sum_of_costs, int num_of_colliding_pairs) const

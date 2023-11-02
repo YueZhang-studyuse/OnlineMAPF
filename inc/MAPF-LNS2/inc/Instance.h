@@ -24,6 +24,8 @@ public:
 	//for allpair heuristics
 	void computeAllPair();
 
+	void prepareDummy();
+
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
 	Instance()=default;
