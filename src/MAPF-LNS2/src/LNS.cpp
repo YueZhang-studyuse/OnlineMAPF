@@ -700,6 +700,8 @@ int LNS::findMostDelayedAgent()
     {
         if (tabu_list.find(i) != tabu_list.end())
             continue;
+        if ((int) agents[i].path.size() -1 <= commit) //if size equal to commit, this means we at least need to have this path length
+            continue;
         int delays = (int) agents[i].path.size() - 1 -  instance.getAllpairDistance(agents[i].path_planner->start_location, agents[i].path_planner->goal_location);
         if (max_delays < delays)
         {
