@@ -438,8 +438,6 @@ bool LNS::runPP()
     neighbor.sum_of_costs = 0;
     runtime = ((fsec)(Time::now() - start_time)).count();
     double T = time_limit - runtime; // time limit
-    // if (!iteration_stats.empty()) // replan
-    //     T = min(T, replan_time_limit);
     auto time = Time::now();
     ConstraintTable constraint_table(instance.env->cols, instance.env->map.size(), &path_table);
 
