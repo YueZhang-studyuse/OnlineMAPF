@@ -51,31 +51,26 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         return;
     }
 
-
-    lns->clearAll("Adaptive");
-    lns->setRuntimeLimit(time_limit);
-    lns->setIterations(MAX_TIMESTEP);
-
-    if (initial_run)
+    if (algo == mapf_algo::LACAM)
     {
-        instance.prepareDummy();
-        lns->setRuntimeLimit(1); //1s for initial run
-        if (algo == mapf_algo::LACAM)
-            lns->setIterations(0); //lacam only
-        initial_success = lns->run();
-        initial_run = false;
-    }
-    else if (!initial_success) //restart if current no initional solution
-    {
-        cout<<"initial not success"<<endl;
+        lns->clearAll("Adaptive");
         lns->setRuntimeLimit(time_limit);
-        if (algo == mapf_algo::LACAM)
-            lns->setIterations(0); //lacam only
-        initial_success = lns->run();
-    }
-    else 
-    {
-        if (algo == mapf_algo::LACAM)
+        lns->setIterations(0);
+
+        if (initial_run)
+        {
+            instance.prepareDummy();
+            lns->setRuntimeLimit(1); //1s for initial run
+            initial_success = lns->run();
+            initial_run = false;
+        }
+        else if (!initial_success) //restart if current no initional solution
+        {
+            cout<<"initial not success"<<endl;
+            lns->setRuntimeLimit(time_limit);
+            initial_success = lns->run();
+        }
+        else 
         {
             bool replan_need = false;
             for (int i = 0; i < env->num_of_agents; i++)
@@ -116,26 +111,27 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
                 lns->loadPaths(future_paths);
             }
         }
-    }
 
-    for (int i = 0; i < env->num_of_agents; i++)
-    {
-        future_paths[i].clear();
-        commited_paths[i].clear();
-    }
-
-    actions = std::vector<Action>(env->curr_states.size(), Action::WA);
-
-    lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
-    if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
-    {
-        for (int i = 0; i <commited_paths.size(); i++)
+        for (int i = 0; i < env->num_of_agents; i++)
         {
-            future_paths[i].push_front(env->curr_states[i].location);
+            future_paths[i].clear();
+            commited_paths[i].clear();
         }
-        commited_paths.clear();
-        return;
+
+        actions = std::vector<Action>(env->curr_states.size(), Action::WA);
+
+        lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
+        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
+        {
+            for (int i = 0; i <commited_paths.size(); i++)
+            {
+                future_paths[i].push_front(env->curr_states[i].location);
+            }
+            commited_paths.clear();
+            return;
+        }
     }
+
 
     //trans to actions
     for (int agent = 0; agent < env->num_of_agents; agent++)
