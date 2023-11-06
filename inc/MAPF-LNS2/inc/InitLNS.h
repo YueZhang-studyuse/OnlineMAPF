@@ -21,6 +21,7 @@ public:
     void printPath() const;
     void printResult();
     void clear(); // delete useless data to save memory
+    bool postProcessMCP();
 
 private:
     string replan_algo_name;

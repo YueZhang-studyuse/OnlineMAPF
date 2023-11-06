@@ -1,6 +1,7 @@
 #include "InitLNS.h"
 #include <queue>
 #include <algorithm>
+#include "MCP.h"
 
 InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_limit,
          const string & replan_algo_name, const string & init_destory_name, int neighbor_size, int screen) :
@@ -61,11 +62,11 @@ bool InitLNS::run()
         assert(instance.validateSolution(paths, sum_of_costs, num_of_colliding_pairs));
         if (ALNS)
             chooseDestroyHeuristicbyALNS();
-
         switch (init_destroy_strategy)
         {
             case TARGET_BASED:
                 succ = generateNeighborByTarget();
+                //succ = generateNeighborRandomly();
                 break;
             case COLLISION_BASED:
                 succ = generateNeighborByCollisionGraph();
@@ -175,7 +176,33 @@ bool InitLNS::run()
     }
 
     printResult();
+    if (num_of_colliding_pairs > 0)
+    {
+        // printPath();
+        // printCollisionGraph();
+        cout<<"MCP Window Fix"<<endl;
+        // postProcessMCP();
+        // printPath();
+        
+    }
     return (num_of_colliding_pairs == 0);
+}
+
+bool InitLNS::postProcessMCP()
+{
+    MCP postmcp(instance,commit+2);
+    {
+        vector<Path*> temp;
+        temp.resize(agents.size());
+        for (int a = 0; a < agents.size(); a++)
+        {
+            temp[a] = &(agents[a].path);
+        }
+        postmcp.build(temp);
+        postmcp.simulate(temp);
+    }
+    postmcp.clear();
+    return true;
 }
 
 bool InitLNS::runPP()
@@ -307,7 +334,10 @@ bool InitLNS::updateCollidingPairs(set<pair<int, int>>& colliding_pairs, int age
 {
     bool succ = false;
     if (path.size() < 2)
+    {
+        cout<<"short path"<<endl;
         return succ;
+    }
     for (int t = 1; t < (int)path.size(); t++)
     {
         int from = path[t - 1].location;
@@ -503,6 +533,7 @@ bool InitLNS::generateNeighborByTarget()
     agents[a].path_planner->findMinimumSetofColldingTargets(goal_table,A_target);// generate non-wait path and collect A_target
 
 
+
     if (screen >= 3){
         cout<<"     Selected a : "<< a<<endl;
         cout<<"     Select A_start: ";
@@ -519,14 +550,17 @@ bool InitLNS::generateNeighborByTarget()
 
     neighbors_set.insert(a);
 
-    if(A_start.size() + A_target.size() >= neighbor_size-1){
-        if (A_start.empty()){
+    if(A_start.size() + A_target.size() >= neighbor_size-1)
+    {
+        if (A_start.empty())
+        {
             vector<int> shuffled_agents;
             shuffled_agents.assign(A_target.begin(),A_target.end());
             std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
             neighbors_set.insert(shuffled_agents.begin(), shuffled_agents.begin() + neighbor_size-1);
         }
-        else if (A_target.size() >= neighbor_size){
+        else if (A_target.size() >= neighbor_size)
+        {
             vector<int> shuffled_agents;
             shuffled_agents.assign(A_target.begin(),A_target.end());
             std::random_shuffle(shuffled_agents.begin(), shuffled_agents.end());
@@ -534,9 +568,11 @@ bool InitLNS::generateNeighborByTarget()
 
             neighbors_set.insert(A_start.begin()->second);
         }
-        else{
+        else
+        {
             neighbors_set.insert(A_target.begin(), A_target.end());
-            for(auto e : A_start){
+            for(auto e : A_start)
+            {
                 //A_start is ordered by time.
                 if (neighbors_set.size()>= neighbor_size)
                     break;

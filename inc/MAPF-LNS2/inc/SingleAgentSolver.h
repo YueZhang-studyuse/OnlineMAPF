@@ -39,7 +39,6 @@ public:
 	// the following is used to comapre nodes in the OPEN list
 	struct compare_node
 	{
-		// returns true if n1 > n2 (note -- this gives us *min*-heap).
 		bool operator()(const LLNode* n1, const LLNode* n2) const
 		{
 			if (n1->reached_goal_at == n2->reached_goal_at)
@@ -54,7 +53,6 @@ public:
 				}
 				return n1->g_val + n1->h_val >= n2->g_val + n2->h_val;
 			}
-			cout<<"comapre "<<n1->reached_goal_at<<" "<<n2->reached_goal_at<<endl;
 			return n1->reached_goal_at >= n2->reached_goal_at;
 		}
 	};  // used by OPEN (heap) to compare nodes (top of the heap has min f-val, and then highest g-val)
@@ -155,6 +153,8 @@ public:
 	int goal_location;
 	int dummy_goal; //for dummy goal location
 
+	int commit_window = 1;
+
 	vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
 	int compute_heuristic(int from, int to) const  // compute admissible heuristic between two locations
 	{
@@ -216,4 +216,3 @@ protected:
 	void compute_heuristics();
 	int get_DH_heuristic(int from, int to) const { return abs(my_heuristic[from] - my_heuristic[to]); }
 };
-

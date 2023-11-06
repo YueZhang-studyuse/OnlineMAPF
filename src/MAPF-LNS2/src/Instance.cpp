@@ -7,55 +7,50 @@
 void Instance::initMap(SharedEnvironment* simulate_env)
 {
     env = simulate_env;
-	// num_of_rows = env->rows;
-	// num_of_cols = env->cols;
-	// num_of_agents = env->num_of_agents;
-	// map_size = env->map.size();
-    //cout<<env->num_of_agents<<endl;
-    //my_map.resize(map_size);
-	//read map to my_map
-	// for (int i = 0; i < map_size; i++)
-	// {
-	// 	my_map[i] = (env->map[i] == 1);
- 	// }
+    existing_path.resize(env->num_of_agents);
+}
+
+void Instance::prepareDummy()
+{
+    //prepare dummy goals
+    vector<list<int>> loc_degrees;
+    loc_degrees.resize(8); 
+
     for (int i = 0; i < env->map.size(); i++)
     {
         if (env->map[i] == 1)
             continue;
-        int index = getDegree(i)-1;
-        degrees[index]++;
+        int d = getDegreeAdvanced(i);
+        if (d == 0)
+            continue;
+        if (getAllpairDistance(env->curr_states[0].location, i) == MAX_TIMESTEP) //do not belongs to the current connectted components
+            continue;
+        loc_degrees[d-1].push_back(i);
     }
 
-    // start_locations.resize(num_of_agents);
-	// goal_location_seqs.resize(num_of_agents);
-    dummy_goals = std::vector<int>(env->num_of_agents,-1);
+    unordered_set<int> candidates;
+    for (int j = 7; j >= 0; j--)
+    {
+        for (auto loc: loc_degrees[j])
+        {
+            candidates.insert(loc);
+        }
+        if (candidates.size() >= env->num_of_agents)
+        {
+            break;
+        }
+    }
+
+    dummy_goals.resize(candidates.size());
+    int index = 0;
+    for (auto loc: candidates)
+    {
+        dummy_goals[index] = loc;
+        index++;
+    }
+    std::random_shuffle(dummy_goals.begin(), dummy_goals.end());
+    dummy_goals.resize(env->num_of_agents);
 }
-
-// bool Instance::updateStartGoals()
-// {
-//     //cout<<"dummy goals degree"<<dummy_goal_accpetance<<endl;
-//     bool new_task = false;
-//     for (int i = 0; i < num_of_agents; i++)
-//     {
-//         start_locations[i] = env->curr_states[i].location;
-//         if (goal_location_seqs[i].empty()|| (goal_location_seqs[i].front() != env->goal_locations[i][0].first))
-//         {
-//             goal_location_seqs[i].push_back(env->goal_locations[i].back().first);
-//             dummy_goals[i] = -1;
-//             //goal_locations[i] = env->goal_locations[i][0].first;
-//             new_task = true;
-//         }
-//     }
-//     if (new_task)
-//         createDummyGoals();
-
-//     // for (int i = 0; i < num_of_agents; i++)
-//     // {
-//     //     cout<<"agent "<<i<<endl;
-//     //     cout<<"start "<<start_locations[i]<<" goal "<<goal_location_seqs[i].front()<<" degree "<<getDegree(goal_location_seqs[i].front())<<" dummy goal "<<dummy_goals[i]<<" degree "<<getDegree(dummy_goals[i])<<endl;
-//     // }
-//     return new_task;
-// }
 
 
 void Instance::printMap() const
@@ -97,17 +92,6 @@ void Instance::saveMap() const
 	}
 	myfile.close();
 }
-
-
-
-// void Instance::printAgents() const
-// {
-//   for (int i = 0; i < num_of_agents; i++) 
-//   {
-//     cout << "Agent" << i << " : S=(" << getRowCoordinate(start_locations[i]) << "," << getColCoordinate(start_locations[i]) 
-// 				<< ") ; G=(" << getRowCoordinate(goal_locations[i]) << "," << getColCoordinate(goal_locations[i]) << ")" << endl;
-//   }
-// }
 
 
 list<int> Instance::getNeighbors(int curr) const
@@ -197,14 +181,7 @@ void Instance::computeAllPair()
                 }
             }
         }
-        // cout<<"vertex "<<i<<" end.. "<<heuristic[i].size()<<endl;
-        // for (int j = 0; j < heuristic[i].size();j++)
-        // {
-        //     cout<<heuristic[i][j]<<" ";
-        // }
-        // cout<<endl;
     }
-
 }
 
 // bool Instance::validateSolution(const vector<Path*>& paths, int sum_of_costs, int num_of_colliding_pairs) const
@@ -371,58 +348,6 @@ void Instance::computeAllPair()
 //     }
 //     dummy_goals[agent] = -1;
 // }
-
-void Instance::assignDummyGoals(int agent) const
-{
-    vector<int> sum_degree = {0,0,0,0};
-    unordered_set<int> current_goals;
-
-    for (int i = 0; i < env->num_of_agents; i++)
-    {
-        if (i == agent)
-            continue;
-        int goal = (dummy_goals[i] == -1 ? env->goal_locations[i][0].first : dummy_goals[i]);
-        current_goals.insert(goal);
-        sum_degree[getDegree(goal)-1]++;
-    }
-
-    //assign dummy goals according to a start location
-    int accept_degree = 4;
-    while (degrees[accept_degree-1] <= sum_degree[accept_degree-1])
-    {
-        accept_degree--;
-    }
-
-
-    //use bfs to find nearst dummy goals (including current location)
-    std::queue<int> open;
-    unordered_set<int> close;
-    open.push(env->goal_locations[agent][0].first);
-    while(!open.empty())
-    {
-        int curr = open.front();
-        open.pop();
-        if (current_goals.find(curr) == current_goals.end() && env->map[curr] != 1 && 
-        getDegree(curr) >= accept_degree)
-        {
-            //return curr;
-            dummy_goals[agent] = curr;
-            return;
-        }
-        if (close.find(curr) != close.end())
-        {
-            continue;
-        }
-        close.insert(curr);
-        auto neighbor = getNeighbors(curr);
-        for (auto location: neighbor)
-        {
-            if (close.find(location) == close.end())
-                open.push(location);
-        }
-    }
-    dummy_goals[agent] = -1;
-}
 
 bool Instance::hasCollision(const Path& p1, const Path& p2) const
 {

@@ -48,9 +48,12 @@ HNode::HNode(const Config& _C, const Instance& I, HNode* _parent, const uint _g,
           priorities[i] = (float)i/N;
           reach_goal[i] = false; //do not reach goal at the start stage
         }
+        depth = 0;
     } 
     else 
     {
+        depth = parent->depth+1;
+        curr_time = parent->curr_time + 1;
         // dynamic priorities, akin to PIBT
         for (size_t i = 0; i < N; ++i) 
         { 
@@ -60,8 +63,6 @@ HNode::HNode(const Config& _C, const Instance& I, HNode* _parent, const uint _g,
                 num_agent_reached++;
                 //priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
                 auto dummy_goal_index = I.getDummyGoals()[i];
-                if (dummy_goal_index == -1)
-                    I.assignDummyGoals(i);
                 if (I.getAllpairDistance(dummy_goal_index, C[i]->index) == 0)
                 {
                     priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
@@ -79,27 +80,12 @@ HNode::HNode(const Config& _C, const Instance& I, HNode* _parent, const uint _g,
                     reach_goal[i] = true;
                     num_agent_reached++;
                     priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
-                    I.assignDummyGoals(i);
                 }
                 else //still not arrived
                 {
                     priorities[i] = parent->priorities[i] + 1;
                 }
             }
-            //the orders
-            // auto goal_index;
-            // if (reach_goal[i]) //reached goal before
-            //     goal_index = 
-                //reach_goal[i] = (D.get(i, C[i]) == 0);
-              //->reached goal get lowest prority
-            // if (!reach_goal[i])
-            // {
-            //   priorities[i] = parent->priorities[i] + 1;
-            // } 
-            // else 
-            // {
-            //   priorities[i] = parent->priorities[i] - (int)parent->priorities[i];
-            // }
         }
     }
 
@@ -190,21 +176,6 @@ Solution Planner::solve(std::string& additional_info)
                 curr_best = H;
         }
 
-        // // check lower bounds, this is used in anytime after finding goal
-        // if (H_goal != nullptr && H->f >= H_goal->f) {
-        //   OPEN.pop();
-        //   continue;
-        // }
-
-        // // check goal condition
-        // if (H_goal == nullptr && is_same_config(H->C, ins->goals)) {
-        //   H_goal = H;
-        //   solver_info(1, "found solution, cost: ", H->g);
-        //   // if (objective == OBJ_NONE) break;
-        //   // continue;
-        //   break;
-        // }
-
 
         // check goal condition -- reach goal once
         //should all reached the current goal and after that reach the dummy goal
@@ -212,15 +183,13 @@ Solution Planner::solve(std::string& additional_info)
         {
             if (H->num_agent_reached == ins->N)
             {
-                //cout<<"checking "<<endl;
                 bool allreached = true;
                 for (int i = 0; i < N; i++)
                 {
                     if (H->C[i]->index != instance.getDummyGoals()[i])
                     {
-                        //cout<<"not reached "<<i<<" "<<H->C[i]->index<<" "<<instance.getDummyGoals()[i]<<" orders "<<H->priorities[i]<<endl; 
                         allreached = false;
-                        //break;
+                        break;
                     }
                 }
                 if(allreached)
@@ -230,8 +199,6 @@ Solution Planner::solve(std::string& additional_info)
                 }
             }
         }
-
-        //cout<<"loop "<<loop_cnt<<" "<<H->num_agent_reached<<endl;
 
         // create successors at the low-level search
         auto L = H->search_tree.front();
@@ -278,10 +245,6 @@ Solution Planner::solve(std::string& additional_info)
             {
                 OPEN.push(H_insert);
             }
-            else
-            {
-                //cout<<"pruned "<<endl;
-            }
         } 
         else 
         {
@@ -300,11 +263,11 @@ Solution Planner::solve(std::string& additional_info)
     {
       H_goal = curr_best;
       cout<<"lacam failed"<<endl;
-      for (int i = 0; i < H_goal->reach_goal.size();i++)
-      {
-          //if (!H_goal->reach_goal[i])
-              //cout<<"not reached goal "<<i<<" "<<H_goal->C[i]->index<<" goal "<<ins->goals[i]->index<<"current order "<<H_goal->priorities[i]<<endl;
-      }
+    //   for (int i = 0; i < H_goal->reach_goal.size();i++)
+    //   {
+    //       //if (!H_goal->reach_goal[i])
+    //           //cout<<"not reached goal "<<i<<" "<<H_goal->C[i]->index<<" goal "<<ins->goals[i]->index<<"current order "<<H_goal->priorities[i]<<endl;
+    //   }
     }
 
     // backtrack
@@ -318,31 +281,6 @@ Solution Planner::solve(std::string& additional_info)
         }
         std::reverse(solution.begin(), solution.end());
     }
-
-
-    // print result
-    if (H_goal != nullptr && OPEN.empty()) 
-    {
-        solver_info(1, "solved optimally, objective: ", objective);
-    } 
-    else if (H_goal != nullptr) 
-    {
-        solver_info(1, "solved sub-optimally, objective: ", objective);
-    } 
-    else if (OPEN.empty()) 
-    {
-        solver_info(1, "no solution");
-    } 
-    else 
-    {
-        solver_info(1, "timeout");
-    }
-
-    // logging
-    additional_info += "optimal=" + std::to_string(H_goal != nullptr && OPEN.empty()) + "\n";
-    additional_info += "objective=" + std::to_string(objective) + "\n";
-    additional_info += "loop_cnt=" + std::to_string(loop_cnt) + "\n";
-    additional_info += "num_node_gen=" + std::to_string(EXPLORED.size()) + "\n";
 
     // memory management
     for (auto a : A) delete a;

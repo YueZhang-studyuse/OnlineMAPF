@@ -2,14 +2,17 @@
 
 LACAMInstance::LACAMInstance(const std::string& map_filename,
                    const std::vector<uint>& start_indexes,
-                   const std::vector<uint>& goal_indexes)
+                   const std::vector<uint>& goal_indexes,
+                   const std::vector<uint>& dummy_goal_indexes)
     : G(map_filename),
       starts(Config()),
-      //goals(Config()),
+      goals(Config()),
+      dummy_goals(Config()),
       N(start_indexes.size())
 {
   for (auto k : start_indexes) starts.push_back(G.U[k]);
   for (auto k : goal_indexes) goals.push_back(G.U[k]);
+  for (auto k : dummy_goal_indexes) dummy_goals.push_back(G.U[k]);
 }
 
 //for start kit
@@ -17,22 +20,21 @@ LACAMInstance::LACAMInstance(SharedEnvironment* env)
   :G(env->map,env->rows,env->cols),starts(Config()), goals(Config()),N(env->num_of_agents)
 {
   //curr states is the start location
-  cout<<"start"<<endl;
+  //cout<<"start"<<endl;
   for (int i = 0; i < env->curr_states.size(); i++)
   {
     starts.push_back(G.U[env->curr_states[i].location]);
-    cout<<env->curr_states[i].location<<" ";
+    //cout<<env->curr_states[i].location<<" ";
   }
-  cout<<endl;
+  //cout<<endl;
 
-  cout<<"goal"<<endl;
+  //cout<<"goal"<<endl;
   for (int i = 0; i < env->goal_locations.size(); i++)
   {
     goals.push_back(G.U[env->goal_locations[i].front().first]);
-    cout<<env->goal_locations[i].front().first<<" ";
+    //cout<<env->goal_locations[i].front().first<<" ";
   }
-  cout<<endl;
-
+  //cout<<endl;
 }
 
 // for load instance
@@ -130,13 +132,8 @@ std::ostream& operator<<(std::ostream& os, const Solution& solution)
 }
 
 
-// void LACAMInstance::update_dummygoals(vector<int> dummy_goal)
-// {
-//   cout<<"update dummy goals"<<endl;
-//   for (int i = 0; i < dummy_goal.size(); i++)
-//   {
-//     dummy_goals.push_back(G.U[dummy_goal[i]]);
-//     cout<<dummy_goal[i]<<" ";
-//   }
-//   cout<<endl;
-// }
+void LACAMInstance::set_dummygoals(const std::vector<uint>& dummy_goal_indexes)
+{
+  dummy_goals = Config();
+  for (auto k : dummy_goal_indexes) dummy_goals.push_back(G.U[k]);
+}

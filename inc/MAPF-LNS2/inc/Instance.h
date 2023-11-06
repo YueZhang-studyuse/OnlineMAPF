@@ -19,8 +19,12 @@ public:
 	//save map degree - for assigning goals
 	vector<int> degrees = {0,0,0,0};
 
+	mutable vector<vector<int>> existing_path;
+
 	//for allpair heuristics
 	void computeAllPair();
+
+	void prepareDummy();
 
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
@@ -75,7 +79,32 @@ public:
 		return heuristic[loc1][loc2];
 	}
 
+	int getAllpairDistance(int agent, int timestep, int loc1, int loc2) const
+	{
+		if (!existing_path[agent].size() > timestep)
+		{
+			if (existing_path[agent][timestep] == loc2)
+				return 0; //follow current path as much as possible
+		}
+		return heuristic[loc1][loc2];
+	}
+
 	int getDegree(int loc) const
+	{
+		assert(loc >= 0 && loc < env->map.size() && env->map[loc] != 1);
+		int degree = 0;
+		if (0 <= loc - env->cols && env->map[loc - env->cols] != 1)
+			degree++;
+		if (loc + env->cols < env->map.size() && env->map[loc + env->cols] != 1)
+			degree++;
+		if (loc % env->cols > 0 && env->map[loc - 1] != 1)
+			degree++;
+		if (loc % env->cols < env->cols - 1 && env->map[loc + 1] != 1)
+			degree++;
+		return degree;
+	}
+
+	int getDegreeAdvanced(int loc) const //more details, up to 8 degrees (including diagonal neighbors)
 	{
 		assert(loc >= 0 && loc < env->map.size() && env->map[loc] != 1);
 		int degree = 0;
@@ -86,6 +115,15 @@ public:
 		if (loc % env->cols > 0 && env->map[loc - 1] != 1)
 			degree++;
 		if (loc % env->cols < env->cols - 1 && env->map[loc + 1] != 1)
+			degree++;
+		//diagonal
+		if (0 <= loc - env->cols - 1 && loc % env->cols > 0 && env->map[loc - env->cols - 1] != 1)
+			degree++;
+		if (loc + env->cols + 1 < env->map.size() && loc % env->cols < env->cols - 1 && env->map[loc + env->cols + 1] != 1)
+			degree++;
+		if (0 <= loc - env->cols + 1 && loc % env->cols < env->cols - 1 && env->map[loc - env->cols + 1] != 1)
+			degree++;
+		if (loc + env->cols - 1 < env->map.size() && loc % env->cols > 0 && env->map[loc + env->cols + 1] != 1)
 			degree++;
 		return degree;
 	}
@@ -98,7 +136,7 @@ public:
 	//void setStart(int agent, int location){start_locations[agent] = location;}
 
 	//void createDummyGoals();
-	void assignDummyGoals (int agent) const;
+	//void assignDummyGoals (int agent) const;
 
 	vector<int> getDummyGoals() const { return dummy_goals;};
 
