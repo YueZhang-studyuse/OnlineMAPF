@@ -440,7 +440,7 @@ bool LNS::fixInitialSolutionWithLaCAM()
             }
             if (!has_collision)
             {
-                //path_table.insertPath(agent.id, agent.path);
+                path_table.insertPath(agent.id, agent.path);
                 complete_paths++;
                 initial_sum_of_costs += (int)agent.path.size() - 1;
                 complete_agents.emplace_back(agent.id);
@@ -453,15 +453,7 @@ bool LNS::fixInitialSolutionWithLaCAM()
             }
         }
     }
-    if (!replan_need)
-    {
-        for (auto agent:agents)
-        {
-            path_table.insertPath(agent.id, agent.path);
-        }
-        return true;
-    }
-    else
+    if (replan_need)
     {
         clearAll("Adaptive");
         cout<<"Fix Solution with LACAM"<<endl;
