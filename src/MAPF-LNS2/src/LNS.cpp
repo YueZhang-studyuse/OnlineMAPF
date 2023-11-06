@@ -438,7 +438,7 @@ bool LNS::fixInitialSolutionWithLNS2()
     }
     if (!neighbor.agents.empty())
     {
-        cout<<"Fix Solution with PP"<<endl;
+        cout<<"Fix Solution with PP, neighbor size: "<<neighbor.agents.size()<<endl;
         start_time = Time::now();
         if (screen == 2)
             cout << complete_agents.size() << " collision-free agents at timestep " << makespan << endl;
@@ -713,7 +713,7 @@ bool LNS::runLACAM2()
 
     const Objective objective = static_cast<Objective>(0);
     const float restart_rate = 0.01;
-    const auto solution = solve(instance, ins, verbose, 0, &deadline, &MT, objective, restart_rate);
+    const auto solution = solve(instance, ins, verbose, commit, 0, &deadline, &MT, objective, restart_rate);
 
     auto succ = true;
 
@@ -731,7 +731,7 @@ bool LNS::runLACAM2()
     {
         bool reach_goal = false;
 
-        agents[agent].path.resize(max(solution.size(),commit+1));
+        agents[agent].path.resize(max((int)solution.size(),commit+1));
         for (size_t t = 0; t < solution.size(); t++)
         {
             auto curr_loc = solution[t][agent]->index;
@@ -742,7 +742,7 @@ bool LNS::runLACAM2()
                 soc++;
         }
 
-        for (size t = solution.size(); t <= commit; t++) //in case the solution is smaller than commit
+        for (size_t t = solution.size(); t <= commit; t++) //in case the solution is smaller than commit
         {
             agents[agent].path[t].location = agents[agent].path[solution.size()-1].location;
         }
@@ -1030,12 +1030,12 @@ void LNS::validateSolution() const
                 << ", which is different from its start location " << a1_.path_planner->start_location << endl;
             //exit(-1);
         }
-        else if (a1_.path_planner->goal_location != a1_.path.back().location)
-        {
-            cout << "The path of agent " << a1_.id << " ends at location " << a1_.path.back().location
-                 << ", which is different from its goal location " << a1_.path_planner->goal_location << endl;
-            //exit(-1);
-        }
+        // else if (a1_.path_planner->goal_location != a1_.path.back().location)
+        // {
+        //     cout << "The path of agent " << a1_.id << " ends at location " << a1_.path.back().location
+        //          << ", which is different from its goal location " << a1_.path_planner->goal_location << endl;
+        //     //exit(-1);
+        // }
         for (int t = 1; t < (int) a1_.path.size(); t++ )
         {
             if (!instance.validMove(a1_.path[t - 1].location, a1_.path[t].location))

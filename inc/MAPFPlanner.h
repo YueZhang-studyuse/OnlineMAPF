@@ -33,5 +33,5 @@ public:
     bool initial_run = true;
     bool initial_success = false;
 
-    mapf_algo algo = mapf_algo::LACAMLNS2;
+    mapf_algo algo = mapf_algo::LACAMLNS;
 };

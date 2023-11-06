@@ -36,6 +36,8 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
     if (get<0>(interval) > 0) //cannot hold this location at timestep 0
         return path;
 
+    auto holding_time = 0;
+
     //auto last_target_collision_time = constraint_table.getLastCollisionTimestep(goal_location); only need touched goal, no requirement for stay at goal
     // generate start and add it to the OPEN & FOCAL list
     auto h = get_heuristic(start_location,goal_location);
@@ -131,16 +133,18 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
         {
             auto next_timestep = get<0>(interval);
             //auto next_h_val = max(my_heuristic[curr->location], (get<2>(interval) ? holding_time : curr->getFVal()) - next_timestep); // path max
-            int next_h_val = 0;
-            if (!curr->reached_goal)
-                next_h_val= max(get_heuristic(next_location,goal_location), (next_collisions > 0?
-                                holding_time : curr->getFVal()) - next_timestep) + get_heuristic(goal_location,dummy_goal); // path max
-            else
-                next_h_val= get_heuristic(next_location,dummy_goal);
 
             auto next_collisions = curr->num_of_conflicts +
                     // (int)curr->collision_v * max(next_timestep - curr->timestep - 1, 0) +
 		    (int)get<2>(interval);
+
+            int next_h_val = 0;
+            if (!curr->reached_goal)
+                next_h_val= max(get_heuristic(curr->location,goal_location), (next_collisions > 0?
+                                holding_time : curr->getFVal()) - next_timestep) + get_heuristic(goal_location,dummy_goal); // path max
+            else
+                next_h_val= get_heuristic(curr->location,dummy_goal);
+
             auto next = new SIPPNode(curr->location, next_timestep, next_h_val, curr, next_timestep,
                                      get<1>(interval), get<1>(interval), get<2>(interval),
                                      next_collisions, (curr->location == goal_location));

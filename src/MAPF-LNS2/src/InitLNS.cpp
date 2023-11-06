@@ -181,8 +181,8 @@ bool InitLNS::run()
         // printPath();
         // printCollisionGraph();
         cout<<"MCP Window Fix"<<endl;
-        // postProcessMCP();
-        // printPath();
+        postProcessMCP();
+        //printPath();
         
     }
     return (num_of_colliding_pairs == 0);
@@ -300,6 +300,8 @@ bool InitLNS::getInitialSolution()
     for (auto id : neighbor.agents)
     {
         agents[id].path = agents[id].path_planner->findPath(constraint_table);
+        if (agents[id].path.empty())
+            cout<<"sipp errors"<<endl;
         assert(!agents[id].path.empty() && agents[id].path.back().location == agents[id].path_planner->goal_location);
         if (agents[id].path_planner->num_collisions > 0)
             updateCollidingPairs(colliding_pairs, agents[id].id, agents[id].path);
@@ -314,9 +316,10 @@ bool InitLNS::getInitialSolution()
                  ", LL nodes = " << agents[id].path_planner->getNumExpanded() <<
                  ", remaining time = " << time_limit - runtime << " seconds. " << endl;
         }
-        if (runtime > time_limit)
-            break;
     }
+
+    if (((fsec)(Time::now() - start_time)).count() > time_limit)
+        cout<<"lns2 init run out of time! "<<endl;
 
     num_of_colliding_pairs = colliding_pairs.size();
     for(const auto& agent_pair : colliding_pairs)
