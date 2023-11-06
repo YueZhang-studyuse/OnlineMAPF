@@ -97,6 +97,8 @@ bool LNS::run()
     {
         runtime =((fsec)(Time::now() - start_time)).count();
 
+        ALNS = false;
+
         if (ALNS)
             chooseDestroyHeuristicbyALNS();
 
