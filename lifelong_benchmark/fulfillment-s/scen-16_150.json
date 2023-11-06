@@ -1,0 +1,8 @@
+{
+    "mapFile": "maps/warehouse_small.map",
+    "agentFile": "agents/scen-16_150.agents",
+    "teamSize": 150,
+    "taskFile": "tasks/scen-16.tasks",
+    "numTasksReveal": 1,
+    "taskAssignmentStrategy": "roundrobin"
+}
