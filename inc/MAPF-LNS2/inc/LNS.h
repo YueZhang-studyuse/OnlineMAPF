@@ -64,9 +64,12 @@ public:
 
     bool target_considered = true;
 
+    bool has_initial_solution = false;
+
+    void setStartGoal();
+
 private:
     InitLNS* init_lns = nullptr;
-    bool has_initial_solution = false;
     string init_algo_name;
     string replan_algo_name;
     bool use_init_lns; // use LNS to find initial solutions

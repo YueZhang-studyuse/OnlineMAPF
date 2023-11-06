@@ -23,6 +23,8 @@ public:
 	bool hasConflictForStep(size_t curr_id, size_t next_id, int next_timestep) const;
     bool hasEdgeConflict(size_t curr_id, size_t next_id, int next_timestep) const;
     int getFutureNumOfCollisions(int loc, int t) const;
+	//int getFutureNumOfCollisionsWithWindow(int loc, int t, int end) const;
+	int getHoldingTimeForWindow(int location, int earliest_timestep, int window) const;
 
 	ConstraintTable(size_t num_col, size_t map_size, const PathTable* path_table_for_CT = nullptr,
 	        const PathTableWC * path_table_for_CAT = nullptr) :

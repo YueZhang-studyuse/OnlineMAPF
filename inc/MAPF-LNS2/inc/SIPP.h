@@ -25,16 +25,6 @@ public:
             LLNode(loc, g_val, h_val, parent, timestep, num_of_conflicts, reached_goal), high_generation(high_generation),
             high_expansion(high_expansion), collision_v(collision_v)
 			{
-				if (parent != nullptr && parent->reached_goal)
-				{
-					reached_goal = true;
-					reached_goal_at = parent->reached_goal_at;
-				}
-				else
-				{
-					if (reached_goal && parent->location != loc) //reached goal at current timestep
-						reached_goal_at = timestep;
-				}
 			}
 
 	// SIPPNode(const SIPPNode& other): LLNode(other), high_generation(other.high_generation), high_expansion(other.high_expansion),
@@ -63,6 +53,21 @@ public:
 	// The following is used for checking whether two nodes are equal
 	// we say that two nodes, s1 and s2, are equal if
 	// both are non-NULL and agree on the id and timestep
+	// struct eqnode
+	// {
+	// 	bool operator()(const SIPPNode* n1, const SIPPNode* n2) const
+	// 	{
+	// 		return (n1 == n2) ||
+	// 		            (n1 && n2 && n1->location == n2->location &&
+	// 			        n1->wait_at_goal == n2->wait_at_goal &&
+	// 			        n1->is_goal == n2->is_goal &&
+    //                      n1->high_generation == n2->high_generation);
+	// 					//   &&
+	// 					//  n1->reached_goal_at == n2->reached_goal_at);
+    //                     //max(n1->timestep, n2->timestep) <
+    //                     //min(get<1>(n1->interval), get<1>(n2->interval))); //overlapping time intervals
+	// 	}
+	// };
 	struct eqnode
 	{
 		bool operator()(const SIPPNode* n1, const SIPPNode* n2) const
@@ -71,8 +76,8 @@ public:
 			            (n1 && n2 && n1->location == n2->location &&
 				        n1->wait_at_goal == n2->wait_at_goal &&
 				        n1->is_goal == n2->is_goal &&
-                         n1->high_generation == n2->high_generation);
-						//   &&
+                         n1->high_generation == n2->high_generation//);
+						&& n1->reached_goal == n2->reached_goal);
 						//  n1->reached_goal_at == n2->reached_goal_at);
                         //max(n1->timestep, n2->timestep) <
                         //min(get<1>(n1->interval), get<1>(n2->interval))); //overlapping time intervals

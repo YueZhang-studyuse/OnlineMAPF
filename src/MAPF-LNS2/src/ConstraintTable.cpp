@@ -238,6 +238,45 @@ int ConstraintTable::getFutureNumOfCollisions(int loc, int t) const
     return rst;
 }
 
+// int ConstraintTable::getFutureNumOfCollisionsWithWindow(int loc, int t, int end) const
+// {
+//     int rst = 0;
+//     if (path_table_for_CAT != nullptr)
+//         rst = path_table_for_CAT->getFutureNumOfCollisions(loc, t);
+//     if (!cat.empty())
+//     {
+//         for (auto timestep = t + 1; timestep < cat[loc].size() && timestep <= end; timestep++)
+//         {
+//             rst += (int)cat[loc][timestep];
+//         }
+//     }
+//     return rst;
+// }
+
+// return the earliest timestep that the agent can hold the location
+int ConstraintTable::getHoldingTimeForWindow(int location, int earliest_timestep, int window) const
+{
+    // path table
+    int rst = earliest_timestep;
+    if (path_table_for_CT!= nullptr)
+        rst = path_table_for_CT->getHoldingTime(location, earliest_timestep, window);
+    // // CT
+	// auto it = ct.find(location);
+	// if (it != ct.end())
+	// {
+	// 	for (auto time_range : it->second)
+	// 		rst = max(rst, time_range.second);
+	// }
+	// // Landmark
+	// for (auto landmark : landmarks)
+	// {
+	// 	if (landmark.second != location)
+	// 		rst = max(rst, (int)landmark.first + 1);
+	// }
+
+	return rst;
+}
+
 // return the earliest timestep that the agent can hold the location
 int ConstraintTable::getHoldingTime(int location, int earliest_timestep) const
 {

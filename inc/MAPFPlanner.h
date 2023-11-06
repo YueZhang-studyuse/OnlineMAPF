@@ -5,7 +5,7 @@
 #include "Instance.h"
 #include <LNS.h>
 
-enum mapf_algo { LACAM, LACAMLNS, ALGO_COUNT };
+enum mapf_algo { LACAM, LACAMLNS, LACAMLNS2, ALGO_COUNT };
 
 class MAPFPlanner
 {
@@ -33,5 +33,5 @@ public:
     bool initial_run = true;
     bool initial_success = false;
 
-    mapf_algo algo = LACAM;
+    mapf_algo algo = mapf_algo::LACAMLNS;
 };

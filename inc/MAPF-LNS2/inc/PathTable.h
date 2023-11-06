@@ -23,6 +23,7 @@ public:
     void get_agents_with_stay_target(set<int>& conflicting_agents, vector<int> stay_target, int neighbor_size, int loc) const;
     void insert_with_target_stay(set<int>& conflicting_agents, vector<int> stay_target,int agent) const;
     int getHoldingTime(int location, int earliest_timestep) const;
+    int getHoldingTime(int location, int earliest_timestep, int window) const;
     explicit PathTable(int map_size = 0) : table(map_size), goals(map_size, MAX_COST) {}
 };
 

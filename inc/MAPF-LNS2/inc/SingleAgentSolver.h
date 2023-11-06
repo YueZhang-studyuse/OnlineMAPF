@@ -39,7 +39,6 @@ public:
 	// the following is used to comapre nodes in the OPEN list
 	struct compare_node
 	{
-		// returns true if n1 > n2 (note -- this gives us *min*-heap).
 		bool operator()(const LLNode* n1, const LLNode* n2) const
 		{
 			if (n1->reached_goal_at == n2->reached_goal_at)
@@ -84,6 +83,8 @@ public:
 		{
 			if (n1->num_of_conflicts == n2->num_of_conflicts)
 			{
+                if (n1->reached_goal_at == n2->reached_goal_at)
+				{
 					if (n1->g_val + n1->h_val == n2->g_val + n2->h_val)
 					{
 						if (n1->h_val == n2->h_val)
@@ -93,6 +94,8 @@ public:
 						return n1->h_val >= n2->h_val;  // break ties towards smaller h_vals (closer to goal location)
 					}
 					return n1->g_val + n1->h_val >= n2->g_val + n2->h_val;
+				}
+				return n1->reached_goal_at >= n2->reached_goal_at;
 			}
 			return n1->num_of_conflicts >= n2->num_of_conflicts;  // n1 > n2 if it has more conflicts
 		}
@@ -102,7 +105,19 @@ public:
 	LLNode() {}
 	LLNode(int location, int g_val, int h_val, LLNode* parent, int timestep, int num_of_conflicts, bool reached_goal) :
 		location(location), g_val(g_val), h_val(h_val), parent(parent), timestep(timestep),
-		num_of_conflicts(num_of_conflicts), reached_goal(reached_goal) {}
+		num_of_conflicts(num_of_conflicts), reached_goal(reached_goal)
+		{
+			if (parent != nullptr && parent->reached_goal)
+			{
+				this->reached_goal = true;
+				this->reached_goal_at = parent->reached_goal_at;
+			}
+			else if (parent != nullptr)
+			{
+				if (this->reached_goal && !parent->reached_goal) //reached goal at current timestep
+					this->reached_goal_at = timestep;
+			}
+		}
 	LLNode(const LLNode& other) { copy(other); }
     ~LLNode()= default;
 
@@ -137,6 +152,8 @@ public:
 	int start_location;
 	int goal_location;
 	int dummy_goal; //for dummy goal location
+
+	int commit_window = 1;
 
 	vector<int> my_heuristic;  // this is the precomputed heuristic for this agent
 	int compute_heuristic(int from, int to) const  // compute admissible heuristic between two locations

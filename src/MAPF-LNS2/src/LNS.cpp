@@ -64,13 +64,13 @@ bool LNS::run()
     }
 
     initial_solution_runtime = 0;
-    start_time = Time::now();
-    bool succ;
-    if (has_initial_solution)
-        //return true;
-        succ = fixInitialSolution();
-    else
+    bool succ = true;
+    // if (has_initial_solution)
+    //     succ = fixInitialSolution();
+    // else
+    if (!has_initial_solution)
     {
+        start_time = Time::now();
         succ = getInitialSolution(); 
         if (!succ) //we do not have a initial solution when reaching the runtime limit, commit what it have anyway
             return false;
@@ -181,6 +181,7 @@ bool LNS::run()
                         (1 - decay_factor) * destroy_weights[selected_neighbor];
             }
         }
+        //cout<<"neighbor test "<<neighbor.sum_of_costs <<" "<<neighbor.old_sum_of_costs<<" "<<sum_of_costs<<endl;
         runtime = ((fsec)(Time::now() - start_time)).count();
         sum_of_costs += neighbor.sum_of_costs - neighbor.old_sum_of_costs;
         if (screen >= 1)
@@ -457,7 +458,8 @@ bool LNS::fixInitialSolutionWithLaCAM()
     {
         clearAll("Adaptive");
         cout<<"Fix Solution with LACAM"<<endl;
-        auto succ = runLACAM2();
+        start_time = Time::now();
+        auto succ = getInitialSolution();
         if (succ)
         {
             initial_sum_of_costs += neighbor.sum_of_costs;
@@ -472,6 +474,9 @@ bool LNS::fixInitialSolutionWithLaCAM()
             return false;
         }
     }
+    sum_of_costs = initial_sum_of_costs;
+    start_time = Time::now();
+    return true;
 }
 
 bool LNS::getInitialSolution()
@@ -524,6 +529,7 @@ bool LNS::runPP()
             cout << "Remaining agents = " << remaining_agents <<
                  ", remaining time = " << T - ((fsec)(Time::now() - time)).count() << " seconds. " << endl
                  << "Agent " << agents[id].id << endl;
+        agents[id].path_planner->commit_window = commit;
         agents[id].path = agents[id].path_planner->findPath(constraint_table);
         if (agents[id].path.empty())
         {
@@ -1130,100 +1136,6 @@ void LNS::writePathsToFile(const string & file_name) const
     output.close();
 }
 
-// void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<list<int>> &future_path,bool skip_start,int current_time)
-// {
-//     int screen = 0;
-//     for (const auto &agent : agents)
-//     {
-//         if (screen == 3)
-//             cout<<"Commiting: "<<agent.id<<endl;
-//         //agent reach target before, but need to de-tour due to resolving conflict, so we add the time reach target as waiting
-//         if (current_time != 0 && agent.path.size() > 1 && commit_path[agent.id].size() <= current_time)
-//         {
-//             commit_path[agent.id].emplace_back(commit_path[agent.id].back());
-//             if (screen == 3)
-//                 cout<< "(" << instance.getColCoordinate(commit_path[agent.id].back()) << "," <<
-//                                 instance.getRowCoordinate(commit_path[agent.id].back()) << ")->";
-//         }
-//         if (agent.path.size() > commit_step)
-//         {
-//             int step = 0;
-//             for (const auto &state : agent.path)
-//             {
-//                 if (step == 0)
-//                 {
-//                     if (skip_start)
-//                     {
-//                         step++;
-//                         continue;
-//                     }
-//                 }
-//                 if(step <commit_step)
-//                 {
-//                     commit_path[agent.id].emplace_back(state.location);
-//                     if (screen == 3)
-//                         cout<< "(" << instance.getColCoordinate(state.location) << "," <<
-//                                 instance.getRowCoordinate(state.location) << ")->";
-//                 }
-//                 else if (step == commit_step)
-//                 {
-//                     commit_path[agent.id].emplace_back(state.location);
-//                     if (screen == 3)
-//                     {
-//                         cout<< "(" << instance.getColCoordinate(state.location) << "," <<
-//                                     instance.getRowCoordinate(state.location) << ")"<<endl;
-//                         cout<<"Remaining: "<<endl;
-//                     }
-                        
-//                     future_path[agent.id].emplace_back(state.location);
-//                     if (screen == 3)
-//                         cout<< "(" << instance.getColCoordinate(state.location) << "," <<
-//                                 instance.getRowCoordinate(state.location) << ")->";
-//                 }
-//                 else
-//                 {
-//                     future_path[agent.id].emplace_back(state.location);
-//                     if (screen == 3)
-//                         cout<< "(" << instance.getColCoordinate(state.location) << "," <<
-//                                 instance.getRowCoordinate(state.location) << ")->";
-//                 }
-//                 step++;
-//             }
-
-//         }
-//         else
-//         {
-//             int step = 0;
-//             for (const auto &state : agent.path)
-//             {
-//                 if (step == 0)
-//                 {
-//                     if (skip_start)
-//                     {
-//                         step++;
-//                         continue;
-//                     }
-//                 }
-//                 commit_path[agent.id].emplace_back(state.location);
-//                 if (screen == 3)
-//                     cout<< "(" << instance.getColCoordinate(state.location) << "," <<
-//                             instance.getRowCoordinate(state.location) << ")->";
-//             }
-//             if (screen == 3)
-//             {
-//                 cout<<endl;
-//                 cout<<"Remaining: "<<endl;
-//             }
-//             future_path[agent.id].emplace_back(commit_path[agent.id].back());
-//             if (screen == 3)
-//                 cout<< "(" << instance.getColCoordinate(commit_path[agent.id].back()) << "," <<
-//                         instance.getRowCoordinate(commit_path[agent.id].back()) << ")->";
-//         }
-//         if (screen == 3)
-//             cout<<endl;
-//     }
-// }
-
 void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<list<int>> &future_path,bool skip_start,int current_time)
 {
     for (const auto &agent : agents)
@@ -1340,6 +1252,20 @@ void LNS::commitPath(int commit_step, vector<list<int>> &commit_path, vector<lis
         }
         if (screen == 3)
             cout<<endl;
+    }
+}
+
+void LNS::setStartGoal()
+{
+    auto starts = instance.env->curr_states;
+    auto goals = instance.env->goal_locations;
+    auto dummy_goals = instance.getDummyGoals();
+    for (auto& a: agents)
+    {
+        a.path_planner->start_location = starts[a.id].location;
+        a.path_planner->goal_location = goals[a.id][0].first;
+        a.path_planner->dummy_goal = dummy_goals[a.id];
+        cout<<"start "<< a.path_planner->start_location<<endl;
     }
 }
 
