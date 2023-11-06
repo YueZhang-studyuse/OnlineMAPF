@@ -34,4 +34,6 @@ public:
     bool initial_success = false;
 
     mapf_algo algo = mapf_algo::LACAMLNS2;
+
+    int mapf_planner;
 };
