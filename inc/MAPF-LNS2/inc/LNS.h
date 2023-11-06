@@ -43,6 +43,7 @@ public:
         delete init_lns;
     }
     bool fixInitialSolution();
+    bool fixInitialSolutionWithLaCAM();
     bool getInitialSolution();
     bool run();
     void validateSolution() const;

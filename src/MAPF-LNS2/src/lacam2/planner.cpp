@@ -346,10 +346,14 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
         if (H->reach_goal[a->id]) a->reached_goal = true;
 
-        if (H->depth <= commit_window || !a->reached_goal) //cannot reach goal at timestep 0
+        if (H->depth <= commit_window || !a->reached_goal) //cannot reach goal before window
+        {
             occupied_now[a->v_now->id] = a;
-        else
+        }
+        if (a->reached_goal && H->depth > commit_window)
+        {
             a->v_next = a->v_now;
+        }
     }
 
     // add constraints

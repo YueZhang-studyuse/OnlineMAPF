@@ -32,7 +32,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     {
         //trans to actions
         for (int agent = 0; agent < env->num_of_agents; agent++)
-        {
+        { 
             int next_loc = commited_paths[agent].front();
             int diff = next_loc - env->curr_states[agent].location;
             if (diff == 1)
@@ -53,7 +53,6 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
 
     if (algo == mapf_algo::LACAM)
     {
-        lns->clearAll("Adaptive");
         lns->setRuntimeLimit(time_limit);
         lns->setIterations(0);
 
@@ -61,55 +60,62 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         {
             instance.prepareDummy();
             lns->setRuntimeLimit(1); //1s for initial run
-            initial_success = lns->run();
+            initial_success = lns->getInitialSolution();
             initial_run = false;
         }
         else if (!initial_success) //restart if current no initional solution
         {
+            lns->clearAll("Adaptive");
             cout<<"initial not success"<<endl;
             lns->setRuntimeLimit(time_limit);
-            initial_success = lns->run();
+            initial_success = lns->getInitialSolution();
         }
         else 
         {
-            bool replan_need = false;
-            for (int i = 0; i < env->num_of_agents; i++)
-            {
-                if (future_paths[i].empty())
-                {
-                    replan_need = true;
-                    break;
-                }
-                if (future_paths[i].front() != env->curr_states[i].location)
-                {
-                    replan_need = true;
-                    break;
-                }
-                bool arrived = false;
-                for (auto loc: future_paths[i])
-                {
-                    if (loc == env->goal_locations[i][0].first)
-                    {
-                        arrived = true;
-                        break;
-                    }
-                }
-                if (!arrived)
-                {
-                    replan_need = true;
-                    break;
-                }
-            }
-            if (replan_need)
-            {
-                lns->setRuntimeLimit(time_limit);
-                lns->setIterations(0); //lacam only
-                initial_success = lns->run();
-            }
-            else
-            {
-                lns->loadPaths(future_paths);
-            }
+            lns->clearAll("Adaptive");
+            lns->setRuntimeLimit(time_limit);
+            lns->setIterations(0); //lacam only
+            lns->loadPaths(future_paths);
+            lns->fixInitialSolutionWithLaCAM();
+            // bool replan_need = false;
+            // for (int i = 0; i < env->num_of_agents; i++)
+            // {
+            //     if (future_paths[i].empty())
+            //     {
+            //         replan_need = true;
+            //         break;
+            //     }
+            //     if (future_paths[i].front() != env->curr_states[i].location)
+            //     {
+            //         replan_need = true;
+            //         break;
+            //     }
+            //     bool arrived = false;
+            //     for (auto loc: future_paths[i])
+            //     {
+            //         if (loc == env->goal_locations[i][0].first)
+            //         {
+            //             arrived = true;
+            //             break;
+            //         }
+            //     }
+            //     if (!arrived)
+            //     {
+            //         replan_need = true;
+            //         break;
+            //     }
+            // }
+            // if (replan_need)
+            // {
+            //     lns->setRuntimeLimit(time_limit);
+            //     lns->setIterations(0); //lacam only
+            //     initial_success = lns->getInitialSolution();
+            // }
+            // else
+            // {
+            //     lns->loadPaths(future_paths);
+            //     lns->fixInitialSolution();
+            // }
         }
 
         for (int i = 0; i < env->num_of_agents; i++)
@@ -123,14 +129,19 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
         if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
         {
+            cout<<"errors"<<endl;
             for (int i = 0; i <commited_paths.size(); i++)
             {
                 future_paths[i].push_front(env->curr_states[i].location);
             }
-            commited_paths.clear();
+            for (int i = 0; i < env->num_of_agents; i++)
+            {
+                commited_paths[i].clear();
+            }
             return;
         }
     }
+    //lns->clearAll("Adaptive");
 
 
     //trans to actions
