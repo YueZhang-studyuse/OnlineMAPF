@@ -1,6 +1,7 @@
 #include "InitLNS.h"
 #include <queue>
 #include <algorithm>
+#include "MCP.h"
 
 InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_limit,
          const string & replan_algo_name, const string & init_destory_name, int neighbor_size, int screen) :
@@ -175,7 +176,29 @@ bool InitLNS::run()
     }
 
     printResult();
+    if (num_of_colliding_pairs > 0)
+    {
+        cout<<"MCP Window Fix"<<endl;
+        postProcessMCP();
+    }
     return (num_of_colliding_pairs == 0);
+}
+
+bool InitLNS::postProcessMCP()
+{
+    MCP postmcp(instance,commit);
+    {
+        vector<Path*> temp;
+        temp.resize(agents.size());
+        for (int a = 0; a < agents.size(); a++)
+        {
+            temp[a] = &(agents[a].path);
+        }
+        postmcp.build(temp);
+        postmcp.simulate(temp);
+    }
+    postmcp.clear();
+    return true;
 }
 
 bool InitLNS::runPP()

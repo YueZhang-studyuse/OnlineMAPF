@@ -61,6 +61,7 @@ public:
     void setRuntimeLimit(int time){time_limit = time; replan_time_limit = time_limit / 100;}
     void clearAll(const string & destory_name);
     void setHasInitialSolution (bool has_initial){ has_initial_solution = has_initial;}
+    bool fixInitialSolutionWithLNS2();
 
     bool target_considered = true;
 

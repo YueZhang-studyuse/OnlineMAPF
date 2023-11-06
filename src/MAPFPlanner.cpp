@@ -160,6 +160,70 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         }
     }
 
+    if (algo == mapf_algo::LACAMLNS2)
+    {
+        lns->setRuntimeLimit(time_limit);
+        lns->setIterations(MAX_TIMESTEP);
+
+        if (initial_run)
+        {
+            instance.prepareDummy();
+            lns->clearAll("Adaptive");
+            lns->setRuntimeLimit(1); //1s for initial run
+            lns->setIterations(MAX_TIMESTEP);
+            initial_success = lns->run();
+            initial_run = false;
+        }
+        else if (!initial_success) //restart if current no initional solution
+        {
+            lns->clearAll("Adaptive");
+            cout<<"initial not success"<<endl;
+            lns->setRuntimeLimit(time_limit);
+            lns->setIterations(MAX_TIMESTEP);
+            initial_success = lns->run();
+        }
+        else 
+        {
+            lns->clearAll("Adaptive");
+            lns->loadPaths(future_paths);
+            lns->setRuntimeLimit(time_limit);
+            lns->fixInitialSolutionWithLNS2();
+            lns->has_initial_solution = true;
+            lns->setIterations(MAX_TIMESTEP); 
+            lns->run();
+        }
+
+        for (int i = 0; i < env->num_of_agents; i++)
+        {
+            future_paths[i].clear();
+            commited_paths[i].clear();
+        }
+
+        actions = std::vector<Action>(env->curr_states.size(), Action::WA);
+
+        lns->commitPath(commit,commited_paths,future_paths,false,env->curr_timestep);
+        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
+        {
+            cout<<"errors"<<endl;
+            for (int i = 0; i <commited_paths.size(); i++)
+            {
+                future_paths[i].push_front(env->curr_states[i].location);
+            }
+            for (int i = 0; i < env->num_of_agents; i++)
+            {
+                commited_paths[i].clear();
+            }
+            return;
+        }
+        else
+        {
+            for (int i = 0; i < env->num_of_agents; i++)
+            {
+                commited_paths[i].pop_front(); //skip starting locations
+            }
+        }
+    }
+
 
     //trans to actions
     for (int agent = 0; agent < env->num_of_agents; agent++)

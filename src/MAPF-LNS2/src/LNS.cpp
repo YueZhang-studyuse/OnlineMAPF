@@ -76,25 +76,6 @@ bool LNS::run()
             return false;
     }
     initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
-    if (!succ && initial_solution_runtime < time_limit) //if lacam failed, we use lns2
-    {
-        init_lns = new InitLNS(instance, agents, time_limit - initial_solution_runtime,
-                replan_algo_name,init_destory_name, neighbor_size, screen);
-
-        succ = init_lns->run();
-        //if (succ) // accept new paths
-        //{ //accept path anyway because we at least need one path for the replan agent
-            path_table.reset();
-            for (const auto & agent : agents)
-            {
-                path_table.insertPath(agent.id, agent.path);
-            }
-            init_lns->clear();
-            initial_sum_of_costs = init_lns->sum_of_costs;
-            sum_of_costs = initial_sum_of_costs;
-        //}
-        initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
-    }
 
     iteration_stats.emplace_back(neighbor.agents.size(),
                                  initial_sum_of_costs, initial_solution_runtime, init_algo_name);
@@ -397,6 +378,103 @@ bool LNS::fixInitialSolution()
         cout<<"pp failed"<<endl;
         return false;
     }
+}
+
+bool LNS::fixInitialSolutionWithLNS2()
+{
+    neighbor.agents.clear();
+    initial_sum_of_costs = 0;
+    list<int> complete_agents; // subsets of agents who have complete and collision-free paths
+    int makespan = 0;
+    bool replan_need = false;
+    for (auto& agent : agents)
+    {
+        if (agent.path.empty())
+        {
+            neighbor.agents.emplace_back(agent.id);
+            agent.path.clear();
+        }
+        else
+        {
+            bool reached_goal = false;
+            for (auto p: agent.path)
+            {
+                if (p.location == agent.path_planner->goal_location)
+                {
+                    reached_goal = true;
+                    break;
+                }
+            }
+            if (!reached_goal)
+            {
+                neighbor.agents.emplace_back(agent.id);
+                agent.path.clear();
+            }
+            bool has_collision = false;
+            for (auto other : complete_agents)
+            {
+                has_collision = instance.hasCollision(agent.path, agents[other].path);
+                if (has_collision)
+                {
+                    neighbor.agents.emplace_back(agent.id);
+                    break;
+                }
+            }
+            if (!has_collision)
+            {
+                path_table.insertPath(agent.id, agent.path);
+                complete_paths++;
+                initial_sum_of_costs += (int)agent.path.size() - 1;
+                complete_agents.emplace_back(agent.id);
+                makespan = max(makespan, (int)agent.path.size() - 1);
+            }
+            instance.existing_path[agent.id].resize(agent.path.size());
+            for (int i = 0; i < (int)agent.path.size(); i++)
+            {
+                instance.existing_path[agent.id][i] = agent.path[i].location;
+            }
+        }
+    }
+    if (!neighbor.agents.empty())
+    {
+        cout<<"Fix Solution with PP"<<endl;
+        start_time = Time::now();
+        if (screen == 2)
+            cout << complete_agents.size() << " collision-free agents at timestep " << makespan << endl;
+        neighbor.old_sum_of_costs = MAX_COST;
+        neighbor.sum_of_costs = 0;
+        auto succ = runPP();
+        if (succ)
+        {
+            initial_sum_of_costs += neighbor.sum_of_costs;
+            sum_of_costs = initial_sum_of_costs;
+            return true;
+        }
+        else
+        {
+            cout<<"Fix Solution with LNS2"<<endl;
+            if (((fsec)(Time::now() - start_time)).count() < time_limit) //if lacam failed, we use lns2
+            {
+                init_lns = new InitLNS(instance, agents, time_limit - ((fsec)(Time::now() - start_time)).count(),
+                        replan_algo_name,init_destory_name, neighbor_size, screen);
+
+                succ = init_lns->run();
+                path_table.reset();
+                for (const auto & agent : agents)
+                {
+                    path_table.insertPath(agent.id, agent.path);
+                }
+                init_lns->clear();
+                initial_sum_of_costs = init_lns->sum_of_costs;
+                sum_of_costs = initial_sum_of_costs;
+                initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
+            }
+            return false;
+        }
+    }
+    sum_of_costs = initial_sum_of_costs;
+    start_time = Time::now();
+    return true;
 }
 
 bool LNS::fixInitialSolutionWithLaCAM()
@@ -1099,6 +1177,10 @@ bool LNS::loadPaths(vector<list<int>> paths)
         for(auto location: paths[agent_id])
         {
             agents[agent_id].path.emplace_back(location);
+        }
+        for (int i = paths[agent_id].size(); i <= commit; i++) //we ensure enough locations in commit window
+        {
+            agents[agent_id].path.emplace_back(paths[agent_id].back());
         }
         //path_table.insertPath(agent_id, agents[agent_id].path);
         initial_sum_of_costs+=agents[agent_id].path.size()-1;
