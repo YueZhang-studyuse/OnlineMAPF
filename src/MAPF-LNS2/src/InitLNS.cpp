@@ -178,15 +178,19 @@ bool InitLNS::run()
     printResult();
     if (num_of_colliding_pairs > 0)
     {
+        printPath();
+        printCollisionGraph();
         cout<<"MCP Window Fix"<<endl;
         postProcessMCP();
+        printPath();
+        
     }
     return (num_of_colliding_pairs == 0);
 }
 
 bool InitLNS::postProcessMCP()
 {
-    MCP postmcp(instance,commit);
+    MCP postmcp(instance,commit+2);
     {
         vector<Path*> temp;
         temp.resize(agents.size());

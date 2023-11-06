@@ -46,6 +46,7 @@ void MCP::simulate(vector<Path*>& paths)
         }
         *(paths[i]) = path_copy[i];
     };
+
     return;
 }
 

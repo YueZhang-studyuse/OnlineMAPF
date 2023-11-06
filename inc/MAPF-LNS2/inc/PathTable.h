@@ -43,6 +43,9 @@ public:
     bool hasCollisions(int from, int to, int to_time) const;
     bool hasEdgeCollisions(int from, int to, int to_time) const;
     int getLastCollisionTimestep(int location) const;
+
+    int getHoldingTime(int location, int earliest_timestep, int window) const;
+
     // return the agent who reaches its target target_location before timestep earliest_timestep
     int getAgentWithTarget(int target_location, int latest_timestep) const;
     void clear();

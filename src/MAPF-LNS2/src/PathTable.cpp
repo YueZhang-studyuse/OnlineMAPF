@@ -205,6 +205,16 @@ int PathTable::getHoldingTime(int location, int earliest_timestep, int window) c
     return rst;
 }
 
+int PathTableWC::getHoldingTime(int location, int earliest_timestep, int window) const
+{
+    if (table.empty() or (int) table[location].size() <= earliest_timestep)
+        return earliest_timestep;
+    int rst = min((int) table[location].size(), window+1);
+    while (rst > earliest_timestep and table[location][rst - 1].empty())
+        rst--;
+    return rst;
+}
+
 void PathTableWC::insertPath(int agent_id, const Path& path)
 {
     paths[agent_id] = &path;

@@ -170,6 +170,8 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                                 get<2>(interval), get<2>(interval), (start_location == goal_location));
     pushNodeToFocal(start);
 
+    //cout<<"goal holding time: "<<constraint_table.getHoldingTimeForWindow(goal_location, constraint_table.length_min,commit_window)<<endl; // the agent can hold the this location afterward until window
+
     while (!focal_list.empty())
     {
         auto* curr = focal_list.top();

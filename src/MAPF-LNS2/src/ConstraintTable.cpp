@@ -260,6 +260,8 @@ int ConstraintTable::getHoldingTimeForWindow(int location, int earliest_timestep
     int rst = earliest_timestep;
     if (path_table_for_CT!= nullptr)
         rst = path_table_for_CT->getHoldingTime(location, earliest_timestep, window);
+    if (path_table_for_CAT!= nullptr)
+        rst = path_table_for_CAT->getHoldingTime(location, earliest_timestep, window);
     // // CT
 	// auto it = ct.find(location);
 	// if (it != ct.end())
