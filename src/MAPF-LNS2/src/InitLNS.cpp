@@ -178,11 +178,11 @@ bool InitLNS::run()
     printResult();
     if (num_of_colliding_pairs > 0)
     {
-        printPath();
-        printCollisionGraph();
+        // printPath();
+        // printCollisionGraph();
         cout<<"MCP Window Fix"<<endl;
-        postProcessMCP();
-        printPath();
+        // postProcessMCP();
+        // printPath();
         
     }
     return (num_of_colliding_pairs == 0);

@@ -465,8 +465,8 @@ bool LNS::fixInitialSolutionWithLNS2()
                 {
                     path_table.insertPath(agent.id, agent.path);
                 }
-                if (!succ)
-                    validateSolution();
+                // if (!succ)
+                //     validateSolution();
                 init_lns->clear();
                 initial_sum_of_costs = init_lns->sum_of_costs;
                 sum_of_costs = initial_sum_of_costs;
