@@ -48,7 +48,7 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                                 get<2>(interval), get<2>(interval), (start_location == goal_location));
     pushNodeToFocal(start);
 
-    //cout<<"start "<< start_location <<" goal "<<goal_location<<" dummy goal "<<dummy_goal<<endl;
+   //cout<<"start "<< start_location <<" goal "<<goal_location<<" dummy goal "<<dummy_goal<<endl;
 
     while (!focal_list.empty())
     {
@@ -57,6 +57,17 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
         curr->in_openlist = false;
         num_expanded++;
         assert(curr->location >= 0);
+
+        // if (curr->reached_goal)
+        // {
+        //     cout<<"current "<<curr->location<<" "<<curr->timestep<<" "<<curr->reached_goal_at<<" h "<<curr->h_val<<endl;
+        // }
+        // else
+        // {
+        //     cout<<"haven't reach: "<<curr->location<<" "<<curr->timestep<<" "<<curr->reached_goal_at<<" h "<<curr->h_val<<endl;
+        //     cout<<"h to goal "<<get_heuristic(curr->location,goal_location)<<endl;
+        //     cout<<"goal to dummy goal h_val: "<<get_heuristic(goal_location,dummy_goal)<<endl;
+        // }
 
         // check if the popped node is a goal
         if (curr->is_goal) //happends in lns2
@@ -101,14 +112,16 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                 //constraint_table.getHoldingTime(goal_location, constraint_table.length_min);
                 auto next_collisions = curr->num_of_conflicts +
                                       (int)next_v_collision + (int)next_e_collision;
-                //cout<<"next "<<next_location<<" "<<next_timestep<<" "<<next_collisions<<endl;
                 //auto next_h_val = max(my_heuristic[next_location], (next_collisions > 0?
                 int next_h_val = 0;
                 if (!curr->reached_goal)
-                    next_h_val= max(get_heuristic(next_location,goal_location), (next_collisions > 0?
-                                holding_time : curr->getFVal()) - next_timestep) + get_heuristic(goal_location,dummy_goal); // path max
+                    //next_h_val= max(get_heuristic(next_location,goal_location), (next_collisions > 0?
+                                //holding_time : curr->getFVal()) - next_timestep) + get_heuristic(goal_location,dummy_goal); // path max
+                    next_h_val= get_heuristic(next_location,goal_location) + get_heuristic(goal_location,dummy_goal);
                 else
                     next_h_val= get_heuristic(next_location,dummy_goal);
+
+                //cout<<"next "<<next_location<<" "<<next_timestep<<" "<<next_collisions<<" h to goal "<<get_heuristic(next_location,goal_location)<<endl;
                 
                 // generate (maybe temporary) node
                 auto next = new SIPPNode(next_location, next_timestep, next_h_val, curr, next_timestep,
@@ -116,6 +129,7 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                 // try to retrieve it from the hash table
                 if (dominanceCheck(next))
                 {
+                    //cout<<"pushed"<<endl;
                     pushNodeToFocal(next);
                     //cout<<"pushed "<<next->reached_goal_at<<endl;
                 }
@@ -140,8 +154,9 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
 
             int next_h_val = 0;
             if (!curr->reached_goal)
-                next_h_val= max(get_heuristic(curr->location,goal_location), (next_collisions > 0?
-                                holding_time : curr->getFVal()) - next_timestep) + get_heuristic(goal_location,dummy_goal); // path max
+                // next_h_val= max(get_heuristic(curr->location,goal_location), (next_collisions > 0?
+                //                 holding_time : curr->getFVal()) - next_timestep) + get_heuristic(goal_location,dummy_goal); // path max
+                next_h_val= get_heuristic(curr->location,goal_location) + get_heuristic(goal_location,dummy_goal);
             else
                 next_h_val= get_heuristic(curr->location,dummy_goal);
 

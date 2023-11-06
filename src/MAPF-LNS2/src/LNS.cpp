@@ -139,12 +139,15 @@ bool LNS::run()
             path_table.deletePath(neighbor.agents[i], agents[neighbor.agents[i]].path);
             //neighbor.old_sum_of_costs += agents[neighbor.agents[i]].path.size() - 1;
             //sum of cost only compare with start -> true goal
+            //cout<<"old path of "<<neighbor.agents[i]<<endl;
             for (auto p: agents[neighbor.agents[i]].path)
             {
+                //cout<<p.location<<" ";
                 if (p.location == agents[neighbor.agents[i]].path_planner->goal_location)
                     break;
                 neighbor.old_sum_of_costs++;
             }
+            //cout<<endl;
         }
         
         if (replan_algo_name == "PP")
@@ -644,13 +647,16 @@ bool LNS::runPP()
             break;
         } 
         //neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
+        //cout<<"goal "<< agents[id].path_planner->goal_location<<endl;
         for (auto p: agents[id].path)
         {
+            //cout<<p.location<<" ";
             if (p.location == agents[id].path_planner->goal_location)
                 break;
             neighbor.sum_of_costs++;
         }
-        //cout<<"old sic "<< neighbor.old_sum_of_costs<<" current sic "<<neighbor.sum_of_costs<<endl;
+        if (screen >= 2) 
+            cout<<"after agent "<<agents[id].id<<", old sic "<< neighbor.old_sum_of_costs<<" current sic "<<neighbor.sum_of_costs<<endl;
         if (neighbor.sum_of_costs >= neighbor.old_sum_of_costs)
         {
             break;
