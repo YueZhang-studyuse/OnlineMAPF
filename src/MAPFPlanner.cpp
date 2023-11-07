@@ -24,6 +24,13 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
     future_paths.resize(env->num_of_agents);
 
     lns->commit = commit;
+
+    if (mapf_planner == 1)
+        algo = mapf_algo::LACAM;
+    else if (mapf_planner == 2)
+        algo = mapf_algo::LACAMLNS;
+    else if (mapf_planner == 3)
+        algo = mapf_algo::LACAMLNS2;
 }
 
 void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
