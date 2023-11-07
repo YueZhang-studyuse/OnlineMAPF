@@ -1,4 +1,4 @@
-#include "MCP.h"
+#include "mcp.h"
 
 
 void MCP::simulate(vector<Path*>& paths)
