@@ -1,7 +1,7 @@
 #include "InitLNS.h"
 #include <queue>
 #include <algorithm>
-#include "MCP.h"
+#include "mcp.h"
 
 InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_limit,
          const string & replan_algo_name, const string & init_destory_name, int neighbor_size, int screen) :
