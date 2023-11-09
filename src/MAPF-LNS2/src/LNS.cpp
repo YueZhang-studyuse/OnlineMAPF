@@ -1528,13 +1528,13 @@ bool LNS::validateCommitSolution(vector<list<int>> commited_paths) const
             {
                 if (a1.path[t].location == a2.path[t].location) // vertex conflict
                 {
-                    cout<<"vertex conflict "<<a1.id<<" "<<a2.id<<endl;
+                    cout<<"vertex conflict "<<a1.id<<" "<<a2.id <<" t:"<< t<<endl;
                     return false;
                 }
                 else if (a1.path[t].location == a2.path[t - 1].location &&
                         a1.path[t - 1].location == a2.path[t].location) // edge conflict
                 {
-                    cout<<"edge conflict "<<a1.id<<" "<<a2.id<<endl;
+                    cout<<"edge conflict "<<a1.id<<" "<<a2.id <<" t:"<< t<<endl;
                     return false;
                 }
             }

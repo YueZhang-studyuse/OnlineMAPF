@@ -184,6 +184,7 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
 
 void MCP::build(vector<Path*>& paths)  
 {
+    cout<<"MCP window size:"<< window_size <<endl;
     //if (options1.debug)
     //    cout << "Start MCP ..." << endl;
     size_t map_size = instance.env->map.size();
@@ -214,6 +215,8 @@ void MCP::build(vector<Path*>& paths)
     for (size_t t = 0; t < max_timestep; t++)
     {
         unordered_map<int, set<int>> t_occupy;
+        unordered_map<set<int>, set<int>> t_occupy_edge;
+
         for (int i = 0; i<paths.size();i++)
         {
             if (t < paths[i]->size() &&
@@ -221,6 +224,8 @@ void MCP::build(vector<Path*>& paths)
                 (t==0 || paths[i]->at(t).location != paths[i]->at(t-1).location))
             {
                 t_occupy[paths[i]->at(t).location].insert(i);
+                if (t>0 && paths[i]->at(t).location != paths[i]->at(t-1).location)
+                    t_occupy_edge[set<int>({paths[i]->at(t-1).location, paths[i]->at(t).location})].insert(i);
                 no_wait_time[i].push_back(t);
 
                 if (goal_arrived.count(paths[i]->at(t).location) && t >= goal_arrived.at(paths[i]->at(t).location) ){
@@ -235,8 +240,20 @@ void MCP::build(vector<Path*>& paths)
             mcp[o.first].push_back(o.second);
             if (o.second.size() > 1 && t <= window_size)
                 for (auto a : o.second){
-                    if (window_size+1 - t > delay_for[a])
+                    if (window_size+1 - t > delay_for[a]){
                         delay_for[a] = window_size+1 - t;
+                        std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< o.first << " at "<< t <<std::endl;
+                    }
+                }
+        }
+
+        for(auto& o : t_occupy_edge){
+            if (o.second.size() > 1 && t <= window_size)
+                for (auto a : o.second){
+                    if (window_size+1 - t > delay_for[a]){
+                        delay_for[a] = window_size+1 - t;
+                        std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< *(o.first.begin()) <<" - "<< *(o.first.begin()++) << " at "<< t <<std::endl;
+                    }
                 }
         }
     }
