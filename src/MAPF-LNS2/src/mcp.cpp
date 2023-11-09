@@ -247,7 +247,7 @@ void MCP::build(vector<Path*>& paths)
                 for (auto a : o.second){
                     if (window_size+1 - t > delay_for[a]){
                         delay_for[a] = window_size+1 - t;
-                        std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< o.first << " at "<< t <<std::endl;
+                        //std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< o.first << " at "<< t <<std::endl;
                     }
                 }
         }
@@ -257,7 +257,7 @@ void MCP::build(vector<Path*>& paths)
                 for (auto a : o.second){
                     if (window_size+1 - t > delay_for[a]){
                         delay_for[a] = window_size+1 - t;
-                        std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< *(o.first.begin()) <<" - "<< *(o.first.begin()++) << " at "<< t <<std::endl;
+                       //std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< *(o.first.begin()) <<" - "<< *(o.first.begin()++) << " at "<< t <<std::endl;
                     }
                 }
         }
