@@ -190,7 +190,8 @@ bool InitLNS::run()
 
 bool InitLNS::postProcessMCP()
 {
-    MCP postmcp(instance,commit+2);
+    cout<<"postProcessMCP window size:" << commit <<endl;
+    MCP postmcp(instance,commit);
     {
         vector<Path*> temp;
         temp.resize(agents.size());

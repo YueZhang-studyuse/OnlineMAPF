@@ -461,6 +461,7 @@ bool LNS::fixInitialSolutionWithLNS2()
             {
                 init_lns = new InitLNS(instance, agents, time_limit - ((fsec)(Time::now() - start_time)).count(),
                         replan_algo_name,init_destory_name, neighbor_size, screen);
+                init_lns->commit = commit;
 
                 succ = init_lns->run();
                 path_table.reset();
@@ -1528,13 +1529,25 @@ bool LNS::validateCommitSolution(vector<list<int>> commited_paths) const
             {
                 if (a1.path[t].location == a2.path[t].location) // vertex conflict
                 {
-                    cout<<"vertex conflict "<<a1.id<<" "<<a2.id<<endl;
+                    cout<<"vertex conflict "<<a1.id<<" "<<a2.id <<" t:"<< t<<endl;
+                    for (auto p: a1.path)
+                        cout<<p.location<<" ";
+                    cout<<endl;
+                    for (auto p: a2.path)
+                        cout<<p.location<<" ";
+                    cout<<endl;
                     return false;
                 }
                 else if (a1.path[t].location == a2.path[t - 1].location &&
                         a1.path[t - 1].location == a2.path[t].location) // edge conflict
                 {
-                    cout<<"edge conflict "<<a1.id<<" "<<a2.id<<endl;
+                    cout<<"edge conflict "<<a1.id<<" "<<a2.id <<" t:"<< t<<endl;
+                    for (auto p: a1.path)
+                        cout<<p.location<<" ";
+                    cout<<endl;
+                    for (auto p: a2.path)
+                        cout<<p.location<<" ";
+                    cout<<endl;
                     return false;
                 }
             }
