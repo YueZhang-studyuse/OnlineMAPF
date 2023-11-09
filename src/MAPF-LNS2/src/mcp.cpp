@@ -86,9 +86,10 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
     int loc = paths[i]->at(no_wait_time[i][copy_agent_time[i]]).location;
     assert(!copy_mcp[loc].empty());
 
-    if (t < delay_for[i]){
+    if (t <= delay_for[i] && delay_for[i] > 0){
         paths_copy[i].push_back(paths_copy[i].back());
         ++p;
+        // cout<< i <<" stop at" << t << "; delay for "<< delay_for[i] <<endl; 
         return false;
     }
 
@@ -212,6 +213,7 @@ void MCP::build(vector<Path*>& paths)
         }
     }
 
+
     for (size_t t = 0; t < max_timestep; t++)
     {
         unordered_map<int, set<int>> t_occupy;
@@ -219,13 +221,16 @@ void MCP::build(vector<Path*>& paths)
 
         for (int i = 0; i<paths.size();i++)
         {
+            if (t < paths[i]->size())
+                t_occupy[paths[i]->at(t).location].insert(i);
+
             if (t < paths[i]->size() &&
-                
                 (t==0 || paths[i]->at(t).location != paths[i]->at(t-1).location))
             {
-                t_occupy[paths[i]->at(t).location].insert(i);
-                if (t>0 && paths[i]->at(t).location != paths[i]->at(t-1).location)
-                    t_occupy_edge[set<int>({paths[i]->at(t-1).location, paths[i]->at(t).location})].insert(i);
+                if (t>0 && paths[i]->at(t).location != paths[i]->at(t-1).location){
+                    set<int> ed = {paths[i]->at(t-1).location, paths[i]->at(t).location};
+                    t_occupy_edge[ed].insert(i);
+                }
                 no_wait_time[i].push_back(t);
 
                 if (goal_arrived.count(paths[i]->at(t).location) && t >= goal_arrived.at(paths[i]->at(t).location) ){
