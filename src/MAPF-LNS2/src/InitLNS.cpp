@@ -181,7 +181,7 @@ bool InitLNS::run()
         // printPath();
         // printCollisionGraph();
         cout<<"MCP Window Fix"<<endl;
-        // postProcessMCP();
+        postProcessMCP();
         // printPath();
         
     }
@@ -190,7 +190,7 @@ bool InitLNS::run()
 
 bool InitLNS::postProcessMCP()
 {
-    MCP postmcp(instance,commit+2);
+    MCP postmcp(instance,commit);
     {
         vector<Path*> temp;
         temp.resize(agents.size());
