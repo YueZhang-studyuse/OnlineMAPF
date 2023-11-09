@@ -461,6 +461,7 @@ bool LNS::fixInitialSolutionWithLNS2()
             {
                 init_lns = new InitLNS(instance, agents, time_limit - ((fsec)(Time::now() - start_time)).count(),
                         replan_algo_name,init_destory_name, neighbor_size, screen);
+                init_lns->commit = commit;
 
                 succ = init_lns->run();
                 path_table.reset();
