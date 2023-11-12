@@ -457,8 +457,9 @@ bool LNS::fixInitialSolutionWithLNS2()
         else
         {
             cout<<"Fix Solution with LNS2"<<endl;
-            if (((fsec)(Time::now() - start_time)).count() < time_limit) //if lacam failed, we use lns2
-            {
+            //we need lns2 to fix path even if runtime out
+            // if (((fsec)(Time::now() - start_time)).count() < time_limit) //if lacam failed, we use lns2 
+            // {
                 init_lns = new InitLNS(instance, agents, time_limit - ((fsec)(Time::now() - start_time)).count(),
                         replan_algo_name,init_destory_name, neighbor_size, screen);
                 init_lns->commit = commit;
@@ -475,7 +476,7 @@ bool LNS::fixInitialSolutionWithLNS2()
                 initial_sum_of_costs = init_lns->sum_of_costs;
                 sum_of_costs = initial_sum_of_costs;
                 initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
-            }
+            //}
             return false;
         }
     }
