@@ -217,6 +217,7 @@ void MCP::build(vector<Path*>& paths)
     for (size_t t = 0; t < max_timestep; t++)
     {
         unordered_map<int, set<int>> t_occupy;
+        unordered_map<int, set<int>> t_occupy_mcp;
         unordered_map<set<int>, set<int>> t_occupy_edge;
 
         for (int i = 0; i<paths.size();i++)
@@ -227,6 +228,8 @@ void MCP::build(vector<Path*>& paths)
             if (t < paths[i]->size() &&
                 (t==0 || paths[i]->at(t).location != paths[i]->at(t-1).location))
             {
+                t_occupy_mcp[paths[i]->at(t).location].insert(i);
+
                 if (t>0 && paths[i]->at(t).location != paths[i]->at(t-1).location){
                     set<int> ed = {paths[i]->at(t-1).location, paths[i]->at(t).location};
                     t_occupy_edge[ed].insert(i);
@@ -241,8 +244,12 @@ void MCP::build(vector<Path*>& paths)
             }
             
         }
-        for(auto& o : t_occupy){
+
+        for(auto& o : t_occupy_mcp){
             mcp[o.first].push_back(o.second);
+        }
+
+        for(auto& o : t_occupy){
             if (o.second.size() > 1 && t <= window_size)
                 for (auto a : o.second){
                     if (window_size+1 - t > delay_for[a]){
@@ -262,6 +269,29 @@ void MCP::build(vector<Path*>& paths)
                 }
         }
     }
+
+    //debug print
+
+    // cout<< "1088: ";
+    // for (auto o : mcp[1088]){
+    //     cout<<"[";
+    //     for (auto a : o){
+    //         cout<<a<<",";
+    //     }
+    //     cout<<"],";
+
+    // }
+    // cout<<endl;
+
+    // cout<< "1089: ";
+    // for (auto o : mcp[1089]){
+    //     cout<<"[";
+    //     for (auto a : o){
+    //         cout<<a<<",";
+    //     }
+    //     cout<<"],";
+    // }
+    // cout<<endl;
 
     for (int i = 0; i<paths.size();i++)
     {
