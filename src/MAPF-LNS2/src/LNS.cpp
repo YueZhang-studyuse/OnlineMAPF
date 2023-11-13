@@ -864,6 +864,7 @@ bool LNS::generateNeighborByRandomWalk()
             break;
         max_sic++;
     }
+    
     //randomWalk(a, agents[a].path[0].location, 0, neighbors_set, neighbor_size, (int) agents[a].path.size() - 1);
     randomWalk(a, agents[a].path[0].location, 0, neighbors_set, neighbor_size, max_sic);
     //randomWalk(a, agents[a].path[0].location, 0, neighbors_set, neighbor_size, 2);
@@ -878,7 +879,7 @@ bool LNS::generateNeighborByRandomWalk()
             max_sic++;
         }
         //int t = rand() % agents[a].path.size();
-        int t = rand() % max_sic+1;
+        int t = rand() % (max_sic+1);
     
         // if (target_considered)
         //     randomWalkwithStayTarget(a, agents[a].path[t].location, t, neighbors_set, neighbor_size, (int) agents[a].path.size() - 1);
