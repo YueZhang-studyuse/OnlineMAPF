@@ -346,11 +346,11 @@ bool Planner::get_new_config(HNode* H, LNode* L)
 
         if (H->reach_goal[a->id]) a->reached_goal = true;
 
-        if (H->depth <= commit_window || !a->reached_goal) //cannot reach goal before window
+        if (H->parent == nullptr || !a->reached_goal) //cannot reach goal at root node
         {
             occupied_now[a->v_now->id] = a;
         }
-        if (a->reached_goal && H->depth > commit_window)
+        if (a->reached_goal && H->parent != nullptr)
         {
             a->v_next = a->v_now;
         }

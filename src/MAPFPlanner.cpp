@@ -17,7 +17,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
                 true,
                 "Adaptive",
                 true,
-                true,0);
+                true,1);
     //lns->setIterations(0);
 
     commited_paths.resize(env->num_of_agents);
@@ -68,6 +68,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
             instance.prepareDummy();
             lns->setRuntimeLimit(1); //1s for initial run
             initial_success = lns->getInitialSolution();
+            if (!lns->validateWindowSolution())
+            {
+                lns->postProcessMCP();
+            }
             initial_run = false;
         }
         else if (!initial_success) //restart if current no initional solution
@@ -76,6 +80,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
             cout<<"initial not success"<<endl;
             lns->setRuntimeLimit(time_limit);
             initial_success = lns->getInitialSolution();
+            if (!lns->validateWindowSolution())
+            {  
+                lns->postProcessMCP();
+            }
         }
         else 
         {
@@ -84,6 +92,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
             lns->setIterations(0); //lacam only
             lns->loadPaths(future_paths);
             lns->fixInitialSolutionWithLaCAM();
+            if (!lns->validateWindowSolution())
+            {
+                lns->postProcessMCP();
+            }
         }
 
         for (int i = 0; i < env->num_of_agents; i++)

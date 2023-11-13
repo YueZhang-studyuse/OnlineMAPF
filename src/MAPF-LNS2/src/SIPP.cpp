@@ -3,7 +3,7 @@
 void SIPP::updatePath(const LLNode* goal, vector<PathEntry> &path)
 {
     num_collisions = goal->num_of_conflicts;
-	path.resize(max(goal->timestep + 1,commit_window+1));
+	path.resize(max(goal->timestep + 1,2));
 	// num_of_conflicts = goal->num_of_conflicts;
 
 	const auto* curr = goal;
@@ -20,7 +20,7 @@ void SIPP::updatePath(const LLNode* goal, vector<PathEntry> &path)
 		curr = prev;
 	}
 	assert(curr->timestep == 0);
-    for (int i = goal->timestep + 1; i <= commit_window; i++) //fill path within window
+    for (int i = goal->timestep + 1; i <= 1; i++) //fill path within window
     {
         path[i].location = goal->location;
     }
@@ -185,9 +185,9 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
             updatePath(curr, path);
             break;
         }
-        else if ((curr->reached_goal || curr->location == goal_location) && // arrive at the goal location or reach goal before
+        else if (curr->location == goal_location && // arrive at the goal location or reach goal before
                 !curr->wait_at_goal && // not wait at the goal location
-                curr->timestep >= constraint_table.getHoldingTimeForWindow(curr->location, constraint_table.length_min,commit_window)) // the agent can hold the this location afterward until window
+                curr->timestep >= 1) // the agent can hold the this location afterward (for >= just in case start = target and needs at least path > 1)
         {
             int future_collisions = 0; //disappear does not require to check future collisions
             if (future_collisions == 0) //agent can stay at goal location

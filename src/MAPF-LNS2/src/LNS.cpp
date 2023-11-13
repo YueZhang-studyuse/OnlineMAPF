@@ -3,6 +3,7 @@
 #include<boost/tokenizer.hpp>
 #include <utility>
 #include "lacam2/lacam2.hpp"
+#include "mcp.h"
 
 LNS::LNS(const Instance& instance, double time_limit, string init_algo_name, string replan_algo_name,
          const string & destory_name, int neighbor_size, int num_of_iterations, bool use_init_lns,
@@ -173,6 +174,11 @@ bool LNS::run()
         iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, runtime, replan_algo_name);
     }
 
+
+    if (!validateWindowSolution())
+    {
+        postProcessMCP();
+    }
 
     average_group_size = - iteration_stats.front().num_of_agents;
     for (const auto& data : iteration_stats)
@@ -1471,6 +1477,80 @@ bool LNS::validateCommitSolution(vector<list<int>> commited_paths) const
                 {
                     cout<<"edge conflict "<<a1.id<<" "<<a2.id<<endl;
                     return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+bool LNS::postProcessMCP()
+{
+    cout<<"previous path"<<endl;
+    for (const auto& agent : agents)
+        cout << "Agent " << agent.id << ": " << agent.path << endl;
+    cout<<"Post Process with MCP due to target collisions"<<endl;
+    MCP postmcp(instance,commit+1);
+    {
+        vector<Path*> temp;
+        temp.resize(agents.size());
+        for (int a = 0; a < agents.size(); a++)
+        {
+            temp[a] = &(agents[a].path);
+        }
+        postmcp.build(temp);
+        postmcp.simulate(temp);
+    }
+    postmcp.clear();
+    cout<<"current path"<<endl;
+    for (const auto& agent : agents)
+        cout << "Agent " << agent.id << ": " << agent.path << endl;
+    return true;
+}
+
+
+bool LNS::validateWindowSolution() const
+{
+    for (const auto& a1_ : agents)
+    {
+        for (const auto  & a2_: agents)
+        {
+            if (a1_.id >= a2_.id || a2_.path.empty())
+                continue;
+            const auto & a1 = a1_.path.size() <= a2_.path.size()? a1_ : a2_;
+            const auto & a2 = a1_.path.size() <= a2_.path.size()? a2_ : a1_;
+            int t = 1;
+            for (; t < (int) a1.path.size() && t <= commit; t++)
+            {
+                if (a1.path[t].location == a2.path[t].location) // vertex conflict
+                {
+                    if (screen >= 1)
+                        cout << "Find a vertex conflict between agents " << a1.id << " and " << a2.id <<
+                            " at location " << a1.path[t].location << " at timestep " << t << endl;
+                    return false;
+                }
+                else if (a1.path[t].location == a2.path[t - 1].location &&
+                        a1.path[t - 1].location == a2.path[t].location) // edge conflict
+                {
+                    if (screen >= 1)
+                        cout << "Find an edge conflict between agents " << a1.id << " and " << a2.id <<
+                         " at edge (" << a1.path[t - 1].location << "," << a1.path[t].location <<
+                         ") at timestep " << t << endl;
+                }
+            }
+            if (a1.path.size() <= commit)
+            {
+                int target = a1.path.back().location;
+                for (; t < (int) a2.path.size() && t <= commit; t++)
+                {
+                    if (a2.path[t].location == target)  // target conflict
+                    {
+                        if (screen >= 1)
+                            cout << "Find a target conflict where agent " << a2.id << " (of length " << a2.path.size() - 1<<
+                            ") traverses agent " << a1.id << " (of length " << a1.path.size() - 1<<
+                            ")'s target location " << target << " at timestep " << t << endl;
+                        return false;
+                    }
                 }
             }
         }

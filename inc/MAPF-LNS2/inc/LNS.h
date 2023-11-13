@@ -69,6 +69,10 @@ public:
 
     void setStartGoal();
 
+    bool postProcessMCP();
+
+    bool validateWindowSolution() const;
+
 private:
     InitLNS* init_lns = nullptr;
     string init_algo_name;
