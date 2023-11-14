@@ -1486,10 +1486,10 @@ bool LNS::validateCommitSolution(vector<list<int>> commited_paths) const
 
 bool LNS::postProcessMCP()
 {
-    cout<<"previous path"<<endl;
-    for (const auto& agent : agents)
-        cout << "Agent " << agent.id << ": " << agent.path << endl;
-    cout<<"Post Process with MCP due to target collisions"<<endl;
+    // cout<<"previous path"<<endl;
+    // for (const auto& agent : agents)
+    //     cout << "Agent " << agent.id << ": " << agent.path << endl;
+    cout<<"Post Process with MCP"<<endl;
     MCP postmcp(instance,commit+1);
     {
         vector<Path*> temp;
@@ -1502,9 +1502,9 @@ bool LNS::postProcessMCP()
         postmcp.simulate(temp);
     }
     postmcp.clear();
-    cout<<"current path"<<endl;
-    for (const auto& agent : agents)
-        cout << "Agent " << agent.id << ": " << agent.path << endl;
+    // cout<<"current path"<<endl;
+    // for (const auto& agent : agents)
+    //     cout << "Agent " << agent.id << ": " << agent.path << endl;
     return true;
 }
 
