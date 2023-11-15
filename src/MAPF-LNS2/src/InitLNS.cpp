@@ -57,6 +57,14 @@ bool InitLNS::run()
     vector<Path*> paths(agents.size());
     for (auto i = 0; i < agents.size(); i++)
         paths[i] = &agents[i].path;
+
+    if (runtime > time_limit+0.1 && num_of_colliding_pairs > 0) //if we run out of time to find a initial solution, we use the rest of next episode to fix solution
+    {
+        //cout<<"increase time limit "<<runtime<<" "<<time_limit<<endl;
+        while(time_limit < runtime)
+            time_limit++;
+    }
+    //cout<<"increase to "<<time_limit;
     while (runtime < time_limit and num_of_colliding_pairs > 0)
     {
         assert(instance.validateSolution(paths, sum_of_costs, num_of_colliding_pairs));
