@@ -36,9 +36,9 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
     if (get<0>(interval) > 0) //cannot hold this location at timestep 0
         return path;
 
-    auto holding_time = 0;
+    auto holding_time = constraint_table.getHoldingTime(dummy_goal, constraint_table.length_min);
+    auto last_target_collision_time = constraint_table.getLastCollisionTimestep(dummy_goal);
 
-    //auto last_target_collision_time = constraint_table.getLastCollisionTimestep(goal_location); only need touched goal, no requirement for stay at goal
     // generate start and add it to the OPEN & FOCAL list
     auto h = get_heuristic(start_location,goal_location);
     //we add the distance from goal to dummy goal
@@ -48,8 +48,6 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
                                 get<2>(interval), get<2>(interval), (start_location == goal_location));
     pushNodeToFocal(start);
 
-   //cout<<"start "<< start_location <<" goal "<<goal_location<<" dummy goal "<<dummy_goal<<endl;
-
     while (!focal_list.empty())
     {
         auto* curr = focal_list.top();
@@ -58,24 +56,15 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
         num_expanded++;
         assert(curr->location >= 0);
 
-        // if (curr->reached_goal)
-        // {
-        //     cout<<"current "<<curr->location<<" "<<curr->timestep<<" "<<curr->reached_goal_at<<" h "<<curr->h_val<<endl;
-        // }
-        // else
-        // {
-        //     cout<<"haven't reach: "<<curr->location<<" "<<curr->timestep<<" "<<curr->reached_goal_at<<" h "<<curr->h_val<<endl;
-        //     cout<<"h to goal "<<get_heuristic(curr->location,goal_location)<<endl;
-        //     cout<<"goal to dummy goal h_val: "<<get_heuristic(goal_location,dummy_goal)<<endl;
-        // }
-
         // check if the popped node is a goal
         if (curr->is_goal) //happends in lns2
         {
             updatePath(curr, path);
             break;
         }
-        else if (curr->reached_goal && curr->location == dummy_goal) //reached goal once and stay at dummy goal
+        else if (curr->reached_goal && curr->location == dummy_goal &&
+                !curr->wait_at_goal &&
+                curr->timestep >= holding_time) //reached goal once and stay at dummy goal
         {
             int future_collisions = constraint_table.getFutureNumOfCollisions(curr->location, curr->timestep);
             if (future_collisions == 0) //agent can stay at goal location
