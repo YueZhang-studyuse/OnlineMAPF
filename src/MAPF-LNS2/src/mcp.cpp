@@ -18,13 +18,20 @@ void MCP::simulate(vector<Path*>& paths)
         
     }
     
-    for (int t = 0;  t <= window_size && !unfinished_agents.empty(); t++) {
+    for (int t = 0; !unfinished_agents.empty(); t++) {
         cout<<"Similate t = "<<t<<endl;
         cout<<"Start "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
         auto old_size = unfinished_agents.size();
         for (auto p = unfinished_agents.begin(); p != unfinished_agents.end();) {
+            cout<< *p;
             moveAgent(path_copy, paths, p, t);
+            cout<<"("<< path_copy[*p][t+1].location;
+            if (path_copy[*p][t+1].location == path_copy[*p][t].location){
+                cout<<",w";
+            }
+            cout<<"),";
         }
+        cout<<endl;
 
         bool no_move = true;
 
@@ -73,13 +80,18 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
         if (paths_copy[i][t].location == loc)// the agent has reached its goal location
         {
             assert(copy_mcp[loc].front().count(i)>0);
-            // copy_mcp[loc].front().erase(i);
-            // if (copy_mcp[loc].front().empty())
-            //     copy_mcp[loc].pop_front();
-            // p = unfinished_agents.erase(p);
-            paths_copy[i].push_back(paths_copy[i].back());
-            ++p;
-            return false;
+
+            if (t <= window_size)
+            {
+                paths_copy[i].push_back(paths_copy[i].back());
+                ++p;
+                return false;
+            }
+            copy_mcp[loc].front().erase(i);
+            if (copy_mcp[loc].front().empty())
+                copy_mcp[loc].pop_front();
+            p = unfinished_agents.erase(p);
+            return true;
         }
         else 
         {
@@ -261,6 +273,9 @@ void MCP::build(vector<Path*>& paths)
     size_t max_timestep = 0;
     for (int i = 0; i<paths.size();i++)
     {
+        if (paths[i]->size() ==0)
+            cout<< "error; agent " << i << " has no path" <<endl;
+            _exit(1);
         max_timestep = max(max_timestep, paths[i]->size());
     }
 
