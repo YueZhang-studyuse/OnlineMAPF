@@ -1541,7 +1541,7 @@ bool LNS::validateWindowSolution() const
             if (a1.path.size() <= commit)
             {
                 int target = a1.path.back().location;
-                for (; t < (int) a2.path.size() && t <= commit; t++)
+                for (t = (int) a1.path.size(); t < (int) a2.path.size() && t <= commit; t++)
                 {
                     if (a2.path[t].location == target)  // target conflict
                     {
