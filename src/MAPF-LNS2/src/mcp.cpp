@@ -10,6 +10,9 @@ void MCP::simulate(vector<Path*>& paths)
     unfinished_agents.clear();
     for (int i = 0; i < paths.size(); i++)
     {
+        if (paths[i]->size()==0){
+            continue;
+        }
         unfinished_agents.push_back(i);
         path_copy[i].reserve(paths[i]->size() * 2);
         assert(copy_agent_time[i] > 0);
@@ -19,8 +22,8 @@ void MCP::simulate(vector<Path*>& paths)
     }
     
     for (int t = 0;  t <= window_size && !unfinished_agents.empty(); t++) {
-        //cout<<"Similate t = "<<t<<endl;
-        //cout<<"Start "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
+        cout<<"Similate t = "<<t<<endl;
+        cout<<"Start "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
         auto old_size = unfinished_agents.size();
         for (auto p = unfinished_agents.begin(); p != unfinished_agents.end();) {
             moveAgent(path_copy, paths, p, t);
@@ -268,6 +271,8 @@ void MCP::build(vector<Path*>& paths)
     size_t max_timestep = 0;
     for (int i = 0; i<paths.size();i++)
     {
+        if (paths[i]->size() ==0 )
+            cout << "error; agent " << i << " has no path" << endl;
         max_timestep = max(max_timestep, paths[i]->size());
     }
 
