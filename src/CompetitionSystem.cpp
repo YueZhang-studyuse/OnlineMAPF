@@ -158,8 +158,8 @@ bool BaseSystem::plan()
     }
     task_td = std::thread(std::move(task));
     started = true;
-    //if (future.wait_for(std::chrono::milliseconds(plan_time_limit*1000 + 100)) == std::future_status::ready) //we allow some minor timeouts
-    if (future.wait_for(std::chrono::seconds(plan_time_limit + 1)) == std::future_status::ready)
+    if (future.wait_for(std::chrono::milliseconds(plan_time_limit*1000 + 200)) == std::future_status::ready) //we allow some minor timeouts
+    //if (future.wait_for(std::chrono::seconds(plan_time_limit + 1)) == std::future_status::ready)
     {
         task_td.join();
         started = false;
