@@ -439,6 +439,8 @@ void LNS::checkReplan()
             }
         }
     }
+    if (screen == 2)
+        cout << complete_agents.size() << " collision-free agents at timestep " << makespan << endl;
 }
 
 bool LNS::fixInitialSolutionWithLNS2()
@@ -501,8 +503,6 @@ bool LNS::fixInitialSolutionWithLNS2()
     {
         cout<<"Fix Solution with PP, neighbor size: "<<neighbor.agents.size()<<endl;
         start_time = Time::now();
-        if (screen == 2)
-            cout << complete_agents.size() << " collision-free agents at timestep " << makespan << endl;
         neighbor.old_sum_of_costs = MAX_COST;
         neighbor.sum_of_costs = 0;
         auto succ = runPP();
