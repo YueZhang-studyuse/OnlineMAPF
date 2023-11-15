@@ -231,6 +231,9 @@ void BaseSystem::simulate(int simulation_time)
         // find a plan
         sync_shared_env();
 
+        
+        planner->loadPaths(); //we assume time on loading path is free for analysis
+
         auto start = std::chrono::steady_clock::now();
 
         bool finished = plan();

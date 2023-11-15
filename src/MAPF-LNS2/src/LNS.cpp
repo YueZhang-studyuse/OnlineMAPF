@@ -383,7 +383,7 @@ bool LNS::fixInitialSolution()
     }
 }
 
-bool LNS::fixInitialSolutionWithLNS2()
+void LNS::checkReplan()
 {
     neighbor.agents.clear();
     initial_sum_of_costs = 0;
@@ -439,6 +439,64 @@ bool LNS::fixInitialSolutionWithLNS2()
             }
         }
     }
+}
+
+bool LNS::fixInitialSolutionWithLNS2()
+{
+    // neighbor.agents.clear();
+    // initial_sum_of_costs = 0;
+    // list<int> complete_agents; // subsets of agents who have complete and collision-free paths
+    // int makespan = 0;
+    // bool replan_need = false;
+    // for (auto& agent : agents)
+    // {
+    //     if (agent.path.empty())
+    //     {
+    //         neighbor.agents.emplace_back(agent.id);
+    //         agent.path.clear();
+    //     }
+    //     else
+    //     {
+    //         bool reached_goal = false;
+    //         for (auto p: agent.path)
+    //         {
+    //             if (p.location == agent.path_planner->goal_location)
+    //             {
+    //                 reached_goal = true;
+    //                 break;
+    //             }
+    //         }
+    //         if (!reached_goal)
+    //         {
+    //             neighbor.agents.emplace_back(agent.id);
+    //             agent.path.clear();
+    //         }
+    //         bool has_collision = false;
+    //         for (auto other : complete_agents)
+    //         {
+    //             has_collision = instance.hasCollision(agent.path, agents[other].path);
+    //             if (has_collision)
+    //             {
+    //                 neighbor.agents.emplace_back(agent.id);
+    //                 agent.path.clear();
+    //                 break;
+    //             }
+    //         }
+    //         if (!has_collision)
+    //         {
+    //             path_table.insertPath(agent.id, agent.path);
+    //             complete_paths++;
+    //             initial_sum_of_costs += (int)agent.path.size() - 1;
+    //             complete_agents.emplace_back(agent.id);
+    //             makespan = max(makespan, (int)agent.path.size() - 1);
+    //         }
+    //         instance.existing_path[agent.id].resize(agent.path.size());
+    //         for (int i = 0; i < (int)agent.path.size(); i++)
+    //         {
+    //             instance.existing_path[agent.id][i] = agent.path[i].location;
+    //         }
+    //     }
+    // }
     if (!neighbor.agents.empty())
     {
         cout<<"Fix Solution with PP, neighbor size: "<<neighbor.agents.size()<<endl;
@@ -487,64 +545,65 @@ bool LNS::fixInitialSolutionWithLNS2()
 
 bool LNS::fixInitialSolutionWithLaCAM()
 {
-    neighbor.agents.clear();
-    initial_sum_of_costs = 0;
-    list<int> complete_agents; // subsets of agents who have complete and collision-free paths
-    int makespan = 0;
-    bool replan_need = false;
-    for (auto& agent : agents)
+    // neighbor.agents.clear();
+    // initial_sum_of_costs = 0;
+    // list<int> complete_agents; // subsets of agents who have complete and collision-free paths
+    // int makespan = 0;
+    // bool replan_need = false;
+    // for (auto& agent : agents)
+    // {
+    //     if (agent.path.empty())
+    //     {
+    //         replan_need = true;
+    //         break;
+    //     }
+    //     else
+    //     {
+    //         bool reached_goal = false;
+    //         for (auto p: agent.path)
+    //         {
+    //             if (p.location == agent.path_planner->goal_location)
+    //             {
+    //                 reached_goal = true;
+    //                 break;
+    //             }
+    //         }
+    //         if (!reached_goal)
+    //         {
+    //             replan_need = true;
+    //             break;
+    //         }
+    //         bool has_collision = false;
+    //         for (auto other : complete_agents)
+    //         {
+    //             has_collision = instance.hasCollision(agent.path, agents[other].path);
+    //             if (has_collision)
+    //             {
+    //                 replan_need = true;
+    //                 break;
+    //             }
+    //         }
+    //         if (!has_collision)
+    //         {
+    //             path_table.insertPath(agent.id, agent.path);
+    //             complete_paths++;
+    //             initial_sum_of_costs += (int)agent.path.size() - 1;
+    //             complete_agents.emplace_back(agent.id);
+    //             makespan = max(makespan, (int)agent.path.size() - 1);
+    //         }
+    //         instance.existing_path[agent.id].resize(agent.path.size());
+    //         for (int i = 0; i < (int)agent.path.size(); i++)
+    //         {
+    //             instance.existing_path[agent.id][i] = agent.path[i].location;
+    //         }
+    //     }
+    // }
+    //if (replan_need)
+    if (!neighbor.agents.empty())
     {
-        if (agent.path.empty())
-        {
-            replan_need = true;
-            break;
-        }
-        else
-        {
-            bool reached_goal = false;
-            for (auto p: agent.path)
-            {
-                if (p.location == agent.path_planner->goal_location)
-                {
-                    reached_goal = true;
-                    break;
-                }
-            }
-            if (!reached_goal)
-            {
-                replan_need = true;
-                break;
-            }
-            bool has_collision = false;
-            for (auto other : complete_agents)
-            {
-                has_collision = instance.hasCollision(agent.path, agents[other].path);
-                if (has_collision)
-                {
-                    replan_need = true;
-                    break;
-                }
-            }
-            if (!has_collision)
-            {
-                path_table.insertPath(agent.id, agent.path);
-                complete_paths++;
-                initial_sum_of_costs += (int)agent.path.size() - 1;
-                complete_agents.emplace_back(agent.id);
-                makespan = max(makespan, (int)agent.path.size() - 1);
-            }
-            instance.existing_path[agent.id].resize(agent.path.size());
-            for (int i = 0; i < (int)agent.path.size(); i++)
-            {
-                instance.existing_path[agent.id][i] = agent.path[i].location;
-            }
-        }
-    }
-    if (replan_need)
-    {
+        start_time = Time::now();
         clearAll("Adaptive");
         cout<<"Fix Solution with LACAM"<<endl;
-        start_time = Time::now();
         auto succ = getInitialSolution();
         if (succ)
         {

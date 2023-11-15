@@ -69,6 +69,8 @@ public:
 
     void setStartGoal();
 
+    void checkReplan();
+
 private:
     InitLNS* init_lns = nullptr;
     string init_algo_name;
