@@ -35,7 +35,7 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
 
 void MAPFPlanner::loadPaths()
 {
-    if (initial_success && !initial_run)
+    if (initial_success && !initial_run && !commited_paths[0].empty())
     {
         lns->clearAll("Adaptive");
         lns->loadPaths(future_paths);
