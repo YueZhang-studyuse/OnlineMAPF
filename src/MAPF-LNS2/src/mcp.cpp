@@ -86,11 +86,46 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
     int loc = paths[i]->at(no_wait_time[i][copy_agent_time[i]]).location;
     assert(!copy_mcp[loc].empty());
 
-    if (t <= delay_for[i] && delay_for[i] > 0){
-        paths_copy[i].push_back(paths_copy[i].back());
-        ++p;
-        // cout<< i <<" stop at" << t << "; delay for "<< delay_for[i] <<endl; 
-        return false;
+    // if (t <= delay_for[i] && delay_for[i] > 0){
+    //     paths_copy[i].push_back(paths_copy[i].back());
+    //     ++p;
+    //     // cout<< i <<" stop at" << t << "; delay for "<< delay_for[i] <<endl; 
+    //     return false;
+    // }
+
+    // if t is in the window, 
+    if (t <= window_size){
+
+        //and next location record more than one agent in top of mcp (vertex conflict may occur), then wait
+        if (copy_mcp[loc] .front().size() > 1){
+            paths_copy[i].push_back(paths_copy[i].back());
+            ++p;
+            // cout<< i <<" stop at" << t << "; window size "<< window_size <<endl; 
+            return false;
+        }
+        //if edge conflict may occur, then wait
+        else {
+            int previous = paths[i]->at(no_wait_time[i][copy_agent_time[i] - 1]).location;
+            if (
+                //if the second agent of next loc include i
+                ((*std::next(copy_mcp[loc].begin())).count(i) > 0)
+                && (std::next(copy_mcp[previous].begin()) != copy_mcp[previous].end())
+            ){
+                //check if the first agents a of next loc is at loc, and want to move to previous loc (the second agents of previous include a)
+                for (auto a : copy_mcp[loc].front()){
+                    int target = paths[a]->at(no_wait_time[a][copy_agent_time[a]]).location;
+                    if ( (target== previous) && (paths_copy[a][t].location == loc) && (*std::next(copy_mcp[previous].begin())).count(a) > 0){
+                        paths_copy[i].push_back(paths_copy[i].back());
+                        ++p;
+                        // cout<< i <<" stop at" << t << "; edge conflict "<< previous << " - "<< loc <<endl; 
+                        return false;
+                    }
+
+                }
+
+            }
+
+        }
     }
 
     if (copy_mcp[loc].front().count(i)>0)
@@ -205,13 +240,25 @@ void MCP::build(vector<Path*>& paths)
     // Push nodes to MCP
     no_wait_time.resize(paths.size());
     delay_for.resize(paths.size(), 0);
-    std::unordered_map<int,int> goal_arrived;
-    for (int i = 0; i<paths.size();i++)
-    {
-        if (paths[i]->size()-1 <window_size){
-            goal_arrived[paths[i]->back().location] = paths[i]->size()-1;
-        }
-    }
+    // std::unordered_map<int,int> goal_arrived;
+    // for (int i = 0; i<paths.size();i++)
+    // {
+    //     if (paths[i]->size()-1 <window_size){
+    //         goal_arrived[paths[i]->back().location] = paths[i]->size()-1;
+    //     }
+    // }
+
+    // cout << "21: ";
+    // for (auto p : *(paths[21])){
+    //     cout<<p.location<<",";
+    // }
+    // cout<<endl;
+
+    // cout << "84: ";
+    // for (auto p : *(paths[84])){
+    //     cout<<p.location<<",";
+    // }
+    // cout<<endl;
 
 
     for (size_t t = 0; t < max_timestep; t++)
@@ -222,25 +269,25 @@ void MCP::build(vector<Path*>& paths)
 
         for (int i = 0; i<paths.size();i++)
         {
-            if (t < paths[i]->size())
-                t_occupy[paths[i]->at(t).location].insert(i);
+            // if (t < paths[i]->size())
+            //     t_occupy[paths[i]->at(t).location].insert(i);
 
             if (t < paths[i]->size() &&
                 (t==0 || paths[i]->at(t).location != paths[i]->at(t-1).location))
             {
                 t_occupy_mcp[paths[i]->at(t).location].insert(i);
 
-                if (t>0 && paths[i]->at(t).location != paths[i]->at(t-1).location){
-                    set<int> ed = {paths[i]->at(t-1).location, paths[i]->at(t).location};
-                    t_occupy_edge[ed].insert(i);
-                }
+                // if (t>0 && paths[i]->at(t).location != paths[i]->at(t-1).location){
+                //     set<int> ed = {paths[i]->at(t-1).location, paths[i]->at(t).location};
+                //     t_occupy_edge[ed].insert(i);
+                // }
                 no_wait_time[i].push_back(t);
 
-                if (goal_arrived.count(paths[i]->at(t).location) && t >= goal_arrived.at(paths[i]->at(t).location) ){
-                    if (window_size+1 - t > delay_for[i]){
-                        delay_for[i] = window_size+1 - t;
-                    }
-                }
+                // if (goal_arrived.count(paths[i]->at(t).location) && t >= goal_arrived.at(paths[i]->at(t).location) ){
+                //     if (window_size+1 - t > delay_for[i]){
+                //         delay_for[i] = window_size+1 - t;
+                //     }
+                // }
             }
             
         }
@@ -249,25 +296,25 @@ void MCP::build(vector<Path*>& paths)
             mcp[o.first].push_back(o.second);
         }
 
-        for(auto& o : t_occupy){
-            if (o.second.size() > 1 && t <= window_size)
-                for (auto a : o.second){
-                    if (window_size+1 - t > delay_for[a]){
-                        delay_for[a] = window_size+1 - t;
-                        std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< o.first << " at "<< t <<std::endl;
-                    }
-                }
-        }
+        // for(auto& o : t_occupy){
+        //     if (o.second.size() > 1 && t <= window_size)
+        //         for (auto a : o.second){
+        //             if (window_size+1 - t > delay_for[a]){
+        //                 delay_for[a] = window_size+1 - t;
+        //                 std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< o.first << " at "<< t <<std::endl;
+        //             }
+        //         }
+        // }
 
-        for(auto& o : t_occupy_edge){
-            if (o.second.size() > 1 && t <= window_size)
-                for (auto a : o.second){
-                    if (window_size+1 - t > delay_for[a]){
-                        delay_for[a] = window_size+1 - t;
-                       std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< *(o.first.begin()) <<" - "<< *(o.first.begin()++) << " at "<< t <<std::endl;
-                    }
-                }
-        }
+        // for(auto& o : t_occupy_edge){
+        //     if (o.second.size() > 1 && t <= window_size)
+        //         for (auto a : o.second){
+        //             if (window_size+1 - t > delay_for[a]){
+        //                 delay_for[a] = window_size+1 - t;
+        //                std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< *(o.first.begin()) <<" - "<< *(o.first.begin()++) << " at "<< t <<std::endl;
+        //             }
+        //         }
+        // }
     }
 
     //debug print
