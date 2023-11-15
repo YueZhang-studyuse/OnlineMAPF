@@ -97,16 +97,8 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
         if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
         {
-            cout<<"errors"<<endl;
-            for (int i = 0; i <commited_paths.size(); i++)
-            {
-                future_paths[i].push_front(env->curr_states[i].location);
-            }
-            for (int i = 0; i < env->num_of_agents; i++)
-            {
-                commited_paths[i].clear();
-            }
-            return;
+            cerr<<"errors"<<endl;
+            exit(-1);
         }
     }
 
@@ -154,16 +146,8 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
         if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
         {
-            cout<<"errors"<<endl;
-            for (int i = 0; i <commited_paths.size(); i++)
-            {
-                future_paths[i].push_front(env->curr_states[i].location);
-            }
-            for (int i = 0; i < env->num_of_agents; i++)
-            {
-                commited_paths[i].clear();
-            }
-            return;
+            cerr<<"errors"<<endl;
+            exit(-1);
         }
     }
 
@@ -211,16 +195,8 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         lns->commitPath(commit,commited_paths,future_paths,false,env->curr_timestep);
         if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
         {
-            cout<<"errors"<<endl;
-            for (int i = 0; i <commited_paths.size(); i++)
-            {
-                future_paths[i].push_front(env->curr_states[i].location);
-            }
-            for (int i = 0; i < env->num_of_agents; i++)
-            {
-                commited_paths[i].clear();
-            }
-            return;
+            cerr<<"errors"<<endl;
+            exit(-1);
         }
         else
         {
