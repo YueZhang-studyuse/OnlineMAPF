@@ -37,6 +37,7 @@ void MAPFPlanner::loadPaths()
 {
     if (initial_success && !initial_run)
     {
+        lns->clearAll("Adaptive");
         lns->loadPaths(future_paths);
         lns->checkReplan();
     }
@@ -88,7 +89,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         }
         else 
         {
-            lns->clearAll("Adaptive");
+            //lns->clearAll("Adaptive");
             lns->setRuntimeLimit(time_limit);
             lns->setIterations(0); //lacam only
             //lns->loadPaths(future_paths);
@@ -140,7 +141,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         }
         else 
         {
-            lns->clearAll("Adaptive");
+            //lns->clearAll("Adaptive");
             //lns->loadPaths(future_paths);
             lns->setRuntimeLimit(time_limit);
             lns->fixInitialSolutionWithLaCAM();
@@ -189,7 +190,7 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         }
         else 
         {
-            lns->clearAll("Adaptive");
+            //lns->clearAll("Adaptive");
             //lns->loadPaths(future_paths);
             lns->setRuntimeLimit(time_limit);
             lns->fixInitialSolutionWithLNS2();
