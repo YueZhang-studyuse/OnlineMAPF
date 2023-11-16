@@ -150,6 +150,8 @@ bool BaseSystem::plan()
         return false;
     }
 
+    planner->loadPaths(); //we assume time on loading path is free for analysis
+
     std::packaged_task<void()> task(std::bind(&BaseSystem::plan_wrapper, this));
     future = task.get_future();
     if (task_td.joinable())
@@ -232,7 +234,7 @@ void BaseSystem::simulate(int simulation_time)
         sync_shared_env();
 
         
-        planner->loadPaths(); //we assume time on loading path is free for analysis
+        //planner->loadPaths(); //we assume time on loading path is free for analysis
 
         auto start = std::chrono::steady_clock::now();
 

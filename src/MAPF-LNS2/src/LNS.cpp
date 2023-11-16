@@ -696,6 +696,12 @@ bool LNS::runPP()
 
     while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
     {
+        //smarter time control
+        auto remain_time = T - ((fsec)(Time::now() - time)).count();
+        auto avg_single = ((fsec)(Time::now() - time)).count()/((int)shuffled_agents.size()-remaining_agents);
+        if (avg_single > remain_time)
+            break;
+            
         int id = *p;
         if (screen >= 3)
             cout << "Remaining agents = " << remaining_agents <<
