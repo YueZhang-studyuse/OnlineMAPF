@@ -31,6 +31,7 @@ void MCP::simulate(vector<Path*>& paths)
             int i = *p;
             moveAgent(path_copy, paths, p, t);
         }
+        cout<<endl;
 
         cout<<"unfinished: "<< unfinished_agents.size() <<endl;
 
@@ -49,7 +50,7 @@ void MCP::simulate(vector<Path*>& paths)
                 int i = *p;
 
                 int loc = paths[i]->at(no_wait_time[i][copy_agent_time[i]]).location;
-                cout<<"Agent "<<i<< "at" << path_copy[i][t].location<<"last "<< paths[i]->back().location<<" for "<<loc;
+                cout<<"Agent "<<i<< "at " << path_copy[i][t].location <<" for "<<loc;
                 for (auto l : copy_mcp[loc]){
                     cout <<" [";
                     for (auto a : l){
@@ -59,6 +60,21 @@ void MCP::simulate(vector<Path*>& paths)
                 }
                 cout<<endl;
             }
+
+            for (int i = 0 ; i < mcp.size();i++){
+                if (mcp[i].size() == 0 )
+                    continue;
+                cout <<"MCP "<< i <<":";
+                for (auto m : mcp[i]){
+                    cout<<"[";
+                    for (auto a : m) {
+                        cout << a << ",";
+                    }
+                    cout<<"]";
+                }
+                cout<<endl;
+            }
+
             _exit(1);
         }       
 
@@ -109,9 +125,9 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
             copy_mcp[loc].front().erase(i);
             if (copy_mcp[loc].front().empty())
                 copy_mcp[loc].pop_front();
-            cout<<"Agent "<<i<<" finished at "<<t << "at" << loc <<endl;
+            // cout<<"Agent "<<i<<" finished at "<<t << "at" << loc <<endl;
             p = unfinished_agents.erase(p);
-        
+            cout <<"["<< i <<",g],";
             return true;
         }
         else 
@@ -139,9 +155,10 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
 
 
         //and next location record more than one agent in top of mcp (vertex conflict may occur), then wait
-        if (copy_mcp[loc] .front().size() > 1){
+        if (copy_mcp[loc].front().size() > 1){
             paths_copy[i].push_back(paths_copy[i].back());
             ++p;
+            cout <<"["<< i <<",wv],";
             // cout<< i <<" stop at" << t << "to avoid vertex conflict on  "<< loc <<endl; 
             return false;
         }
@@ -159,8 +176,6 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
                 (std::next(copy_mcp[loc].begin())!= copy_mcp[loc].end() )&&
                 ((*std::next(copy_mcp[loc].begin())).count(i) > 0)
             ){
-                // cout << "check edge conflict 1" << endl;
-
                 //check if the first agents a of next loc is at loc, and want to move to previous loc (the second agents of previous include a)
                 for (auto a : copy_mcp[loc].front()){
                     // cout << "check edge conflict for "<< a << endl;
@@ -169,31 +184,24 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
                     if ( (target== previous) && (paths_copy[a][t].location == loc) && (*std::next(copy_mcp[previous].begin())).count(a) > 0){
                         paths_copy[i].push_back(paths_copy[i].back());
                         ++p;
+                        cout <<"["<< i <<",we],";
+
                         // cout<< i <<" stop at" << t << "to avoid edge conflict on "<< previous << " - "<< loc <<endl; 
                         return false;
                     }
 
                 }
-                //  cout << "check edge conflict done " << endl;
-
-
             }
-                //  cout << "check edge conflict done2 " << endl;
-
-
-
         }
     }
 
-    // cout<<"No collision, continue"  <<endl;
-
+    int previous = paths[i]->at(no_wait_time[i][copy_agent_time[i] - 1]).location;
 
     if (copy_mcp[loc].front().count(i)>0)
     {
         paths_copy[i].push_back(paths[i]->at(no_wait_time[i][copy_agent_time[i]])); // move
         assert(copy_agent_time[i] > 0);
         
-        int previous = paths[i]->at(no_wait_time[i][copy_agent_time[i] - 1]).location;
         
         if (copy_mcp[previous].front().count(i)==0)
         {
@@ -214,22 +222,27 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
         
         copy_agent_time[i]++;
         ++p;
+        cout <<"["<< i <<",m],";
         return true;
     }
+
+
     assert(copy_mcp[loc].size() > 1);
 
-    if ((*std::next(copy_mcp[loc].begin())).count(i) > 0){// the second agent is i
-        if (t <= window_size && (*std::next(copy_mcp[loc].begin())).size() > 1){
+    if (copy_mcp[previous].begin()->count(i) > 0 &&  std::next(copy_mcp[loc].begin())->count(i) > 0){// the second agent is i
+        if (t <= window_size 
+            && (*std::next(copy_mcp[loc].begin())).size() > 1){
             paths_copy[i].push_back(paths_copy[i].back()); // stay still
             ++p;
+                    cout <<"["<< i <<",rv],";
             return false;
         }
         // pretend this agent can move: see whether the first agent can move successfully
         paths_copy[i].push_back(paths[i]->at(no_wait_time[i][copy_agent_time[i]])); // move
 
-        int previous = paths[i]->at(no_wait_time[i][copy_agent_time[i] - 1]).location;
         assert(copy_mcp[previous].front().count(i) != 0);
-        int mcp_pop = false;
+        bool mcp_pop = false;
+        bool erased = copy_mcp[previous].front().count(i) > 0;//for case the agent on current location, but top do not include current agent.
         copy_mcp[previous].front().erase(i);
         if (copy_mcp[previous].front().empty()){
             copy_mcp[previous].pop_front();
@@ -249,9 +262,7 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
                 auto p2 = std::find(unfinished_agents.begin(), unfinished_agents.end(), first_agent);
                 assert(p2 != unfinished_agents.end());
                 
-                succ = moveAgent(paths_copy, paths, p2, t);
-                
-                
+                succ = moveAgent(paths_copy, paths, p2, t);  
             }
 
             
@@ -266,13 +277,16 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
                     copy_mcp[previous].push_front(set<int>());
                 }
 
-                
-                copy_mcp[previous].front().insert(i);
+                if (erased)
+                    copy_mcp[previous].front().insert(i);
                 ++p;
+                cout <<"["<< i <<",rf],";
                 return false;
             }
         }
         ++p;
+        cout <<"["<< i <<",rm],";
+
         return true;
 
     }
@@ -302,60 +316,23 @@ void MCP::build(vector<Path*>& paths)
         max_timestep = max(max_timestep, paths[i]->size());
     }
 
-    //if (options1.debug)
-    //    cout << "max_timestep = " << max_timestep << endl;
 
     // Push nodes to MCP
     no_wait_time.resize(paths.size());
     delay_for.resize(paths.size(), 0);
-    // std::unordered_map<int,int> goal_arrived;
-    // for (int i = 0; i<paths.size();i++)
-    // {
-    //     if (paths[i]->size()-1 <window_size){
-    //         goal_arrived[paths[i]->back().location] = paths[i]->size()-1;
-    //     }
-    // }
-
-    // cout << "21: ";
-    // for (auto p : *(paths[21])){
-    //     cout<<p.location<<",";
-    // }
-    // cout<<endl;
-
-    // cout << "84: ";
-    // for (auto p : *(paths[84])){
-    //     cout<<p.location<<",";
-    // }
-    // cout<<endl;
 
 
     for (size_t t = 0; t < max_timestep; t++)
     {
-        unordered_map<int, set<int>> t_occupy;
         unordered_map<int, set<int>> t_occupy_mcp;
-        unordered_map<set<int>, set<int>> t_occupy_edge;
 
         for (int i = 0; i<paths.size();i++)
         {
-            // if (t < paths[i]->size())
-            //     t_occupy[paths[i]->at(t).location].insert(i);
 
             if (t < paths[i]->size())
-                // (t==0 || paths[i]->at(t).location != paths[i]->at(t-1).location))
             {
                 t_occupy_mcp[paths[i]->at(t).location].insert(i);
-
-                // if (t>0 && paths[i]->at(t).location != paths[i]->at(t-1).location){
-                //     set<int> ed = {paths[i]->at(t-1).location, paths[i]->at(t).location};
-                //     t_occupy_edge[ed].insert(i);
-                // }
                 no_wait_time[i].push_back(t);
-
-            //     // if (goal_arrived.count(paths[i]->at(t).location) && t >= goal_arrived.at(paths[i]->at(t).location) ){
-            //     //     if (window_size+1 - t > delay_for[i]){
-            //     //         delay_for[i] = window_size+1 - t;
-            //     //     }
-            //     // }
             }
             
         }
@@ -363,45 +340,7 @@ void MCP::build(vector<Path*>& paths)
         for(auto& o : t_occupy_mcp){
             mcp[o.first].push_back(o.second);
         }
-
-        // for(auto& o : t_occupy){
-        //     if (o.second.size() > 1 && t <= window_size)
-        //         for (auto a : o.second){
-        //             if (window_size+1 - t > delay_for[a]){
-        //                 delay_for[a] = window_size+1 - t;
-        //                 std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< o.first << " at "<< t <<std::endl;
-        //             }
-        //         }
-        // }
-
-        // for(auto& o : t_occupy_edge){
-        //     if (o.second.size() > 1 && t <= window_size)
-        //         for (auto a : o.second){
-        //             if (window_size+1 - t > delay_for[a]){
-        //                 delay_for[a] = window_size+1 - t;
-        //                std::cout<<"delay for "<<a<<" is "<<delay_for[a] <<" with conflict "<< *(o.first.begin()) <<" - "<< *(o.first.begin()++) << " at "<< t <<std::endl;
-        //             }
-        //         }
-        // }
     }
-
-    //debug print
-
-    // for  (int l = 0; l < map_size; l++){
-    //     if (mcp[l].size()== 0)
-    //         continue;
-    //     cout<< l <<": ";
-    //     for (auto o : mcp[l]){
-    //         cout<<"[";
-    //         for (auto a : o){
-    //             cout<<a<<",";
-    //         }
-    //         cout<<"],";
-
-    //     }
-    //     cout<<endl;
-
-    // }
 
     for (int i = 0; i<paths.size();i++)
     {
