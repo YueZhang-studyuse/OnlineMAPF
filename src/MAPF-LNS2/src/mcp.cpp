@@ -10,6 +10,8 @@ void MCP::simulate(vector<Path*>& paths)
     unfinished_agents.clear();
     for (int i = 0; i < paths.size(); i++)
     {
+        if (paths[i]->size() == 0)
+            continue;
         unfinished_agents.push_back(i);
         path_copy[i].reserve(paths[i]->size() * 2);
         assert(copy_agent_time[i] > 0);
@@ -22,39 +24,55 @@ void MCP::simulate(vector<Path*>& paths)
         cout<<"Similate t = "<<t<<endl;
         cout<<"Start "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
         auto old_size = unfinished_agents.size();
+
+
+        std::__1::vector<int> before = copy_agent_time;
         for (auto p = unfinished_agents.begin(); p != unfinished_agents.end();) {
-            cout<< *p;
+            int i = *p;
             moveAgent(path_copy, paths, p, t);
-            cout<<"("<< path_copy[*p][t+1].location;
-            if (path_copy[*p][t+1].location == path_copy[*p][t].location){
-                cout<<",w";
-            }
-            cout<<"),";
         }
-        cout<<endl;
+
+        cout<<"unfinished: "<< unfinished_agents.size() <<endl;
 
         bool no_move = true;
 
-        for(auto& p: path_copy){
-            if (p.size()< t+2)
-                continue;
-            if (p.at(p.size()-1).location !=  p.at(p.size()-2).location){
+        for (auto p = unfinished_agents.begin(); p != unfinished_agents.end();p++) {
+            if (copy_agent_time[*p] != before[*p]){
                 no_move = false;
                 break;
             }
-        }        
+        } 
+        if (no_move && !unfinished_agents.empty()){
+            cout<<"No move at "<<t<<endl;
+
+            for (auto p = unfinished_agents.begin(); p != unfinished_agents.end();p++) {
+                int i = *p;
+
+                int loc = paths[i]->at(no_wait_time[i][copy_agent_time[i]]).location;
+                cout<<"Agent "<<i<< "at" << path_copy[i][t].location<<"last "<< paths[i]->back().location<<" for "<<loc;
+                for (auto l : copy_mcp[loc]){
+                    cout <<" [";
+                    for (auto a : l){
+                        cout<<a<<",";
+                    }
+                    cout<<"]";
+                }
+                cout<<endl;
+            }
+            _exit(1);
+        }       
 
         
     }
 
-    for (int i = 0; i < paths.size(); i++)
-    {
-        if (copy_agent_time[i] != (int) no_wait_time[i].size()){
-            path_copy[i].insert(path_copy[i].end()
-            , std::next(paths[i]->begin(),no_wait_time[i][copy_agent_time[i]]), paths[i]->end());
-        }
-        *(paths[i]) = path_copy[i];
-    };
+    // for (int i = 0; i < paths.size(); i++)
+    // {
+    //     if (copy_agent_time[i] != (int) no_wait_time[i].size()){
+    //         path_copy[i].insert(path_copy[i].end()
+    //         , std::next(paths[i]->begin(),no_wait_time[i][copy_agent_time[i]]), paths[i]->end());
+    //     }
+    //     *(paths[i]) = path_copy[i];
+    // };
     cout<<"Simulation done at "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
 
 
@@ -76,6 +94,7 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
     assert(copy_agent_time[i] <= (int) no_wait_time[i].size());
     if (copy_agent_time[i] == (int) no_wait_time[i].size()) // the agent has reached the last location on its path
     {
+        cout<<"Agent "<<i<<" reach last " <<endl;
         int loc = paths[i]->back().location;
         if (paths_copy[i][t].location == loc)// the agent has reached its goal location
         {
@@ -90,7 +109,9 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
             copy_mcp[loc].front().erase(i);
             if (copy_mcp[loc].front().empty())
                 copy_mcp[loc].pop_front();
+            cout<<"Agent "<<i<<" finished at "<<t << "at" << loc <<endl;
             p = unfinished_agents.erase(p);
+        
             return true;
         }
         else 
@@ -128,10 +149,12 @@ bool MCP::moveAgent(vector<Path>& paths_copy, vector<Path*>& paths, list<int>::i
         else {
             // cout << "check edge conflict" << endl;
             int previous = paths[i]->at(no_wait_time[i][copy_agent_time[i] - 1]).location;
+
             // cout << "get previous" << endl;
 
             if (
                 //if the second agent of next loc include i
+                previous != loc &&
                 (std::next(copy_mcp[previous].begin()) != copy_mcp[previous].end()) &&
                 (std::next(copy_mcp[loc].begin())!= copy_mcp[loc].end() )&&
                 ((*std::next(copy_mcp[loc].begin())).count(i) > 0)
@@ -275,7 +298,7 @@ void MCP::build(vector<Path*>& paths)
     {
         if (paths[i]->size() ==0)
             cout<< "error; agent " << i << " has no path" <<endl;
-            _exit(1);
+            // _exit(1);
         max_timestep = max(max_timestep, paths[i]->size());
     }
 
@@ -317,8 +340,8 @@ void MCP::build(vector<Path*>& paths)
             // if (t < paths[i]->size())
             //     t_occupy[paths[i]->at(t).location].insert(i);
 
-            if (t < paths[i]->size() &&
-                (t==0 || paths[i]->at(t).location != paths[i]->at(t-1).location))
+            if (t < paths[i]->size())
+                // (t==0 || paths[i]->at(t).location != paths[i]->at(t-1).location))
             {
                 t_occupy_mcp[paths[i]->at(t).location].insert(i);
 
@@ -328,11 +351,11 @@ void MCP::build(vector<Path*>& paths)
                 // }
                 no_wait_time[i].push_back(t);
 
-                // if (goal_arrived.count(paths[i]->at(t).location) && t >= goal_arrived.at(paths[i]->at(t).location) ){
-                //     if (window_size+1 - t > delay_for[i]){
-                //         delay_for[i] = window_size+1 - t;
-                //     }
-                // }
+            //     // if (goal_arrived.count(paths[i]->at(t).location) && t >= goal_arrived.at(paths[i]->at(t).location) ){
+            //     //     if (window_size+1 - t > delay_for[i]){
+            //     //         delay_for[i] = window_size+1 - t;
+            //     //     }
+            //     // }
             }
             
         }
