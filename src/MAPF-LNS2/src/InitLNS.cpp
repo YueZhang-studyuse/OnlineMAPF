@@ -186,7 +186,7 @@ bool InitLNS::run()
     printResult();
     if (num_of_colliding_pairs > 0)
     {
-        printPath();
+        // printPath();
         // printCollisionGraph();
         cout<<"MCP Window Fix"<<endl;
         postProcessMCP();
