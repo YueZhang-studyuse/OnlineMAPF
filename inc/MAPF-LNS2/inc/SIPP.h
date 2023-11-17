@@ -82,7 +82,7 @@ public:
     //Path findOptimalPath(const ConstraintTable& constraint_table, const PathTableWC& path_table);
 
     Path findPath(const ConstraintTable& constraint_table); // return A path that minimizes collisions, breaking ties by cost
-	Path findPath(const ConstraintTable& constraint_table, double timeout);
+	Path findPath(const ConstraintTable& constraint_table, double timeout, bool &timeout_flag);
     int getTravelTime(int start, int end, const ConstraintTable& constraint_table, int upper_bound);
 
 	string getName() const { return "SIPP"; }

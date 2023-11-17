@@ -164,7 +164,7 @@ Path SIPP::findPath(const ConstraintTable& constraint_table)
     return path;
 }
 
-Path SIPP::findPath(const ConstraintTable& constraint_table, double timeout)
+Path SIPP::findPath(const ConstraintTable& constraint_table, double timeout, bool &timeout_flag)
 {
     auto start_time = Time::now();
     reset();
@@ -187,8 +187,13 @@ Path SIPP::findPath(const ConstraintTable& constraint_table, double timeout)
                                 get<2>(interval), get<2>(interval), (start_location == goal_location));
     pushNodeToFocal(start);
 
-    while (!focal_list.empty() && ((fsec)(Time::now() - start_time)).count() < timeout)
+    while (!focal_list.empty())
     {
+        if (((fsec)(Time::now() - start_time)).count() >= timeout)
+        {
+            timeout_flag = true;
+            break;
+        }
         auto* curr = focal_list.top();
         focal_list.pop();
         curr->in_openlist = false;
