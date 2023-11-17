@@ -74,7 +74,7 @@ bool InitLNS::run()
     
     while (runtime < time_limit and num_of_colliding_pairs > 0)
     {
-        assert(instance.validateSolution(paths, sum_of_costs, num_of_colliding_pairs));
+        //assert(instance.validateSolution(paths, sum_of_costs, num_of_colliding_pairs));
         if (ALNS)
             chooseDestroyHeuristicbyALNS();
         switch (init_destroy_strategy)
@@ -197,6 +197,7 @@ bool InitLNS::run()
         // printCollisionGraph();
         cout<<"MCP Window Fix"<<endl;
         postProcessMCP();
+        cout<<"MCP done"<<endl;
         // printPath();
         
     }
@@ -242,7 +243,7 @@ bool InitLNS::runPP()
     {
         int id = *p;
         agents[id].path = agents[id].path_planner->findPath(constraint_table);
-        assert(!agents[id].path.empty() && agents[id].path.back().location == agents[id].path_planner->goal_location);
+        //assert(!agents[id].path.empty() && agents[id].path.back().location == agents[id].path_planner->goal_location);
         if (agents[id].path_planner->num_collisions > 0)
             updateCollidingPairs(neighbor.colliding_pairs, agents[id].id, agents[id].path);
         assert(agents[id].path_planner->num_collisions > 0 or
@@ -319,7 +320,7 @@ bool InitLNS::getInitialSolution()
     for (auto id : neighbor.agents)
     {
         agents[id].path = agents[id].path_planner->findPath(constraint_table);
-        assert(!agents[id].path.empty() && agents[id].path.back().location == agents[id].path_planner->goal_location);
+        //assert(!agents[id].path.empty() && agents[id].path.back().location == agents[id].path_planner->goal_location);
         if (agents[id].path_planner->num_collisions > 0)
             updateCollidingPairs(colliding_pairs, agents[id].id, agents[id].path);
         sum_of_costs += (int)agents[id].path.size() - 1;

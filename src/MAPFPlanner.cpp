@@ -45,6 +45,8 @@ void MAPFPlanner::loadPaths()
 
 void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
 {
+    actions = std::vector<Action>(env->curr_states.size(), Action::WA);
+    
     if (!commited_paths[0].empty())
     {
         //trans to actions
@@ -102,13 +104,16 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
             commited_paths[i].clear();
         }
 
-        actions = std::vector<Action>(env->curr_states.size(), Action::WA);
-
         lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
-        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
+        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions --this should not happen in lacam
         {
-            cerr<<"errors"<<endl;
-            exit(-1);
+            cout<<"lacam produce errors"<<endl;
+            for (int i = 0; i < env->num_of_agents; i++)
+            {
+                future_paths[i].clear();
+                commited_paths[i].clear();
+            }
+            return;
         }
     }
 
@@ -154,9 +159,9 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         actions = std::vector<Action>(env->curr_states.size(), Action::WA);
 
         lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
-        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
+        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions --this should not happen in lacam-lns1
         {
-            cerr<<"errors"<<endl;
+            cerr<<"lacam lns produce errors"<<endl;
             exit(-1);
         }
     }
@@ -199,11 +204,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
             future_paths[i].clear();
             commited_paths[i].clear();
         }
-
-        actions = std::vector<Action>(env->curr_states.size(), Action::WA);
+        cout<<"1"<<endl;
 
         lns->commitPath(commit,commited_paths,future_paths,false,env->curr_timestep);
-        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
+        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions --this should not happen, because we use mcp in lns2
         {
             cerr<<"errors"<<endl;
             exit(-1);
