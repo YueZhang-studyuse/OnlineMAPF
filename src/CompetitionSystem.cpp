@@ -150,7 +150,8 @@ bool BaseSystem::plan()
         return false;
     }
 
-    planner->loadPaths(); //we assume time on loading path is free for analysis
+    if (!started)
+        planner->loadPaths(); //we assume time on loading path is free for analysis
 
     std::packaged_task<void()> task(std::bind(&BaseSystem::plan_wrapper, this));
     future = task.get_future();
