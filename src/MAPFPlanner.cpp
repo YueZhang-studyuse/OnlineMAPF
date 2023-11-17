@@ -33,6 +33,16 @@ void MAPFPlanner::initialize(int preprocess_time_limit)
         algo = mapf_algo::LACAMLNS2;
 }
 
+void MAPFPlanner::loadPaths()
+{
+    if (initial_success && !initial_run && commited_paths[0].empty())
+    {
+        lns->clearAll("Adaptive");
+        lns->loadPaths(future_paths);
+        lns->checkReplan();
+    }
+}
+
 void MAPFPlanner::plan(int time_limit,vector<Action> & actions) 
 {
     if (!commited_paths[0].empty())
@@ -79,10 +89,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         }
         else 
         {
-            lns->clearAll("Adaptive");
+            //lns->clearAll("Adaptive");
             lns->setRuntimeLimit(time_limit);
             lns->setIterations(0); //lacam only
-            lns->loadPaths(future_paths);
+            //lns->loadPaths(future_paths);
             lns->fixInitialSolutionWithLaCAM();
         }
 
@@ -95,15 +105,12 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         actions = std::vector<Action>(env->curr_states.size(), Action::WA);
 
         lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
-        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
+        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions --this should not happen in lacam
         {
-            cout<<"errors"<<endl;
-            for (int i = 0; i <commited_paths.size(); i++)
-            {
-                future_paths[i].push_front(env->curr_states[i].location);
-            }
+            cout<<"lacam produce errors"<<endl;
             for (int i = 0; i < env->num_of_agents; i++)
             {
+                future_paths[i].clear();
                 commited_paths[i].clear();
             }
             return;
@@ -134,8 +141,8 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         }
         else 
         {
-            lns->clearAll("Adaptive");
-            lns->loadPaths(future_paths);
+            //lns->clearAll("Adaptive");
+            //lns->loadPaths(future_paths);
             lns->setRuntimeLimit(time_limit);
             lns->fixInitialSolutionWithLaCAM();
             lns->has_initial_solution = true;
@@ -152,18 +159,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         actions = std::vector<Action>(env->curr_states.size(), Action::WA);
 
         lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
-        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
+        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions --this should not happen in lacam-lns1
         {
-            cout<<"errors"<<endl;
-            for (int i = 0; i <commited_paths.size(); i++)
-            {
-                future_paths[i].push_front(env->curr_states[i].location);
-            }
-            for (int i = 0; i < env->num_of_agents; i++)
-            {
-                commited_paths[i].clear();
-            }
-            return;
+            cerr<<"lacam lns produce errors"<<endl;
+            exit(-1);
         }
     }
 
@@ -191,8 +190,8 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         }
         else 
         {
-            lns->clearAll("Adaptive");
-            lns->loadPaths(future_paths);
+            //lns->clearAll("Adaptive");
+            //lns->loadPaths(future_paths);
             lns->setRuntimeLimit(time_limit);
             lns->fixInitialSolutionWithLNS2();
             lns->has_initial_solution = true;
@@ -209,18 +208,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         actions = std::vector<Action>(env->curr_states.size(), Action::WA);
 
         lns->commitPath(commit,commited_paths,future_paths,false,env->curr_timestep);
-        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions
+        if (!lns->validateCommitSolution(commited_paths)) //current window has collisions --this should not happen, because we use mcp in lns2
         {
-            cout<<"errors"<<endl;
-            for (int i = 0; i <commited_paths.size(); i++)
-            {
-                future_paths[i].push_front(env->curr_states[i].location);
-            }
-            for (int i = 0; i < env->num_of_agents; i++)
-            {
-                commited_paths[i].clear();
-            }
-            return;
+            cerr<<"errors"<<endl;
+            exit(-1);
         }
         else
         {

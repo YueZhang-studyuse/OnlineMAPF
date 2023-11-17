@@ -138,6 +138,7 @@ bool BaseSystem::plan()
         //auto waitlimit = plan_time_limit+0.1;
 
         if (future.wait_for(std::chrono::seconds(plan_time_limit)) == std::future_status::ready) //allow some minor timeout
+        //if (future.wait_for(std::chrono::milliseconds(plan_time_limit*1000)) == std::future_status::ready) //allow some minor timeout
         {
             task_td.join();
             started = false;
@@ -149,6 +150,9 @@ bool BaseSystem::plan()
         return false;
     }
 
+    if (!started)
+        planner->loadPaths(); //we assume time on loading path is free for analysis
+
     std::packaged_task<void()> task(std::bind(&BaseSystem::plan_wrapper, this));
     future = task.get_future();
     if (task_td.joinable())
@@ -157,7 +161,8 @@ bool BaseSystem::plan()
     }
     task_td = std::thread(std::move(task));
     started = true;
-    if (future.wait_for(std::chrono::seconds(plan_time_limit + 1)) == std::future_status::ready)
+    if (future.wait_for(std::chrono::milliseconds(plan_time_limit*1000 + 200)) == std::future_status::ready) //we allow some minor timeouts
+    //if (future.wait_for(std::chrono::seconds(plan_time_limit + 1)) == std::future_status::ready)
     {
         task_td.join();
         started = false;
@@ -228,6 +233,9 @@ void BaseSystem::simulate(int simulation_time)
 
         // find a plan
         sync_shared_env();
+
+        
+        //planner->loadPaths(); //we assume time on loading path is free for analysis
 
         auto start = std::chrono::steady_clock::now();
 

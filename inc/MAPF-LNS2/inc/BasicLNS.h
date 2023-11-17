@@ -46,6 +46,8 @@ public:
 
     int commit = 1;
 
+    bool timeout_flag = false;
+
     BasicLNS(const Instance& instance, double time_limit, int neighbor_size, int screen);
     virtual string getSolverName() const = 0;
 

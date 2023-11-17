@@ -57,6 +57,14 @@ bool InitLNS::run()
     vector<Path*> paths(agents.size());
     for (auto i = 0; i < agents.size(); i++)
         paths[i] = &agents[i].path;
+
+    if (runtime > time_limit+0.1 && num_of_colliding_pairs > 0) //if we run out of time to find a initial solution, we use the rest of next episode to fix solution
+    {
+        //cout<<"increase time limit "<<runtime<<" "<<time_limit<<endl;
+        while(time_limit < runtime)
+            time_limit++;
+    }
+    //cout<<"increase to "<<time_limit;
     while (runtime < time_limit and num_of_colliding_pairs > 0)
     {
         assert(instance.validateSolution(paths, sum_of_costs, num_of_colliding_pairs));
@@ -284,6 +292,9 @@ bool InitLNS::getInitialSolution()
     neighbor.agents.clear();
     neighbor.agents.reserve(agents.size());
     sum_of_costs = 0;
+
+    set<pair<int, int>> colliding_pairs;
+    
     for (int i = 0; i < (int)agents.size(); i++)
     {
         if (agents[i].path.empty())
@@ -291,13 +302,15 @@ bool InitLNS::getInitialSolution()
         else
         {
             sum_of_costs += (int)agents[i].path.size() - 1;
+            updateCollidingPairs(colliding_pairs, agents[i].id, agents[i].path); //pre loaded path may have collisions
             path_table.insertPath(agents[i].id, agents[i].path);
         }
     }
+
     int remaining_agents = (int)neighbor.agents.size();
     std::random_shuffle(neighbor.agents.begin(), neighbor.agents.end());
     ConstraintTable constraint_table(instance.env->cols, instance.env->map.size(), nullptr, &path_table);
-    set<pair<int, int>> colliding_pairs;
+
     for (auto id : neighbor.agents)
     {
         agents[id].path = agents[id].path_planner->findPath(constraint_table);
