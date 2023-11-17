@@ -19,8 +19,8 @@ void MCP::simulate(vector<Path*>& paths)
     }
     
     for (int t = 0;  t <= window_size && !unfinished_agents.empty(); t++) {
-        cout<<"Similate t = "<<t<<endl;
-        cout<<"Start "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
+        // cout<<"Similate t = "<<t<<endl;
+        // cout<<"Start "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
         auto old_size = unfinished_agents.size();
         for (auto p = unfinished_agents.begin(); p != unfinished_agents.end();) {
             moveAgent(path_copy, paths, p, t);
@@ -39,7 +39,7 @@ void MCP::simulate(vector<Path*>& paths)
 
         
     }
-    cout<<"Simulation 1 done at "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
+    //cout<<"Simulation 1 done at "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
 
     for (int i = 0; i < paths.size(); i++)
     {
@@ -49,7 +49,7 @@ void MCP::simulate(vector<Path*>& paths)
         }
         *(paths[i]) = path_copy[i];
     };
-    cout<<"Simulation done at "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
+    //cout<<"Simulation done at "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
 
 
     return;
