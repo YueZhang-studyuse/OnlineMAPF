@@ -20,10 +20,10 @@ void MCP::simulate(vector<Path*>& paths)
         path_copy[i].push_back(paths[i]->at(no_wait_time[i][copy_agent_time[i] - 1]));
         
     }
-    
+    cout<<"Start "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
+
     for (int t = 0; !unfinished_agents.empty(); t++) {
         // cout<<"Similate t = "<<t<<endl;
-        // cout<<"Start "<<(float)clock()/(float)CLOCKS_PER_SEC<<endl;
         auto old_size = unfinished_agents.size();
 
 
