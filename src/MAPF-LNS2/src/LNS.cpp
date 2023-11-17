@@ -93,7 +93,7 @@ bool LNS::run()
         return false; // terminate because no initial solution is found
     }
 
-    while (runtime < time_limit && iteration_stats.size() <= num_of_iterations)
+    while (runtime < time_limit && iteration_stats.size() <= num_of_iterations && !timeout_flag)
     {
         runtime =((fsec)(Time::now() - start_time)).count();
 
@@ -702,7 +702,10 @@ bool LNS::runPP()
             auto remain_time = T - ((fsec)(Time::now() - time)).count();
             auto avg_single = ((fsec)(Time::now() - time)).count()/((int)shuffled_agents.size()-remaining_agents);
             if (avg_single > remain_time)
+            {
+                timeout_flag = true;
                 break;
+            }
         }
 
         int id = *p;
@@ -1508,7 +1511,7 @@ void LNS::clearAll(const string & destory_name)
         a.path_planner->dummy_goal = dummy_goals[a.id];
     }
 
-    //start_time = Time::now();
+    //start_time = Time::now(); 
     neighbor.agents.clear();
     neighbor.sum_of_costs = 0;
     neighbor.old_sum_of_costs = 0;
@@ -1520,6 +1523,7 @@ void LNS::clearAll(const string & destory_name)
     iteration_stats.clear();
     average_group_size = -1;
     sum_of_costs = 0;
+    timeout_flag = false;
 
     // decay_factor = -1;
     // reaction_factor = -1;
