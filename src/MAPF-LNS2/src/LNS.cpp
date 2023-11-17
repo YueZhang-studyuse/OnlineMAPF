@@ -480,7 +480,11 @@ bool LNS::fixInitialSolutionWithLNS2()
         if (succ)
             return true;
         else
+        {
+            // cout<<"after post processing: "<<endl;
+            // validateSolution();
             return false;
+        }
     }
     sum_of_costs = initial_sum_of_costs;
     start_time = Time::now();
@@ -1043,16 +1047,19 @@ void LNS::randomWalkwithStayTarget(int agent_id, int start_location, int start_t
 
 void LNS::validateSolution() const
 {
+    int errors = 0;
     int sum = 0;
     for (const auto& a1_ : agents)
     {
         if (a1_.path.empty())
         {
+            if (screen >=1)
             cout << "No solution for agent " << a1_.id << endl;
             //exit(-1);
         }
         else if (a1_.path_planner->start_location != a1_.path.front().location)
         {
+            if (screen >=1)
             cout << "The path of agent " << a1_.id << " starts from location " << a1_.path.front().location
                 << ", which is different from its start location " << a1_.path_planner->start_location << endl;
             //exit(-1);
@@ -1067,6 +1074,7 @@ void LNS::validateSolution() const
         {
             if (!instance.validMove(a1_.path[t - 1].location, a1_.path[t].location))
             {
+                if (screen >=1)
                 cout << "The path of agent " << a1_.id << " jump from "
                      << a1_.path[t - 1].location << " to " << a1_.path[t].location
                      << " between timesteps " << t - 1 << " and " << t << endl;
@@ -1086,16 +1094,20 @@ void LNS::validateSolution() const
             {
                 if (a1.path[t].location == a2.path[t].location) // vertex conflict
                 {
+                    if (screen >=1)
                     cout << "Find a vertex conflict between agents " << a1.id << " and " << a2.id <<
                             " at location " << a1.path[t].location << " at timestep " << t << endl;
+                    errors++;
                     //exit(-1);
                 }
                 else if (a1.path[t].location == a2.path[t - 1].location &&
                         a1.path[t - 1].location == a2.path[t].location) // edge conflict
                 {
+                    if (screen >=1)
                     cout << "Find an edge conflict between agents " << a1.id << " and " << a2.id <<
                          " at edge (" << a1.path[t - 1].location << "," << a1.path[t].location <<
                          ") at timestep " << t << endl;
+                    errors++;
                     //exit(-1);
                 }
             }
@@ -1104,9 +1116,11 @@ void LNS::validateSolution() const
             {
                 if (a2.path[t].location == target)  // target conflict
                 {
+                    if (screen >=1)
                     cout << "Find a target conflict where agent " << a2.id << " (of length " << a2.path.size() - 1<<
                          ") traverses agent " << a1.id << " (of length " << a1.path.size() - 1<<
                          ")'s target location " << target << " at timestep " << t << endl;
+                    errors++;
                     //exit(-1);
                 }
             }
@@ -1114,10 +1128,12 @@ void LNS::validateSolution() const
     }
     if (sum_of_costs != sum)
     {
+        if (screen >=1)
         cout << "The computed sum of costs " << sum_of_costs <<
              " is different from the sum of the paths in the solution " << sum << endl;
         //exit(-1);
     }
+    cout<<"errors "<<errors<<endl;
 }
 
 void LNS::writeIterStatsToFile(const string & file_name) const
