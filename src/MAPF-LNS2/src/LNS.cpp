@@ -389,7 +389,9 @@ void LNS::checkReplan()
     initial_sum_of_costs = 0;
     list<int> complete_agents; // subsets of agents who have complete and collision-free paths
     int makespan = 0;
-    bool replan_need = false;
+
+    initial_collision = false;
+
     for (auto& agent : agents)
     {
         if (agent.path.empty())
@@ -397,7 +399,7 @@ void LNS::checkReplan()
             neighbor.agents.emplace_back(agent.id);
             agent.path.clear();
         }
-        else
+        else //check if plan is reached goal or not
         {
             bool reached_goal = false;
             for (auto p: agent.path)
@@ -408,7 +410,7 @@ void LNS::checkReplan()
                     break;
                 }
             }
-            if (!reached_goal)
+            if (!reached_goal) 
             {
                 neighbor.agents.emplace_back(agent.id);
                 agent.path.clear();
@@ -419,8 +421,9 @@ void LNS::checkReplan()
                 has_collision = instance.hasCollision(agent.path, agents[other].path);
                 if (has_collision)
                 {
-                    neighbor.agents.emplace_back(agent.id);
-                    agent.path.clear();
+                    //neighbor.agents.emplace_back(agent.id);
+                    initial_collision = true;
+                    //agent.path.clear(); do not clear path, use this as initial solution to lns2
                     break;
                 }
             }
@@ -432,11 +435,6 @@ void LNS::checkReplan()
                 complete_agents.emplace_back(agent.id);
                 makespan = max(makespan, (int)agent.path.size() - 1);
             }
-            instance.existing_path[agent.id].resize(agent.path.size());
-            for (int i = 0; i < (int)agent.path.size(); i++)
-            {
-                instance.existing_path[agent.id][i] = agent.path[i].location;
-            }
         }
     }
     if (screen == 2)
@@ -445,98 +443,44 @@ void LNS::checkReplan()
 
 bool LNS::fixInitialSolutionWithLNS2()
 {
-    // neighbor.agents.clear();
-    // initial_sum_of_costs = 0;
-    // list<int> complete_agents; // subsets of agents who have complete and collision-free paths
-    // int makespan = 0;
-    // bool replan_need = false;
-    // for (auto& agent : agents)
-    // {
-    //     if (agent.path.empty())
-    //     {
-    //         neighbor.agents.emplace_back(agent.id);
-    //         agent.path.clear();
-    //     }
-    //     else
-    //     {
-    //         bool reached_goal = false;
-    //         for (auto p: agent.path)
-    //         {
-    //             if (p.location == agent.path_planner->goal_location)
-    //             {
-    //                 reached_goal = true;
-    //                 break;
-    //             }
-    //         }
-    //         if (!reached_goal)
-    //         {
-    //             neighbor.agents.emplace_back(agent.id);
-    //             agent.path.clear();
-    //         }
-    //         bool has_collision = false;
-    //         for (auto other : complete_agents)
-    //         {
-    //             has_collision = instance.hasCollision(agent.path, agents[other].path);
-    //             if (has_collision)
-    //             {
-    //                 neighbor.agents.emplace_back(agent.id);
-    //                 agent.path.clear();
-    //                 break;
-    //             }
-    //         }
-    //         if (!has_collision)
-    //         {
-    //             path_table.insertPath(agent.id, agent.path);
-    //             complete_paths++;
-    //             initial_sum_of_costs += (int)agent.path.size() - 1;
-    //             complete_agents.emplace_back(agent.id);
-    //             makespan = max(makespan, (int)agent.path.size() - 1);
-    //         }
-    //         instance.existing_path[agent.id].resize(agent.path.size());
-    //         for (int i = 0; i < (int)agent.path.size(); i++)
-    //         {
-    //             instance.existing_path[agent.id][i] = agent.path[i].location;
-    //         }
-    //     }
-    // }
-    if (!neighbor.agents.empty())
+    if (!neighbor.agents.empty() || initial_collision) //replan is need
     {
         cout<<"Fix Solution with PP, neighbor size: "<<neighbor.agents.size()<<endl;
         start_time = Time::now();
         neighbor.old_sum_of_costs = MAX_COST;
         neighbor.sum_of_costs = 0;
-        auto succ = runPP();
-        if (succ)
+        bool succ = false;
+        if (!neighbor.agents.empty()) //only run pp for those who does not have a path yet
         {
-            initial_sum_of_costs += neighbor.sum_of_costs;
-            sum_of_costs = initial_sum_of_costs;
-            return true;
-        }
-        else
-        {
-            cout<<"Fix Solution with LNS2"<<endl;
-            //we need lns2 to fix path even if runtime out
-            // if (((fsec)(Time::now() - start_time)).count() < time_limit) //if lacam failed, we use lns2 
-            // {
-                init_lns = new InitLNS(instance, agents, time_limit - ((fsec)(Time::now() - start_time)).count(),
-                        replan_algo_name,init_destory_name, neighbor_size, screen);
-                init_lns->commit = commit;
-
-                succ = init_lns->run();
-                path_table.reset();
-                for (const auto & agent : agents)
-                {
-                    path_table.insertPath(agent.id, agent.path);
-                }
-                // if (!succ)
-                //     validateSolution();
-                init_lns->clear();
-                initial_sum_of_costs = init_lns->sum_of_costs;
+            succ = runPP();
+            if (succ && !initial_collision)
+            {
+                initial_sum_of_costs += neighbor.sum_of_costs;
                 sum_of_costs = initial_sum_of_costs;
-                initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
-            //}
-            return false;
+                return true;
+            }
         }
+        //not succ or initial_collision
+        cout<<"Fix Solution with LNS2"<<endl;
+        //we need lns2 to fix path even if runtime out
+        init_lns = new InitLNS(instance, agents, time_limit - ((fsec)(Time::now() - start_time)).count(),
+                replan_algo_name,init_destory_name, neighbor_size, screen);
+        init_lns->commit = commit;
+
+        succ = init_lns->run();
+        path_table.reset();
+        for (const auto & agent : agents)
+        {
+            path_table.insertPath(agent.id, agent.path);
+        }
+        init_lns->clear();
+        initial_sum_of_costs = init_lns->sum_of_costs;
+        sum_of_costs = initial_sum_of_costs;
+        initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
+        if (succ)
+            return true;
+        else
+            return false;
     }
     sum_of_costs = initial_sum_of_costs;
     start_time = Time::now();
@@ -599,7 +543,7 @@ bool LNS::fixInitialSolutionWithLaCAM()
     //     }
     // }
     //if (replan_need)
-    if (!neighbor.agents.empty())
+    if (!neighbor.agents.empty() || initial_collision)
     {
         start_time = Time::now();
         clearAll("Adaptive");

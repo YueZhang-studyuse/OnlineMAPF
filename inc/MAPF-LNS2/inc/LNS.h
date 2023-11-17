@@ -67,6 +67,8 @@ public:
 
     bool has_initial_solution = false;
 
+    bool initial_collision = false;
+
     void setStartGoal();
 
     void checkReplan();
