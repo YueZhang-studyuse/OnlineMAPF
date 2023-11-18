@@ -24,6 +24,8 @@ public:
 
     virtual void loadPaths();
 
+    virtual void plan_commit(vector<Action> & actions); 
+
     int commit = 1;
     int remain_commit = 1;
 
