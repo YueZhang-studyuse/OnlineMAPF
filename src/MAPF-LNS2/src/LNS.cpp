@@ -637,6 +637,11 @@ bool LNS::runPP()
     neighbor.sum_of_costs = 0;
     runtime = ((fsec)(Time::now() - start_time)).count();
     double T = time_limit - runtime; // time limit
+    //rough estimation on other overheads find path
+    if (instance.env->map.size() > 9000)
+        T-=0.1;
+    if (instance.env->map.size() > 50000)
+        T-=0.1;
     // if (!iteration_stats.empty()) // replan
     //     T = min(T, replan_time_limit);
     auto time = Time::now();
