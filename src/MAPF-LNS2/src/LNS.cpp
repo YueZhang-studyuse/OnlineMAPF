@@ -666,10 +666,10 @@ bool LNS::runPP()
             cout << "Remaining agents = " << remaining_agents <<
                  ", remaining time = " << T - ((fsec)(Time::now() - time)).count() << " seconds. " << endl
                  << "Agent " << agents[id].id << endl;
-        if (remaining_agents == (int)shuffled_agents.size())
-            agents[id].path = agents[id].path_planner->findPath(constraint_table, T - ((fsec)(Time::now() - time)).count(),timeout_flag);
-        else
-            agents[id].path = agents[id].path_planner->findPath(constraint_table);
+        //if (remaining_agents == (int)shuffled_agents.size())
+        agents[id].path = agents[id].path_planner->findPath(constraint_table, T - ((fsec)(Time::now() - time)).count(),timeout_flag);
+        // else
+        //     agents[id].path = agents[id].path_planner->findPath(constraint_table);
         if (agents[id].path.empty())
         {
             //cout<<"sipp failed"<<endl;
