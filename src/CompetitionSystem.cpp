@@ -127,9 +127,10 @@ void BaseSystem::plan_wrapper()
 bool BaseSystem::plan()
 {
     using namespace std::placeholders;
-    if (started && future.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+    // if (started && future.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+    if (started)
     {
-        std::cout << started << "     " << (future.wait_for(std::chrono::seconds(0)) != std::future_status::ready) << std::endl;
+        //std::cout << started << "     " << (future.wait_for(std::chrono::seconds(0)) != std::future_status::ready) << std::endl;
         if(logger)
         {
             logger->log_info("planner cannot run because the previous run is still running", timestep);
@@ -150,8 +151,8 @@ bool BaseSystem::plan()
         return false;
     }
 
-    if (!started)
-        planner->loadPaths(); //we assume time on loading path is free for analysis
+    // if (!started)
+    //     planner->loadPaths(); //we assume time on loading path is free for analysis
 
     std::packaged_task<void()> task(std::bind(&BaseSystem::plan_wrapper, this));
     future = task.get_future();
@@ -237,13 +238,19 @@ void BaseSystem::simulate(int simulation_time)
         
         //planner->loadPaths(); //we assume time on loading path is free for analysis
 
+        if (!started)
+            planner->loadPaths(); //we assume time on loading path is free for analysis
+
         auto start = std::chrono::steady_clock::now();
 
         bool finished = plan();
-        if (!finished)
-            actions = {};
 
         auto end = std::chrono::steady_clock::now();
+
+        if (!finished)
+            actions = {};
+        else
+            planner->plan_commit(actions);
 
         timestep += 1;
         for (int a = 0; a < num_of_agents; a++)

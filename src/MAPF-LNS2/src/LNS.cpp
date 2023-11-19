@@ -555,6 +555,10 @@ bool LNS::runPP()
     neighbor.sum_of_costs = 0;
     runtime = ((fsec)(Time::now() - start_time)).count();
     double T = time_limit - runtime; // time limit
+    if (instance.env->map.size() > 9000)
+        T-=0.1;
+    if (instance.env->map.size() > 50000)
+        T-=0.1;
     auto time = Time::now();
     ConstraintTable constraint_table(instance.env->cols, instance.env->map.size(), &path_table);
 
@@ -579,10 +583,7 @@ bool LNS::runPP()
                  << "Agent " << agents[id].id << endl;
         agents[id].path_planner->commit_window = commit;
         //agents[id].path = agents[id].path_planner->findPath(constraint_table);
-        if (remaining_agents == (int)shuffled_agents.size())
-            agents[id].path = agents[id].path_planner->findPath(constraint_table, T - ((fsec)(Time::now() - time)).count(),timeout_flag);
-        else
-            agents[id].path = agents[id].path_planner->findPath(constraint_table);
+        agents[id].path = agents[id].path_planner->findPath(constraint_table, T - ((fsec)(Time::now() - time)).count(),timeout_flag);
         if (agents[id].path.empty())
         {
             if (screen >= 3)
