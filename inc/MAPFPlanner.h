@@ -22,6 +22,9 @@ public:
     // return next states for all agents
     virtual void plan(int time_limit, std::vector<Action> & plan);
 
+    virtual void loadPaths();
+    virtual void plan_commit(vector<Action> & actions);
+
     int commit = 1;
     int remain_commit = 1;
 

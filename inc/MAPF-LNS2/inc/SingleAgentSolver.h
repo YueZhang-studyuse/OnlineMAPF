@@ -168,6 +168,7 @@ public:
 
 
     virtual Path findPath(const ConstraintTable& constraint_table) = 0;  // return the path
+	virtual Path findPath(const ConstraintTable& constraint_table, double timeout, bool &timeout_flag) = 0;
     void findMinimumSetofColldingTargets(vector<int>& goal_table,set<int>& A_target);
     virtual int getTravelTime(int start, int end, const ConstraintTable& constraint_table, int upper_bound) = 0;
 	virtual string getName() const = 0;

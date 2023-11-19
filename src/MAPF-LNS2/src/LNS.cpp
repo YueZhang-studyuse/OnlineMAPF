@@ -94,7 +94,7 @@ bool LNS::run()
         return false; // terminate because no initial solution is found
     }
 
-    while (runtime < time_limit && iteration_stats.size() <= num_of_iterations)
+    while (runtime < time_limit && iteration_stats.size() <= num_of_iterations && !timeout_flag)
     {
         runtime =((fsec)(Time::now() - start_time)).count();
 
@@ -174,11 +174,11 @@ bool LNS::run()
         iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, runtime, replan_algo_name);
     }
 
-
     if (!validateWindowSolution())
     {
         postProcessMCP();
     }
+
 
     average_group_size = - iteration_stats.front().num_of_agents;
     for (const auto& data : iteration_stats)
@@ -386,13 +386,15 @@ bool LNS::fixInitialSolution()
     }
 }
 
-bool LNS::fixInitialSolutionWithLNS2()
+void LNS::checkReplan()
 {
     neighbor.agents.clear();
     initial_sum_of_costs = 0;
     list<int> complete_agents; // subsets of agents who have complete and collision-free paths
     int makespan = 0;
-    bool replan_need = false;
+
+    initial_collision = false;
+
     for (auto& agent : agents)
     {
         if (agent.path.empty())
@@ -400,7 +402,7 @@ bool LNS::fixInitialSolutionWithLNS2()
             neighbor.agents.emplace_back(agent.id);
             agent.path.clear();
         }
-        else
+        else //check if plan is reached goal or not
         {
             bool reached_goal = false;
             for (auto p: agent.path)
@@ -411,7 +413,7 @@ bool LNS::fixInitialSolutionWithLNS2()
                     break;
                 }
             }
-            if (!reached_goal)
+            if (!reached_goal) 
             {
                 neighbor.agents.emplace_back(agent.id);
                 agent.path.clear();
@@ -422,8 +424,9 @@ bool LNS::fixInitialSolutionWithLNS2()
                 has_collision = instance.hasCollision(agent.path, agents[other].path);
                 if (has_collision)
                 {
-                    neighbor.agents.emplace_back(agent.id);
-                    agent.path.clear();
+                    //neighbor.agents.emplace_back(agent.id);
+                    initial_collision = true;
+                    //agent.path.clear(); do not clear path, use this as initial solution to lns2
                     break;
                 }
             }
@@ -435,50 +438,54 @@ bool LNS::fixInitialSolutionWithLNS2()
                 complete_agents.emplace_back(agent.id);
                 makespan = max(makespan, (int)agent.path.size() - 1);
             }
-            instance.existing_path[agent.id].resize(agent.path.size());
-            for (int i = 0; i < (int)agent.path.size(); i++)
-            {
-                instance.existing_path[agent.id][i] = agent.path[i].location;
-            }
         }
     }
-    if (!neighbor.agents.empty())
+    if (screen == 2)
+        cout << complete_agents.size() << " collision-free agents at timestep " << makespan << endl;
+}
+
+bool LNS::fixInitialSolutionWithLNS2()
+{
+    if (!neighbor.agents.empty() || initial_collision) //replan is need
     {
-        cout<<"Fix Solution with PP"<<endl;
+        cout<<"Fix Solution with PP, neighbor size: "<<neighbor.agents.size()<<endl;
         start_time = Time::now();
-        if (screen == 2)
-            cout << complete_agents.size() << " collision-free agents at timestep " << makespan << endl;
         neighbor.old_sum_of_costs = MAX_COST;
         neighbor.sum_of_costs = 0;
-        auto succ = runPP();
-        if (succ)
+        bool succ = false;
+        if (!neighbor.agents.empty()) //only run pp for those who does not have a path yet
         {
-            initial_sum_of_costs += neighbor.sum_of_costs;
-            sum_of_costs = initial_sum_of_costs;
-            return true;
+            succ = runPP();
+            if (succ && !initial_collision)
+            {
+                initial_sum_of_costs += neighbor.sum_of_costs;
+                sum_of_costs = initial_sum_of_costs;
+                return true;
+            }
         }
+        //not succ or initial_collision
+        cout<<"Fix Solution with LNS2"<<endl;
+        //we need lns2 to fix path even if runtime out
+        init_lns = new InitLNS(instance, agents, time_limit - ((fsec)(Time::now() - start_time)).count(),
+                replan_algo_name,init_destory_name, neighbor_size, screen);
+        init_lns->commit = commit;
+
+        succ = init_lns->run();
+        path_table.reset();
+        for (const auto & agent : agents)
+        {
+            path_table.insertPath(agent.id, agent.path);
+        }
+        init_lns->clear();
+        initial_sum_of_costs = init_lns->sum_of_costs;
+        sum_of_costs = initial_sum_of_costs;
+        initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
+        if (succ)
+            return true;
         else
         {
-            cout<<"Fix Solution with LNS2"<<endl;
-            if (((fsec)(Time::now() - start_time)).count() < time_limit) //if lacam failed, we use lns2
-            {
-                init_lns = new InitLNS(instance, agents, time_limit - ((fsec)(Time::now() - start_time)).count(),
-                        replan_algo_name,init_destory_name, neighbor_size, screen);
-                init_lns->commit = commit;
-
-                succ = init_lns->run();
-                path_table.reset();
-                for (const auto & agent : agents)
-                {
-                    path_table.insertPath(agent.id, agent.path);
-                }
-                // if (!succ)
-                //     validateSolution();
-                init_lns->clear();
-                initial_sum_of_costs = init_lns->sum_of_costs;
-                sum_of_costs = initial_sum_of_costs;
-                initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
-            }
+            // cout<<"after post processing: "<<endl;
+            // validateSolution();
             return false;
         }
     }
@@ -489,64 +496,11 @@ bool LNS::fixInitialSolutionWithLNS2()
 
 bool LNS::fixInitialSolutionWithLaCAM()
 {
-    neighbor.agents.clear();
-    initial_sum_of_costs = 0;
-    list<int> complete_agents; // subsets of agents who have complete and collision-free paths
-    int makespan = 0;
-    bool replan_need = false;
-    for (auto& agent : agents)
+    if (!neighbor.agents.empty() || initial_collision)
     {
-        if (agent.path.empty())
-        {
-            replan_need = true;
-            break;
-        }
-        else
-        {
-            bool reached_goal = false;
-            for (auto p: agent.path)
-            {
-                if (p.location == agent.path_planner->goal_location)
-                {
-                    reached_goal = true;
-                    break;
-                }
-            }
-            if (!reached_goal)
-            {
-                replan_need = true;
-                break;
-            }
-            bool has_collision = false;
-            for (auto other : complete_agents)
-            {
-                has_collision = instance.hasCollision(agent.path, agents[other].path);
-                if (has_collision)
-                {
-                    replan_need = true;
-                    break;
-                }
-            }
-            if (!has_collision)
-            {
-                path_table.insertPath(agent.id, agent.path);
-                complete_paths++;
-                initial_sum_of_costs += (int)agent.path.size() - 1;
-                complete_agents.emplace_back(agent.id);
-                makespan = max(makespan, (int)agent.path.size() - 1);
-            }
-            instance.existing_path[agent.id].resize(agent.path.size());
-            for (int i = 0; i < (int)agent.path.size(); i++)
-            {
-                instance.existing_path[agent.id][i] = agent.path[i].location;
-            }
-        }
-    }
-    if (replan_need)
-    {
+        start_time = Time::now();
         clearAll("Adaptive");
         cout<<"Fix Solution with LACAM"<<endl;
-        start_time = Time::now();
         auto succ = getInitialSolution();
         if (succ)
         {
@@ -607,18 +561,35 @@ bool LNS::runPP()
     neighbor.sum_of_costs = 0;
     runtime = ((fsec)(Time::now() - start_time)).count();
     double T = time_limit - runtime; // time limit
+    if (instance.env->map.size() > 9000)
+        T-=0.1;
+    if (instance.env->map.size() > 50000)
+        T-=0.1;
     auto time = Time::now();
     ConstraintTable constraint_table(instance.env->cols, instance.env->map.size(), &path_table);
 
     while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
     {
+        //smarter time control
+        if (remaining_agents < (int)shuffled_agents.size())
+        {
+            auto remain_time = T - ((fsec)(Time::now() - time)).count();
+            auto avg_single = ((fsec)(Time::now() - time)).count()/((int)shuffled_agents.size()-remaining_agents);
+            if (avg_single > remain_time)
+            {
+                timeout_flag = true;
+                break;
+            }
+        }
+
         int id = *p;
         if (screen >= 3)
             cout << "Remaining agents = " << remaining_agents <<
                  ", remaining time = " << T - ((fsec)(Time::now() - time)).count() << " seconds. " << endl
                  << "Agent " << agents[id].id << endl;
         agents[id].path_planner->commit_window = commit;
-        agents[id].path = agents[id].path_planner->findPath(constraint_table);
+        //agents[id].path = agents[id].path_planner->findPath(constraint_table);
+        agents[id].path = agents[id].path_planner->findPath(constraint_table, T - ((fsec)(Time::now() - time)).count(),timeout_flag);
         if (agents[id].path.empty())
         {
             if (screen >= 3)
@@ -1378,7 +1349,7 @@ void LNS::clearAll(const string & destory_name)
         a.path_planner->dummy_goal = dummy_goals[a.id];
     }
 
-    //start_time = Time::now();
+    //start_time = Time::now(); 
     neighbor.agents.clear();
     neighbor.sum_of_costs = 0;
     neighbor.old_sum_of_costs = 0;
@@ -1390,6 +1361,7 @@ void LNS::clearAll(const string & destory_name)
     iteration_stats.clear();
     average_group_size = -1;
     sum_of_costs = 0;
+    timeout_flag = false;
 
     // decay_factor = -1;
     // reaction_factor = -1;
@@ -1426,9 +1398,6 @@ void LNS::clearAll(const string & destory_name)
         cerr << "Destroy heuristic " << destory_name << " does not exists. " << endl;
         exit(-1);
     }
-
-    //start_time = Time::now();
-    //replan_time_limit = time_limit / 100;
 }
 
 
@@ -1557,6 +1526,4 @@ bool LNS::validateWindowSolution() const
     }
     return true;
 }
-
-
 
