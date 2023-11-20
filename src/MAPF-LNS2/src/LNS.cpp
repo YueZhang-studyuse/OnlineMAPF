@@ -668,6 +668,8 @@ bool LNS::runPP()
                  << "Agent " << agents[id].id << endl;
         //if (remaining_agents == (int)shuffled_agents.size())
         agents[id].path = agents[id].path_planner->findPath(constraint_table, T - ((fsec)(Time::now() - time)).count(),timeout_flag);
+        if (timeout_flag)
+            break;
         // else
         //     agents[id].path = agents[id].path_planner->findPath(constraint_table);
         if (agents[id].path.empty())

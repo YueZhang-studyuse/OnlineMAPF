@@ -237,6 +237,8 @@ bool InitLNS::runPP()
         int id = *p;
         //agents[id].path = agents[id].path_planner->findPath(constraint_table);
         agents[id].path = agents[id].path_planner->findPath(constraint_table, T - ((fsec)(Time::now() - time)).count(),timeout_flag);
+        if (timeout_flag)
+            break;
         assert(!agents[id].path.empty() && agents[id].path.back().location == agents[id].path_planner->goal_location);
         if (agents[id].path_planner->num_collisions > 0)
             updateCollidingPairs(neighbor.colliding_pairs, agents[id].id, agents[id].path);
