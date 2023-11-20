@@ -694,7 +694,7 @@ bool LNS::runPP()
         path_table.insertPath(agents[id].id, agents[id].path);
         ++p;
     }
-    if (remaining_agents == 0 && neighbor.sum_of_costs <= neighbor.old_sum_of_costs) // accept new paths
+    if (remaining_agents == 0 && !timeout_flag && neighbor.sum_of_costs <= neighbor.old_sum_of_costs) // accept new paths
     {
         return true;
     }
