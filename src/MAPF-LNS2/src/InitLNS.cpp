@@ -244,7 +244,7 @@ bool InitLNS::runPP()
         T-=0.1;
     auto time = Time::now();
     ConstraintTable constraint_table(instance.env->cols, instance.env->map.size(), nullptr, &path_table);
-    while (p != shuffled_agents.end() && ((fsec)(Time::now() - time)).count() < T)
+    while (p != shuffled_agents.end() && !timeout_flag && ((fsec)(Time::now() - time)).count() < T)
     {
         int id = *p;
         //agents[id].path = agents[id].path_planner->findPath(constraint_table);
