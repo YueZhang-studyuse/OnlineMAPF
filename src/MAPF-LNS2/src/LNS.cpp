@@ -590,6 +590,8 @@ bool LNS::runPP()
         agents[id].path_planner->commit_window = commit;
         //agents[id].path = agents[id].path_planner->findPath(constraint_table);
         agents[id].path = agents[id].path_planner->findPath(constraint_table, T - ((fsec)(Time::now() - time)).count(),timeout_flag);
+        if (timeout_flag)
+            break;
         if (agents[id].path.empty())
         {
             if (screen >= 3)
