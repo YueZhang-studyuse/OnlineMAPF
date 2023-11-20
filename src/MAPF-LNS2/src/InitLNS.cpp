@@ -257,7 +257,7 @@ bool InitLNS::runPP()
         path_table.insertPath(agents[id].id, agents[id].path);
         ++p;
     }
-    if (p == shuffled_agents.end() && neighbor.colliding_pairs.size() <= neighbor.old_colliding_pairs.size()) // accept new paths
+    if (p == shuffled_agents.end() && !timeout_flag && neighbor.colliding_pairs.size() <= neighbor.old_colliding_pairs.size()) // accept new paths
     {
         return true;
     }
