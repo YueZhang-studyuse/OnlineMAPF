@@ -257,6 +257,8 @@ bool InitLNS::runPP()
         assert(agents[id].path_planner->num_collisions > 0 or
             !updateCollidingPairs(neighbor.colliding_pairs, agents[id].id, agents[id].path));
         neighbor.sum_of_costs += (int)agents[id].path.size() - 1;
+        if (agents[id].path.size() <= commit)
+            cout<<"sipp error"<<agents[id].path.size()<<endl;
         remaining_agents--;
         if (screen >= 3)
         {

@@ -1343,6 +1343,7 @@ void LNS::clearAll(const string & destory_name)
         a.path_planner->start_location = starts[a.id].location;
         a.path_planner->goal_location = goals[a.id][0].first;
         a.path_planner->dummy_goal = dummy_goals[a.id];
+        a.path_planner->commit_window = commit;
     }
 
     //start_time = Time::now(); 
