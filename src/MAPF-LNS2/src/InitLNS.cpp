@@ -9,24 +9,24 @@ InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_li
          path_table(instance.env->map.size(), agents.size()), collision_graph(agents.size()), goal_table(instance.env->map.size(), -1)
 {
     replan_time_limit = time_limit;
-    if (init_destory_name == "Adaptive")
-    {
+    // if (init_destory_name == "Adaptive")
+    // {
         ALNS = true;
         destroy_weights.assign(INIT_COUNT, 1);
         decay_factor = 0.05;
         reaction_factor = 0.05;
-    }
-    else if (init_destory_name == "Target")
-        init_destroy_strategy = TARGET_BASED;
-    else if (init_destory_name == "Collision")
-        init_destroy_strategy = COLLISION_BASED;
-    else if (init_destory_name == "Random")
-        init_destroy_strategy = RANDOM_BASED;
-    else
-    {
-        cerr << "Init Destroy heuristic " << init_destory_name << " does not exists. " << endl;
-        exit(-1);
-    }
+    // }
+    // else if (init_destory_name == "Target")
+    //     init_destroy_strategy = TARGET_BASED;
+    // else if (init_destory_name == "Collision")
+    //     init_destroy_strategy = COLLISION_BASED;
+    // else if (init_destory_name == "Random")
+    //     init_destroy_strategy = RANDOM_BASED;
+    // else
+    // {
+    //     cerr << "Init Destroy heuristic " << init_destory_name << " does not exists. " << endl;
+    //     exit(-1);
+    // }
 
     for (auto& i:agents) {
         goal_table[i.path_planner->goal_location] = i.id;
