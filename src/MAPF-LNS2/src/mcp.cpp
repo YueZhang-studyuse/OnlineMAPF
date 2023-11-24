@@ -36,6 +36,9 @@ void MCP::simulate(vector<Path*>& paths)
 
         // cout<<"unfinished: "<< unfinished_agents.size() <<endl;
 
+        if (t > window_size) // no need to check if all agents stops in window, as collision not allowed.
+            continue;
+
         bool no_move = true;
 
         for (auto p = unfinished_agents.begin(); p != unfinished_agents.end();p++) {
