@@ -234,10 +234,18 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
             //lns->clearAll("Adaptive");
             //lns->loadPaths(future_paths);
             lns->setRuntimeLimit(time_limit);
-            lns->fixInitialSolutionWithLNS2();
+            auto succ = lns->fixInitialSolutionWithLNS2();
             lns->has_initial_solution = true;
             lns->setIterations(MAX_TIMESTEP); 
-            lns->run();
+            if (succ)
+                lns->run();
+            else
+            {
+                if (!lns->validateWindowSolution())
+                {
+                    lns->postProcessMCP();
+                }
+            }
         }
 
         // for (int i = 0; i < env->num_of_agents; i++)

@@ -1508,6 +1508,7 @@ bool LNS::validateWindowSolution() const
                         cout << "Find an edge conflict between agents " << a1.id << " and " << a2.id <<
                          " at edge (" << a1.path[t - 1].location << "," << a1.path[t].location <<
                          ") at timestep " << t << endl;
+                    return false;
                 }
             }
             if (a1.path.size() <= commit)
