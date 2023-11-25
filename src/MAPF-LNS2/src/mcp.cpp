@@ -27,7 +27,7 @@ void MCP::simulate(vector<Path*>& paths)
         auto old_size = unfinished_agents.size();
 
 
-        std::__1::vector<int> before = copy_agent_time;
+        std::vector<int> before = copy_agent_time;
         for (auto p = unfinished_agents.begin(); p != unfinished_agents.end();) {
             int i = *p;
             moveAgent(path_copy, paths, p, t);
