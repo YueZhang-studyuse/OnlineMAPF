@@ -166,7 +166,6 @@ Path SIPP::findPath(const ConstraintTable& constraint_table, double timeout, boo
     // generate start and add it to the OPEN & FOCAL list
     auto holding_time = 0;
     auto h = get_heuristic(start_location,goal_location);
-    h+= get_heuristic(goal_location,dummy_goal);
 
     auto start = new SIPPNode(start_location, 0, h, nullptr, 0, get<1>(interval), get<1>(interval),
                                 get<2>(interval), get<2>(interval), (start_location == goal_location));
@@ -228,12 +227,8 @@ Path SIPP::findPath(const ConstraintTable& constraint_table, double timeout, boo
                                       (int)next_v_collision + (int)next_e_collision;
                 auto next_h_val = max(get_heuristic(next_location,goal_location), (next_collisions > 0?
                     holding_time : curr->getFVal()) - next_timestep); // path max
-                if (!curr->reached_goal)
-                    //next_h_val= max(get_heuristic(next_location,goal_location), (next_collisions > 0?
-                                //holding_time : curr->getFVal()) - next_timestep) + get_heuristic(goal_location,dummy_goal); // path max
-                    next_h_val+= get_heuristic(goal_location,dummy_goal);
-                else
-                    next_h_val= get_heuristic(next_location,dummy_goal);
+                if (curr->reached_goal)
+                    next_h_val = 0; //go to any location is fine
                 
                 // generate (maybe temporary) node
                 auto next = new SIPPNode(next_location, next_timestep, next_h_val, curr, next_timestep,
@@ -261,10 +256,6 @@ Path SIPP::findPath(const ConstraintTable& constraint_table, double timeout, boo
             auto next_h_val = max(get_heuristic(curr->location,goal_location), (get<2>(interval) ? holding_time : curr->getFVal()) - next_timestep); // path max
             if (curr->reached_goal)
                 next_h_val = 0; //go to any location is fine
-            if (!curr->reached_goal)
-                next_h_val+=get_heuristic(goal_location,dummy_goal);
-            else
-                next_h_val= get_heuristic(curr->location,dummy_goal);
 
             auto next_collisions = curr->num_of_conflicts +
                     // (int)curr->collision_v * max(next_timestep - curr->timestep - 1, 0) +
