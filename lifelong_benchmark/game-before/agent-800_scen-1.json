@@ -1,5 +1,5 @@
 {
-    "mapFile": "maps/lak303d.map",
+    "mapFile": "maps/den520d.map",
     "agentFile": "agents/agent-800_scen-1.agents",
     "teamSize": 800,
     "taskFile": "tasks/agent-800_scen-1.tasks",
