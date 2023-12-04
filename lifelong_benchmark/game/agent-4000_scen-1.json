@@ -1,0 +1,8 @@
+{
+    "mapFile": "maps/lak303d.map",
+    "agentFile": "agents/agent-4000_scen-1.agents",
+    "teamSize": 4000,
+    "taskFile": "tasks/agent-4000_scen-1.tasks",
+    "numTasksReveal": 1,
+    "taskAssignmentStrategy": "roundrobin"
+}
