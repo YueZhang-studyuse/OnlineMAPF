@@ -222,7 +222,18 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         //     }
         // }
     }
-
+    int time_exceed = (int)(lns->runtime - time_limit);
+    if (time_exceed > 0)
+    {
+        cout<<"time out for "<<time_exceed<<" s"<<endl;
+        for (int i = 0; i < time_exceed; i++)
+        {
+            for (int i = 0; i < env->num_of_agents; i++)
+            {
+                commited_paths[i].push_front(env->curr_states[i].location);
+            }
+        }
+    }
 
     // //trans to actions
     // for (int agent = 0; agent < env->num_of_agents; agent++)
