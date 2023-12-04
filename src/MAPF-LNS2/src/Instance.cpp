@@ -128,6 +128,7 @@ void Instance::savePaths(const string & file_name, const vector<Path*>& paths) c
 
 void Instance::computeAllPair()
 {
+    int h_size  = 0;
     cout<<"computing all pair"<<endl;
     heuristic.resize(env->map.size());
 
@@ -155,6 +156,7 @@ void Instance::computeAllPair()
             continue;
         //heuristic[i] = std::vector<int>(heuristic.size()-i, MAX_TIMESTEP);
         heuristic[i] = std::vector<int>(heuristic.size(), MAX_TIMESTEP);
+        h_size++;
     }
     for (int i = 0; i < heuristic.size(); i++)
     {
@@ -182,6 +184,25 @@ void Instance::computeAllPair()
             }
         }
     }
+
+    // //save heuristic
+    // std::ofstream myfile;
+    // myfile.open ("Paris_1_256_heuristics_table.txt");
+	// myfile << "table_size" << std::endl << 
+    //     h_size << "," << env->map.size() << std::endl;
+	// for (int i = 0; i < heuristic.size(); i++) 
+	// {
+    //     if (heuristic[i].empty())
+    //         continue;
+
+    //     myfile << i << std::endl;
+	// 	for (int h : heuristic[i]) 
+	// 	{
+    //         myfile << h << ",";
+	// 	}
+	// 	myfile << std::endl;
+	// }
+	// myfile.close();
 }
 
 // bool Instance::validateSolution(const vector<Path*>& paths, int sum_of_costs, int num_of_colliding_pairs) const
