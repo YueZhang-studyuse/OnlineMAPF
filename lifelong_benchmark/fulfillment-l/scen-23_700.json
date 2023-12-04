@@ -1,8 +1,0 @@
-{
-    "mapFile": "maps/warehouse_large.map",
-    "agentFile": "agents/scen-23_700.agents",
-    "teamSize": 700,
-    "taskFile": "tasks/scen-23.tasks",
-    "numTasksReveal": 1,
-    "taskAssignmentStrategy": "roundrobin"
-}
