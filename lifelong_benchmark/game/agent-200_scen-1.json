@@ -1,5 +1,5 @@
 {
-    "mapFile": "maps/lak303d.map",
+    "mapFile": "maps/ht_mansion_n.map",
     "agentFile": "agents/agent-200_scen-1.agents",
     "teamSize": 200,
     "taskFile": "tasks/agent-200_scen-1.tasks",

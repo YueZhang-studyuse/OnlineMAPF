@@ -251,7 +251,7 @@ void BaseSystem::simulate(int simulation_time)
         // if (!finished)
         //     actions = {};
         // else
-            planner->plan_commit(actions);
+            //planner->plan_commit(actions);
 
         timestep += 1;
         for (int a = 0; a < num_of_agents; a++)
