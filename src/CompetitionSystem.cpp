@@ -236,21 +236,22 @@ void BaseSystem::simulate(int simulation_time)
         sync_shared_env();
 
         
-        //planner->loadPaths(); //we assume time on loading path is free for analysis
+        planner->loadPaths(); //we assume time on loading path is free for analysis
 
-        if (!started)
-            planner->loadPaths(); //we assume time on loading path is free for analysis
+        // if (!started)
+        //     planner->loadPaths(); //we assume time on loading path is free for analysis
 
         auto start = std::chrono::steady_clock::now();
 
-        bool finished = plan();
+        //bool finished = plan();
+        planner->plan(plan_time_limit, actions);
 
         auto end = std::chrono::steady_clock::now();
 
-        if (!finished)
-            actions = {};
-        else
-            planner->plan_commit(actions);
+        // if (!finished)
+        //     actions = {};
+        // else
+            //planner->plan_commit(actions);
 
         timestep += 1;
         for (int a = 0; a < num_of_agents; a++)
