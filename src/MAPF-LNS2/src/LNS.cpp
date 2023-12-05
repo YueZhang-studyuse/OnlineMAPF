@@ -63,19 +63,21 @@ bool LNS::run()
         //agent.path_planner->my_heuristic[agent.path_planner->start_location];
     }
 
-    initial_solution_runtime = 0;
+    
     bool succ = true;
     // if (has_initial_solution)
     //     succ = fixInitialSolution();
     // else
     if (!has_initial_solution)
     {
+        initial_solution_runtime = 0;
         start_time = Time::now();
         succ = getInitialSolution(); 
+        initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
         if (!succ) //we do not have a initial solution when reaching the runtime limit, commit what it have anyway
             return false;
     }
-    initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
+    //initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
 
     iteration_stats.emplace_back(neighbor.agents.size(),
                                  initial_sum_of_costs, initial_solution_runtime, init_algo_name);
@@ -468,6 +470,7 @@ bool LNS::fixInitialSolutionWithLNS2()
         init_lns->commit = commit;
 
         succ = init_lns->run();
+        initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
         path_table.reset();
         for (const auto & agent : agents)
         {
@@ -476,7 +479,7 @@ bool LNS::fixInitialSolutionWithLNS2()
         init_lns->clear();
         initial_sum_of_costs = init_lns->sum_of_costs;
         sum_of_costs = initial_sum_of_costs;
-        initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
+        //initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
         if (succ)
             return true;
         else
@@ -487,6 +490,7 @@ bool LNS::fixInitialSolutionWithLNS2()
         }
     }
     sum_of_costs = initial_sum_of_costs;
+    initial_solution_runtime = ((fsec)(Time::now() - start_time)).count();
     start_time = Time::now();
     return true;
 }

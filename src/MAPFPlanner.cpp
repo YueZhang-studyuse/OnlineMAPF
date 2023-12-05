@@ -50,22 +50,22 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
     if (!commited_paths[0].empty())
     {
         // //trans to actions
-        // for (int agent = 0; agent < env->num_of_agents; agent++)
-        // { 
-        //     int next_loc = commited_paths[agent].front();
-        //     int diff = next_loc - env->curr_states[agent].location;
-        //     if (diff == 1)
-        //         actions[agent] = Action::E;
-        //     else if (diff == -1)
-        //         actions[agent] = Action::WE;
-        //     else if (diff > 0)
-        //         actions[agent] = Action::S;
-        //     else if (diff == 0)
-        //         actions[agent] = Action::WA;
-        //     else
-        //         actions[agent] = Action::N;
-        //     commited_paths[agent].pop_front();
-        // }
+        for (int agent = 0; agent < env->num_of_agents; agent++)
+        { 
+            int next_loc = commited_paths[agent].front();
+            int diff = next_loc - env->curr_states[agent].location;
+            if (diff == 1)
+                actions[agent] = Action::E;
+            else if (diff == -1)
+                actions[agent] = Action::WE;
+            else if (diff > 0)
+                actions[agent] = Action::S;
+            else if (diff == 0)
+                actions[agent] = Action::WA;
+            else
+                actions[agent] = Action::N;
+            commited_paths[agent].pop_front();
+        }
         cout<<"commit directly"<<endl;
         return;
     }
@@ -223,30 +223,10 @@ void MAPFPlanner::plan(int time_limit,vector<Action> & actions)
         // }
     }
 
+    int time_exceed = (int)(lns->runtime - time_limit);
+    cout<<"time "<<lns->runtime<<endl;
 
-    // //trans to actions
-    // for (int agent = 0; agent < env->num_of_agents; agent++)
-    // {
-    //     int next_loc = commited_paths[agent].front();
-    //     int diff = next_loc - env->curr_states[agent].location;
-    //     if (diff == 1)
-    //         actions[agent] = Action::E;
-    //     else if (diff == -1)
-    //         actions[agent] = Action::WE;
-    //     else if (diff > 0)
-    //         actions[agent] = Action::S;
-    //     else if (diff == 0)
-    //         actions[agent] = Action::WA;
-    //     else
-    //         actions[agent] = Action::N;
-    //     commited_paths[agent].pop_front();
-    // }
 
-    return;
-}
-
-void MAPFPlanner::plan_commit(vector<Action> & actions) 
-{
     actions = std::vector<Action>(env->curr_states.size(), Action::WA);
     if (commited_paths[0].empty())
     {
@@ -257,6 +237,18 @@ void MAPFPlanner::plan_commit(vector<Action> & actions)
         }
 
         lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
+        // int time_exceed = (int)(lns->runtime - time_limit);
+        if (time_exceed > 0)
+        {
+            cout<<"time out for "<<time_exceed<<" s"<<endl;
+            for (int i = 0; i < time_exceed; i++)
+            {
+                for (int i = 0; i < env->num_of_agents; i++)
+                {
+                    commited_paths[i].push_front(env->curr_states[i].location); //for timeouts
+                }
+            }
+        }
         if (!lns->validateCommitSolution(commited_paths)) //current window has collisions --this should not happen, because we use mcp in lns2
         {
             cerr<<"errors"<<endl;
@@ -264,9 +256,9 @@ void MAPFPlanner::plan_commit(vector<Action> & actions)
         }
     }
 
-    //trans to actions
+    // //trans to actions
     for (int agent = 0; agent < env->num_of_agents; agent++)
-    {
+    { 
         int next_loc = commited_paths[agent].front();
         int diff = next_loc - env->curr_states[agent].location;
         if (diff == 1)
@@ -281,8 +273,48 @@ void MAPFPlanner::plan_commit(vector<Action> & actions)
             actions[agent] = Action::N;
         commited_paths[agent].pop_front();
     }
-
     return;
-
+    // }
 }
+
+// void MAPFPlanner::plan_commit(vector<Action> & actions) 
+// {
+//     actions = std::vector<Action>(env->curr_states.size(), Action::WA);
+//     if (commited_paths[0].empty())
+//     {
+//         for (int i = 0; i < env->num_of_agents; i++)
+//         {
+//             future_paths[i].clear();
+//             commited_paths[i].clear();
+//         }
+
+//         lns->commitPath(commit,commited_paths,future_paths,true,env->curr_timestep);
+//         if (!lns->validateCommitSolution(commited_paths)) //current window has collisions --this should not happen, because we use mcp in lns2
+//         {
+//             cerr<<"errors"<<endl;
+//             exit(-1);
+//         }
+//     }
+
+//     //trans to actions
+//     for (int agent = 0; agent < env->num_of_agents; agent++)
+//     {
+//         int next_loc = commited_paths[agent].front();
+//         int diff = next_loc - env->curr_states[agent].location;
+//         if (diff == 1)
+//             actions[agent] = Action::E;
+//         else if (diff == -1)
+//             actions[agent] = Action::WE;
+//         else if (diff > 0)
+//             actions[agent] = Action::S;
+//         else if (diff == 0)
+//             actions[agent] = Action::WA;
+//         else
+//             actions[agent] = Action::N;
+//         commited_paths[agent].pop_front();
+//     }
+
+//     return;
+
+// }
 
