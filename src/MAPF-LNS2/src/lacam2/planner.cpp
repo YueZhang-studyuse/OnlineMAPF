@@ -414,10 +414,13 @@ bool Planner::funcPIBT(LACAMAgent* ai)
     std::sort(C_next[i].begin(), C_next[i].begin() + K + 1,
               [&](Vertex* const v, Vertex* const u) 
               {
-                  // return D.get(i, v) + tie_breakers[v->id] <
-                  //       D.get(i, u) + tie_breakers[u->id];
-                  return instance.getAllpairDistance(goal_loc,v->index) + tie_breakers[v->id] <
-                          instance.getAllpairDistance(goal_loc,u->index) + tie_breakers[u->id];
+                  pair<int,int> hv = instance.getAllpairDistance(ai->curr_timestep+1,goal_loc,v->index,ai->v_now->index);
+                  pair<int,int> uv = instance.getAllpairDistance(ai->curr_timestep+1,goal_loc,u->index,ai->v_now->index);
+                  if (hv.first == uv.first)
+                    return hv.second + tie_breakers[v->id] <
+                          uv.second + tie_breakers[u->id];
+                  return hv.first + tie_breakers[v->id] <
+                          uv.first + tie_breakers[u->id];
               });
 
     swap_agent = swap_possible_and_required(ai);
@@ -515,13 +518,9 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
     auto v_pusher = v_pusher_origin;
     auto v_puller = v_puller_origin;
     int pusher_vpuller = instance.getAllpairDistance(pusher_goal,v_puller->index);
-    //A[pusher]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[pusher]->index, v_puller->index) : D.get(pusher, v_puller);
     int pusher_vpusher = instance.getAllpairDistance(pusher_goal,v_pusher->index);
-    //A[pusher]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[pusher]->index, v_pusher->index) : D.get(pusher, v_pusher);
     int puller_vpuller = instance.getAllpairDistance(puller_goal,v_puller->index);
-    //A[puller]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[puller]->index, v_puller->index) : D.get(puller, v_puller);
     int puller_vpusher = instance.getAllpairDistance(puller_goal,v_pusher->index);
-    //A[puller]->reached_goal ? instance.getAllpairDistance(ins->dummy_goals[puller]->index, v_pusher->index) : D.get(puller, v_pusher);
 
 
     Vertex* tmp = nullptr;
@@ -551,10 +550,6 @@ bool Planner::is_swap_required(const uint pusher, const uint puller,
         v_pusher = v_puller;
         v_puller = tmp;
 
-        // int pusher_vpuller = instance.getAllpairDistance(pusher_goal,v_puller->index);
-        // int pusher_vpusher = instance.getAllpairDistance(pusher_goal,v_pusher->index);
-        // int puller_vpuller = instance.getAllpairDistance(puller_goal,v_puller->index);
-        // int puller_vpusher = instance.getAllpairDistance(puller_goal,v_pusher->index);
         int pusher_vpuller = instance.getAllpairDistance(pusher_goal,v_puller->index);
         int pusher_vpusher = instance.getAllpairDistance(pusher_goal,v_pusher->index);
         int puller_vpuller = instance.getAllpairDistance(puller_goal,v_puller->index);

@@ -37,6 +37,28 @@ LACAMInstance::LACAMInstance(SharedEnvironment* env)
   //cout<<endl;
 }
 
+//for start kit -- only plan for a neighbor subset
+LACAMInstance::LACAMInstance(SharedEnvironment* env, const std::vector<uint>& neighbors)
+  :G(env->map,env->rows,env->cols),starts(Config()), goals(Config()),N(neighbors.size())
+{
+  //curr states is the start location
+  //cout<<"start"<<endl;
+  for (int i = 0; i < neighbors.size(); i++)
+  {
+    starts.push_back(G.U[env->curr_states[neighbors[i]].location]);
+    //cout<<env->curr_states[i].location<<" ";
+  }
+  //cout<<endl;
+
+  //cout<<"goal"<<endl;
+  for (int i = 0; i < neighbors.size(); i++)
+  {
+    goals.push_back(G.U[env->goal_locations[neighbors[i]].front().first]);
+    //cout<<env->goal_locations[i].front().first<<" ";
+  }
+  //cout<<endl;
+}
+
 // for load instance
 static const std::regex r_instance =
     std::regex(R"(\d+\t.+\.map\t\d+\t\d+\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t.+)");

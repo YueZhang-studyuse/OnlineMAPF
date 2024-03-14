@@ -31,6 +31,8 @@ struct LACAMInstance
 
     LACAMInstance(SharedEnvironment* env);
 
+    LACAMInstance(SharedEnvironment* env, const std::vector<uint>& neighbors);
+
     ~LACAMInstance() {}
 
     void set_dummygoals(const std::vector<uint>& dummy_goal_indexes);

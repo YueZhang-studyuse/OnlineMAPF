@@ -52,6 +52,21 @@ void Instance::prepareDummy()
     dummy_goals.resize(env->num_of_agents);
 }
 
+void Instance::insertPath(Path path, int id) const
+{
+    for (int t = 0; t < path.size(); t++)
+    {
+        if (existing_path.size() > t)
+        {
+            existing_path[t][path[t].location] = id;
+        }
+        else
+        {
+            existing_path.push_back(unordered_map<int,int>{{path[t].location,id}});
+        }
+    }
+}
+
 
 void Instance::printMap() const
 {

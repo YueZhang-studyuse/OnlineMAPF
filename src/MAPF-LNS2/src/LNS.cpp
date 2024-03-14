@@ -354,11 +354,11 @@ bool LNS::fixInitialSolution()
                 complete_agents.emplace_back(agent.id);
                 makespan = max(makespan, (int)agent.path.size() - 1);
             }
-            instance.existing_path[agent.id].resize(agent.path.size());
-            for (int i = 0; i < (int)agent.path.size(); i++)
-            {
-                instance.existing_path[agent.id][i] = agent.path[i].location;
-            }
+            // instance.existing_path[agent.id].resize(agent.path.size());
+            // for (int i = 0; i < (int)agent.path.size(); i++)
+            // {
+            //     instance.existing_path[agent.id][i] = agent.path[i].location;
+            // }
         }
     }
     if (screen == 2)
@@ -418,9 +418,9 @@ void LNS::checkReplan()
                 has_collision = instance.hasCollision(agent.path, agents[other].path);
                 if (has_collision)
                 {
-                    //neighbor.agents.emplace_back(agent.id);
+                    neighbor.agents.emplace_back(agent.id);
                     initial_collision = true;
-                    //agent.path.clear(); do not clear path, use this as initial solution to lns2
+                    agent.path.clear(); //do not clear path, use this as initial solution to lns2
                     break;
                 }
             }
@@ -447,16 +447,17 @@ bool LNS::fixInitialSolutionWithLNS2()
         neighbor.old_sum_of_costs = MAX_COST;
         neighbor.sum_of_costs = 0;
         bool succ = false;
-        if (!neighbor.agents.empty()) //only run pp for those who does not have a path yet
-        {
-            succ = runPP();
-            if (succ && !initial_collision)
-            {
-                initial_sum_of_costs += neighbor.sum_of_costs;
-                sum_of_costs = initial_sum_of_costs;
-                return true;
-            }
-        }
+        // if (!neighbor.agents.empty()) //only run pp for those who does not have a path yet
+        // {
+        //     succ = runPP();
+        //     cout<<"PP runtime: "<<((fsec)(Time::now() - start_time)).count()<<endl;
+        //     if (succ && !initial_collision)
+        //     {
+        //         initial_sum_of_costs += neighbor.sum_of_costs;
+        //         sum_of_costs = initial_sum_of_costs;
+        //         return true;
+        //     }
+        // }
         //not succ or initial_collision
         cout<<"Fix Solution with LNS2"<<endl;
         //we need lns2 to fix path even if runtime out

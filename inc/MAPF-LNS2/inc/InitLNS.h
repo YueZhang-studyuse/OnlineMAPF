@@ -13,6 +13,7 @@ public:
             const string & replan_algo_name, const string & init_destory_name, int neighbor_size, int screen);
 
     bool getInitialSolution();
+    bool getLaCAMInitialSolution();
     bool run();
     void writeIterStatsToFile(const string & file_name) const;
     void writeResultToFile(const string & file_name, int sum_of_distances, double preprocessing_time) const;

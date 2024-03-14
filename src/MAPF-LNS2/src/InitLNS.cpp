@@ -2,6 +2,7 @@
 #include <queue>
 #include <algorithm>
 #include "mcp.h"
+#include "lacam2/lacam2.hpp"
 
 InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_limit,
          const string & replan_algo_name, const string & init_destory_name, int neighbor_size, int screen) :
@@ -37,7 +38,8 @@ InitLNS::InitLNS(const Instance& instance, vector<Agent>& agents, double time_li
 bool InitLNS::run()
 {
     start_time = Time::now();
-    bool succ = getInitialSolution();
+    //bool succ = getInitialSolution();
+    bool succ = getLaCAMInitialSolution();
     runtime = ((fsec)(Time::now() - start_time)).count();
     iteration_stats.emplace_back(neighbor.agents.size(), sum_of_costs, runtime, "PP", 0, num_of_colliding_pairs);
     if (screen >= 3)
@@ -357,6 +359,106 @@ bool InitLNS::getInitialSolution()
     if (screen >= 2)
         printCollisionGraph();
     return remaining_agents == 0;
+}
+
+bool InitLNS::getLaCAMInitialSolution()
+{
+    neighbor.agents.clear();
+    neighbor.agents.reserve(agents.size());
+    vector<uint> neighbor_id;
+    
+    sum_of_costs = 0;
+
+    instance.existing_path.clear();
+
+    set<pair<int, int>> colliding_pairs;
+    
+    for (int i = 0; i < (int)agents.size(); i++)
+    {
+        if (agents[i].path.empty())
+        {
+            neighbor.agents.push_back(i);
+            neighbor_id.push_back(i);
+        }
+        else
+        {
+            sum_of_costs += (int)agents[i].path.size() - 1;
+            updateCollidingPairs(colliding_pairs, agents[i].id, agents[i].path); //pre loaded path may have collisions
+            path_table.insertPath(agents[i].id, agents[i].path);
+            instance.insertPath(agents[i].path,agents[i].id);
+        }
+    }
+
+    cout<<"fix solution with LaCAM subset size "<<neighbor_id.size()<<endl;
+    //plan for neighbors using lacam
+    LACAMInstance ins = LACAMInstance(instance.env, neighbor_id);
+    string verbose = "";
+    auto MT = std::mt19937(0);
+    const auto deadline = Deadline((time_limit) * 1000);
+    const Objective objective = static_cast<Objective>(0);
+    const float restart_rate = 0.01;
+    const auto solution = solve(instance, ins, verbose, commit, 0, &deadline, &MT, objective, restart_rate);
+    auto succ = true;
+    if (solution.empty()) 
+    {
+        cout<<"empty"<<endl;
+        return false;
+    }
+
+    for (int i = 0; i < neighbor.agents.size(); i++)
+    {
+        int agent = neighbor.agents[i];
+        int reached_goal_time = -1;
+        for (size_t t = 0; t < solution.size(); t++)
+        {
+            auto curr_loc = solution[t][i]->index;
+            // agents[agent].path[t].location = curr_loc;
+            if (curr_loc == instance.env->goal_locations[agent][0].first)
+            {
+                reached_goal_time = t;
+                break;
+            }
+        }
+
+        if (reached_goal_time == -1 || reached_goal_time < commit)
+        {
+            agents[agent].path.resize(solution.size());
+            for (size_t t = 0; t <= solution.size() - 1; t++)
+            {
+                auto curr_loc = solution[t][i]->index;
+                agents[agent].path[t].location = curr_loc;
+            }
+            updateCollidingPairs(colliding_pairs, agents[agent].id, agents[agent].path);
+            path_table.insertPath(agents[agent].id, agents[agent].path);
+            sum_of_costs += agents[agent].path.size()-1;
+            if (reached_goal_time == -1)
+                succ = false;
+        }
+        else
+        {
+            agents[agent].path.resize(reached_goal_time+1);
+            for (size_t t = 0; t <= reached_goal_time; t++)
+            {
+                auto curr_loc = solution[t][i]->index;
+                agents[agent].path[t].location = curr_loc;
+            }
+            updateCollidingPairs(colliding_pairs, agents[agent].id, agents[agent].path);
+            path_table.insertPath(agents[agent].id, agents[agent].path);
+            sum_of_costs += agents[agent].path.size()-1;
+        }
+    }
+    runtime = ((fsec)(Time::now() - start_time)).count();
+
+    num_of_colliding_pairs = colliding_pairs.size();
+    for(const auto& agent_pair : colliding_pairs)
+    {
+        collision_graph[agent_pair.first].emplace(agent_pair.second);
+        collision_graph[agent_pair.second].emplace(agent_pair.first);
+    }
+    if (screen >= 2)
+        printCollisionGraph();
+    instance.existing_path.clear();
+    return succ;
 }
 
 // return true if the new p[ath has collisions;

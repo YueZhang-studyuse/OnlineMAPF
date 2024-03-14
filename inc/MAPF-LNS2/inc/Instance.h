@@ -19,12 +19,14 @@ public:
 	//save map degree - for assigning goals
 	vector<int> degrees = {0,0,0,0};
 
-	mutable vector<vector<int>> existing_path;
+	mutable vector<unordered_map<int,int>> existing_path; //<timestep <locations>>
 
 	//for allpair heuristics
 	void computeAllPair();
 
 	void prepareDummy();
+
+	void insertPath(Path path, int id) const;
 
 	// enum valid_moves_t { NORTH, EAST, SOUTH, WEST, WAIT_MOVE, MOVE_COUNT };  // MOVE_COUNT is the enum's size
 
@@ -79,14 +81,19 @@ public:
 		return heuristic[loc1][loc2];
 	}
 
-	int getAllpairDistance(int agent, int timestep, int loc1, int loc2) const
+	pair<int,int> getAllpairDistance(int timestep, int loc1, int loc2, int edge_start) const
 	{
-		if (!existing_path[agent].size() > timestep)
+		int conflicts = 0;
+		if (existing_path.size() > timestep)
 		{
-			if (existing_path[agent][timestep] == loc2)
-				return 0; //follow current path as much as possible
+			if (existing_path[timestep].find(loc2) != existing_path[timestep].end())
+				conflicts++;
+			if (timestep > 0 && existing_path[timestep-1].find(loc2) != existing_path[timestep-1].end() && 
+				existing_path[timestep].find(edge_start) != existing_path[timestep].end() &&
+				existing_path[timestep][edge_start] == existing_path[timestep-1][loc2]) //agents use the same edge
+				conflicts++;
 		}
-		return heuristic[loc1][loc2];
+		return make_pair(conflicts, heuristic[loc1][loc2]);
 	}
 
 	int getDegree(int loc) const
